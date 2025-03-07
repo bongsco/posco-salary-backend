@@ -1,16 +1,28 @@
 package com.bongsco.poscosalarybackend.user.domain;
 
-import com.bongsco.poscosalarybackend.adjust.domain.PaymentCriteria;
-import jakarta.persistence.*;
-import lombok.Data;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
+
+import org.hibernate.annotations.SQLDelete;
+
+import com.bongsco.poscosalarybackend.adjust.domain.PaymentCriteria;
+import com.bongsco.poscosalarybackend.global.domain.BaseEntity;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.Data;
 
 @Entity
 @Table(name = "employee")
 @Data
-public class Employee {
+@SQLDelete(sql = "UPDATE employee SET deleted = true WHERE id = ?")
+public class Employee extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -38,18 +50,21 @@ public class Employee {
     @Column(length = 10, nullable = false)
     private String name;
 
-    @Column(nullable = false, unique = true)
-    private Long empNum;
+    @Column(length = 10, nullable = false, unique = true)
+    private String empNum;
 
     @Column(nullable = false)
     private LocalDate hireDate;
 
+    @Column(length = 10)
     private LocalDate birth;
 
+    @Column(length = 10)
     private String positionName;
+
+    @Column(length = 10)
     private String positionArea;
 
     @Column(precision = 5, scale = 2)
     private BigDecimal stdSalaryIncrementRate;
 }
-

@@ -1,23 +1,26 @@
 package com.bongsco.poscosalarybackend.baseup.domain;
 
 import com.bongsco.poscosalarybackend.adjust.domain.AdjInfo;
+import com.bongsco.poscosalarybackend.global.domain.BaseEntity;
 import com.bongsco.poscosalarybackend.global.domain.Status;
 import com.bongsco.poscosalarybackend.user.domain.Grade;
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.SQLDelete;
 
 import java.math.BigDecimal;
 
 @Entity
 @Table(name = "baseup_criteria")
 @Data
-public class BaseupCriteria {
+@SQLDelete(sql = "UPDATE baseup_criteria SET deleted = true WHERE id = ?")
+public class BaseupCriteria extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "adj_id", nullable = false)
+    @JoinColumn(name = "adj_info_id", nullable = false)
     private AdjInfo adjInfo;
 
     @ManyToOne

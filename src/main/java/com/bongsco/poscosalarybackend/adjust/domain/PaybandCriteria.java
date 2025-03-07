@@ -1,22 +1,36 @@
 package com.bongsco.poscosalarybackend.adjust.domain;
 
+import java.math.BigDecimal;
+
+import org.hibernate.annotations.SQLDelete;
+
+import com.bongsco.poscosalarybackend.global.domain.BaseEntity;
 import com.bongsco.poscosalarybackend.global.domain.Status;
 import com.bongsco.poscosalarybackend.user.domain.Grade;
-import jakarta.persistence.*;
-import lombok.Data;
 
-import java.math.BigDecimal;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.Data;
 
 @Entity
 @Table(name = "payband_criteria")
 @Data
-public class PaybandCriteria {
+@SQLDelete(sql = "UPDATE payband_criteria SET deleted = true WHERE id = ?")
+public class PaybandCriteria extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "adj_id", nullable = false)
+    @JoinColumn(name = "adj_info_id", nullable = false)
     private AdjInfo adjInfo;
 
     @ManyToOne
@@ -32,4 +46,3 @@ public class PaybandCriteria {
     @Column(precision = 20, scale = 2)
     private BigDecimal lowerLimitPrice;
 }
-

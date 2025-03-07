@@ -1,13 +1,25 @@
 package com.bongsco.poscosalarybackend.adjust.domain;
 
+import org.hibernate.annotations.SQLDelete;
+
+import com.bongsco.poscosalarybackend.global.domain.BaseEntity;
 import com.bongsco.poscosalarybackend.user.domain.Employee;
-import jakarta.persistence.*;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.Data;
 
 @Entity
 @Table(name = "adj_subject")
 @Data
-public class AdjSubject {
+@SQLDelete(sql = "UPDATE adj_subject SET deleted = true WHERE id = ?")
+public class AdjSubject extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -17,16 +29,15 @@ public class AdjSubject {
     private Employee employee;
 
     @ManyToOne
-    @JoinColumn(name = "adj_id", nullable = false)
+    @JoinColumn(name = "adj_info_id", nullable = false)
     private AdjInfo adjInfo;
 
-    @Column(length = 1)
-    private String subjectUse;
+    @Column(nullable = false)
+    private Boolean subjectUse;
 
-    @Column(length = 1)
-    private String inHighPerformGroup;
+    @Column
+    private Boolean inHighPerformGroup;
 
-    @Column(length = 1)
-    private String paybandUse;
+    @Column
+    private Boolean paybandUse;
 }
-

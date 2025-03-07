@@ -1,22 +1,31 @@
 package com.bongsco.poscosalarybackend.adjust.domain;
 
-import com.bongsco.poscosalarybackend.global.domain.SalaryType;
-import jakarta.persistence.*;
-import lombok.Data;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
+
+import org.hibernate.annotations.SQLDelete;
+
+import com.bongsco.poscosalarybackend.global.domain.AdjType;
+import com.bongsco.poscosalarybackend.global.domain.BaseEntity;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.Data;
 
 @Entity
 @Table(name = "adj_info")
 @Data
-public class AdjInfo {
+@SQLDelete(sql = "UPDATE adj_info SET deleted = true WHERE id = ?")
+public class AdjInfo extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(length = 100, nullable = false)
-    private String adjName;
 
     @Column(nullable = false)
     private Integer year;
@@ -26,15 +35,15 @@ public class AdjInfo {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private SalaryType salaryType;
+    private AdjType adjType;
 
-    @Column
+    @Column(length = 4)
     private String workStep;
 
     @Column
-    private String interfaceUse;
+    private Boolean interfaceUse;
 
-    @Column
+    @Column(length = 4000)
     private String remarks;
 
     @Column(nullable = false)
@@ -43,6 +52,7 @@ public class AdjInfo {
     @Column(length = 50, nullable = false)
     private String creator;
 
+    @Column(length = 50, nullable = false)
     private Integer orderNumber;
 
     @Column(precision = 5, scale = 2, nullable = false)
@@ -50,5 +60,19 @@ public class AdjInfo {
 
     @Column(precision = 5, scale = 2, nullable = false)
     private BigDecimal evalPerformProvideRate;
-}
 
+    @Column
+    private LocalDate baseDate;
+
+    @Column
+    private LocalDate exceptionStartDate;
+
+    @Column
+    private LocalDate exceptionEndDate;
+
+    @Column
+    private LocalDate promotionStartDate;
+
+    @Column
+    private LocalDate promotionEndDate;
+}
