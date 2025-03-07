@@ -1,0 +1,19 @@
+name: "🐞 Bugfix"
+description: "버그 수정"
+labels: ["bug"]
+body:
+  - type: textarea
+    attributes:
+      label: 🐛 버그 설명
+      description: 발생한 버그에 대한 설명을 작성해 주세요.
+      placeholder: 어떤 문제인지 구체적으로 적어주세요.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 🛠 해결 방법
+      description: 버그를 어떻게 해결할지 간략하게 설명해 주세요.
+  - type: textarea
+    attributes:
+      label: 📝 참고 자료
+      description: 참고할 만한 링크나 문서가 있다면 작성해 주세요.
