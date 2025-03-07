@@ -1,6 +1,5 @@
 package com.bongsco.poscosalarybackend.global.domain;
 
-
 public enum AdjType {
     BASEUP("Baseup"),
     PROMOTION("승진자연봉조정"),
@@ -16,4 +15,3 @@ public enum AdjType {
         return description;
     }
 }
-

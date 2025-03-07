@@ -1,16 +1,24 @@
 package com.bongsco.poscosalarybackend.user.domain;
 
-import jakarta.persistence.*;
-import lombok.Data;
+import java.math.BigDecimal;
+
 import org.hibernate.annotations.SQLDelete;
 
-import java.math.BigDecimal;
+import com.bongsco.poscosalarybackend.global.domain.BaseEntity;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.Data;
 
 @Entity
 @Table(name = "grade")
 @Data
 @SQLDelete(sql = "UPDATE grade SET deleted = true WHERE id = ?")
-public class Grade {
+public class Grade extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -21,4 +29,3 @@ public class Grade {
     @Column(precision = 20, scale = 2, nullable = false)
     private BigDecimal gradeBaseSalary;
 }
-

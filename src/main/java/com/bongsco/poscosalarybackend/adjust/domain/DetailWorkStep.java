@@ -1,5 +1,6 @@
 package com.bongsco.poscosalarybackend.adjust.domain;
 
+import com.bongsco.poscosalarybackend.global.domain.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.SQLDelete;
@@ -10,7 +11,7 @@ import java.time.LocalDate;
 @Table(name = "detail_work_step")
 @Data
 @SQLDelete(sql = "UPDATE detail_work_step SET deleted = true WHERE id = ?")
-public class DetailWorkStep {
+public class DetailWorkStep extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
