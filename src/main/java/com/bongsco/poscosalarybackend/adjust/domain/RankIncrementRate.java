@@ -4,12 +4,14 @@ import com.bongsco.poscosalarybackend.user.domain.Grade;
 import com.bongsco.poscosalarybackend.user.domain.Rank;
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.SQLDelete;
 
 import java.math.BigDecimal;
 
 @Entity
 @Table(name = "rank_increment_rate")
 @Data
+@SQLDelete(sql = "UPDATE rank_increment_rate SET deleted = true WHERE rank_id = ? AND adj_info_id = ? AND grade_id = ?ß")
 public class RankIncrementRate {
     @Id
     @ManyToOne
@@ -18,7 +20,7 @@ public class RankIncrementRate {
 
     @Id
     @ManyToOne
-    @JoinColumn(name = "adj_id", nullable = false)
+    @JoinColumn(name = "adj_info_id", nullable = false)
     private AdjInfo adjInfo;
 
     @Id

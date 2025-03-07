@@ -1,14 +1,13 @@
 package com.bongsco.poscosalarybackend.user.domain;
 
-import com.bongsco.poscosalarybackend.adjust.domain.SubjectCriteria;
 import jakarta.persistence.*;
 import lombok.Data;
-
-import java.util.List;
+import org.hibernate.annotations.SQLDelete;
 
 @Entity
 @Table(name = "station")
 @Data
+@SQLDelete(sql = "UPDATE station SET deleted = true WHERE id = ?")
 public class Station {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -17,7 +16,5 @@ public class Station {
     @Column(length = 50, nullable = false)
     private String stationName;
 
-    @OneToMany(mappedBy = "station")
-    private List<SubjectCriteria> subjectCriteriaList;
 }
 

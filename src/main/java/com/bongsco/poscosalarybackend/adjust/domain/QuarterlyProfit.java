@@ -3,12 +3,14 @@ package com.bongsco.poscosalarybackend.adjust.domain;
 import com.bongsco.poscosalarybackend.user.domain.Department;
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.SQLDelete;
 
 import java.math.BigDecimal;
 
 @Entity
 @Table(name = "quarterly_profit")
 @Data
+@SQLDelete(sql = "UPDATE quarterly_profit SET deleted = true WHERE id = ?")
 public class QuarterlyProfit {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

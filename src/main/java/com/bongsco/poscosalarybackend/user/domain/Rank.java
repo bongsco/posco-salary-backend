@@ -2,10 +2,12 @@ package com.bongsco.poscosalarybackend.user.domain;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.SQLDelete;
 
 @Entity
 @Table(name = "rank")
 @Data
+@SQLDelete(sql = "UPDATE rank SET deleted = true WHERE id = ?")
 public class Rank {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
