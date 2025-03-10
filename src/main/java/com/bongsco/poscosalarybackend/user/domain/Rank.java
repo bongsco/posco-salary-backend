@@ -13,7 +13,7 @@ import jakarta.persistence.Table;
 import lombok.Data;
 
 @Entity
-@Table(name = "rank")
+@Table(name = "`rank`")
 @Data
 @SQLDelete(sql = "UPDATE rank SET deleted = true WHERE id = ?")
 public class Rank extends BaseEntity {
