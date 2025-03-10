@@ -3,10 +3,12 @@ package com.bongsco.poscosalarybackend.adjust.domain;
 import com.bongsco.poscosalarybackend.user.domain.Employee;
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.SQLDelete;
 
 @Entity
 @Table(name = "adj_subject")
 @Data
+@SQLDelete(sql = "UPDATE adj_subject SET deleted = true WHERE id = ?")
 public class AdjSubject {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -17,16 +19,16 @@ public class AdjSubject {
     private Employee employee;
 
     @ManyToOne
-    @JoinColumn(name = "adj_id", nullable = false)
+    @JoinColumn(name = "adj_info_id", nullable = false)
     private AdjInfo adjInfo;
 
-    @Column(length = 1)
-    private String subjectUse;
+    @Column(nullable = false)
+    private Boolean subjectUse;
 
-    @Column(length = 1)
-    private String inHighPerformGroup;
+    @Column
+    private Boolean inHighPerformGroup;
 
-    @Column(length = 1)
-    private String paybandUse;
+    @Column
+    private Boolean paybandUse;
 }
 

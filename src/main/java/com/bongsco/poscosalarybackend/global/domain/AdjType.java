@@ -1,14 +1,14 @@
 package com.bongsco.poscosalarybackend.global.domain;
 
 
-public enum SalaryType {
+public enum AdjType {
     BASEUP("Baseup"),
-    PROMOTION("승진자 연봉 조정"),
+    PROMOTION("승진자연봉조정"),
     ANNUAL_SALARY_ADJUSTMENT("정기연봉조정");
 
     private final String description;
 
-    SalaryType(String description) {
+    AdjType(String description) {
         this.description = description;
     }
 

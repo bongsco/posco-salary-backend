@@ -1,8 +1,9 @@
 package com.bongsco.poscosalarybackend.adjust.domain;
 
-import com.bongsco.poscosalarybackend.global.domain.SalaryType;
+import com.bongsco.poscosalarybackend.global.domain.AdjType;
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.SQLDelete;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -10,13 +11,11 @@ import java.time.LocalDate;
 @Entity
 @Table(name = "adj_info")
 @Data
+@SQLDelete(sql = "UPDATE adj_info SET deleted = true WHERE id = ?")
 public class AdjInfo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(length = 100, nullable = false)
-    private String adjName;
 
     @Column(nullable = false)
     private Integer year;
@@ -26,15 +25,15 @@ public class AdjInfo {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private SalaryType salaryType;
+    private AdjType adjType;
 
-    @Column
+    @Column(length = 4)
     private String workStep;
 
     @Column
-    private String interfaceUse;
+    private Boolean interfaceUse;
 
-    @Column
+    @Column(length = 4000)
     private String remarks;
 
     @Column(nullable = false)
@@ -50,5 +49,20 @@ public class AdjInfo {
 
     @Column(precision = 5, scale = 2, nullable = false)
     private BigDecimal evalPerformProvideRate;
+
+    @Column
+    private LocalDate baseDate;
+
+    @Column
+    private LocalDate exceptionStartDate;
+
+    @Column
+    private LocalDate exceptionEndDate;
+
+    @Column
+    private LocalDate promotionStartDate;
+
+    @Column
+    private LocalDate promotionEndDate;
 }
 

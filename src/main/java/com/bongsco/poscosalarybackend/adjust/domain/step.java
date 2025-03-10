@@ -4,19 +4,15 @@ import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.SQLDelete;
 
-import java.util.List;
-
 @Entity
-@Table(name = "payment_criteria")
+@Table(name = "step")
 @Data
-@SQLDelete(sql = "UPDATE payment_criteria SET deleted = true WHERE id = ?")
-public class PaymentCriteria {
+@SQLDelete(sql = "UPDATE step SET deleted = true WHERE id = ?")
+public class step {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(length = 50, nullable = false)
-    private String paymentName;
+    @Column(nullable = false)
+    private String stepName;
 }
-
-
