@@ -2,6 +2,8 @@ package com.bongsco.poscosalarybackend.user.domain;
 
 import org.hibernate.annotations.SQLDelete;
 
+import com.bongsco.poscosalarybackend.global.domain.BaseEntity;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -14,7 +16,7 @@ import lombok.Data;
 @Table(name = "department")
 @Data
 @SQLDelete(sql = "UPDATE department SET deleted = true WHERE id = ?")
-public class Department {
+public class Department extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
