@@ -1,6 +1,5 @@
 package com.bongsco.poscosalarybackend.adjust.domain;
 
-import com.bongsco.poscosalarybackend.global.domain.BaseEntity;
 import com.bongsco.poscosalarybackend.user.domain.Station;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -10,7 +9,7 @@ import org.hibernate.annotations.SQLDelete;
 @Table(name = "station_adj_info")
 @Data
 @SQLDelete(sql = "UPDATE station_adj_info SET deleted = true WHERE station_id = ? AND adj_info_id = ?")
-public class StationAdjInfo extends BaseEntity {
+public class StationAdjInfo {
     @Id
     @ManyToOne
     @JoinColumn(name = "station_id", nullable = false)

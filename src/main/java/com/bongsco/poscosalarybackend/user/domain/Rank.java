@@ -1,22 +1,14 @@
 package com.bongsco.poscosalarybackend.user.domain;
 
-import org.hibernate.annotations.SQLDelete;
-
-import com.bongsco.poscosalarybackend.global.domain.BaseEntity;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.SQLDelete;
 
 @Entity
 @Table(name = "rank")
 @Data
 @SQLDelete(sql = "UPDATE rank SET deleted = true WHERE id = ?")
-public class Rank extends BaseEntity {
+public class Rank {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -27,3 +19,4 @@ public class Rank extends BaseEntity {
     @Column(length = 50, nullable = false)
     private String rankName;
 }
+

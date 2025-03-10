@@ -1,7 +1,6 @@
 package com.bongsco.poscosalarybackend.baseup.domain;
 
 import com.bongsco.poscosalarybackend.adjust.domain.AdjInfo;
-import com.bongsco.poscosalarybackend.global.domain.BaseEntity;
 import com.bongsco.poscosalarybackend.global.domain.Status;
 import com.bongsco.poscosalarybackend.user.domain.Grade;
 import jakarta.persistence.*;
@@ -14,7 +13,7 @@ import java.math.BigDecimal;
 @Table(name = "baseup_criteria")
 @Data
 @SQLDelete(sql = "UPDATE baseup_criteria SET deleted = true WHERE id = ?")
-public class BaseupCriteria extends BaseEntity {
+public class BaseupCriteria {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
