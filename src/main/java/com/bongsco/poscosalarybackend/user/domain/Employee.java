@@ -1,18 +1,28 @@
 package com.bongsco.poscosalarybackend.user.domain;
 
-import com.bongsco.poscosalarybackend.adjust.domain.PaymentCriteria;
-import jakarta.persistence.*;
-import lombok.Data;
-import org.hibernate.annotations.SQLDelete;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
+
+import org.hibernate.annotations.SQLDelete;
+
+import com.bongsco.poscosalarybackend.adjust.domain.PaymentCriteria;
+import com.bongsco.poscosalarybackend.global.domain.BaseEntity;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.Data;
 
 @Entity
 @Table(name = "employee")
 @Data
 @SQLDelete(sql = "UPDATE employee SET deleted = true WHERE id = ?")
-public class Employee {
+public class Employee extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

@@ -1,19 +1,31 @@
 package com.bongsco.poscosalarybackend.baseup.domain;
 
-import com.bongsco.poscosalarybackend.adjust.domain.AdjInfo;
-import com.bongsco.poscosalarybackend.global.domain.Status;
-import com.bongsco.poscosalarybackend.user.domain.Grade;
-import jakarta.persistence.*;
-import lombok.Data;
+import java.math.BigDecimal;
+
 import org.hibernate.annotations.SQLDelete;
 
-import java.math.BigDecimal;
+import com.bongsco.poscosalarybackend.adjust.domain.AdjInfo;
+import com.bongsco.poscosalarybackend.global.domain.BaseEntity;
+import com.bongsco.poscosalarybackend.global.domain.Status;
+import com.bongsco.poscosalarybackend.user.domain.Grade;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.Data;
 
 @Entity
 @Table(name = "baseup_criteria")
 @Data
 @SQLDelete(sql = "UPDATE baseup_criteria SET deleted = true WHERE id = ?")
-public class BaseupCriteria {
+public class BaseupCriteria extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
