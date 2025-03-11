@@ -5,10 +5,13 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.bongsco.poscosalarybackend.adjust.dto.request.ChangedSubjectListRequest;
 import com.bongsco.poscosalarybackend.adjust.dto.response.MainAdjPaybandBothSubjectsResponse;
 import com.bongsco.poscosalarybackend.adjust.dto.response.MainAdjPaybandCriteriaResponse;
 import com.bongsco.poscosalarybackend.adjust.service.PaybandCriteriaService;
@@ -61,5 +64,21 @@ public class MainAdjController {
         //adjustSubjectService.getBothUpperLowerSubjects();
         // return ResponseEntity.status(HttpStatus.OK)
         //     .body(JsonResult.success(MainAdjPaybandBothSubjectsResponse.of(adjustSubjectService.getBothUpperLowerSubjects())));
+    }
+
+    @Operation(summary = "payband 여부 수정", description = "payband 여부 수정")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "요청 성공, payband 대상자 변경"),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청"),
+        @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
+        @ApiResponse(responseCode = "403", description = "권한 없음"),
+        @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    })
+    @PatchMapping("/{adj_info_id}/payband/subjects")
+    public ResponseEntity<JsonResult<String>> modifyPaybandSubjects(
+        @PathVariable("adj_info_id") Long adjInfoId, @RequestBody ChangedSubjectListRequest changedSubjectListRequest) {
+        // adjustSubjectService.modifyAdjustSubject()
+        return ResponseEntity.status(HttpStatus.OK)
+            .body(JsonResult.success("Successfully changed"));
     }
 }
