@@ -13,7 +13,6 @@ env:
   ECR_REPOSITORY: bongsco/salary-management-backend
   ECS_SERVICE: bonsco-springboot
   ECS_CLUSTER: bongsco-salary-management-ecs-cluster
-  ECS_TASK_DEFINITION: ${{secrets.BONGSCO_TASK_JSON}}
   CONTAINER_NAME: bongsco-springboot
 
 jobs:
@@ -70,11 +69,17 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
+      - name: Decode and save ECS task definition JSON
+        env:
+          ECS_TASK_DEFINITION: ${{ secrets.ECS_TASK_DEFINITION }}
+        run: |
+          echo "$ECS_TASK_DEFINITION" | base64 --decode > ecs-task-definition.json
+
       - name: Fill in the new image ID in the Amazon ECS task definition
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: ${{ env.ECS_TASK_DEFINITION }}
+          task-definition: ecs-task-definition.json
           container-name: ${{ env.CONTAINER_NAME }}
           image: ${{ steps.build-image.outputs.image }}
 
