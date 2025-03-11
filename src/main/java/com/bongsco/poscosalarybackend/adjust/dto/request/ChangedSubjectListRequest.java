@@ -7,11 +7,7 @@ import lombok.Getter;
 public class ChangedSubjectListRequest {
     private final List<ChangedSubjectRequest> changedSubject;
 
-    private ChangedSubjectListRequest(List<ChangedSubjectRequest> changedSubject) {
+    public ChangedSubjectListRequest(List<ChangedSubjectRequest> changedSubject) {
         this.changedSubject = changedSubject;
-    }
-
-    public static ChangedSubjectListRequest of(List<ChangedSubjectRequest> changedSubject) {
-        return new ChangedSubjectListRequest(changedSubject);
     }
 }

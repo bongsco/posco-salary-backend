@@ -13,7 +13,7 @@ public class MainAdjPaybandSubjectsResponse {
     private final String rankName;
     private final Boolean subjectUse;
 
-    private MainAdjPaybandSubjectsResponse(Long employeeId, String empNum, String name, LocalDate hireDate,
+    public MainAdjPaybandSubjectsResponse(Long employeeId, String empNum, String name, LocalDate hireDate,
         String rankName, Boolean subjectUse) {
         this.employeeId = employeeId;
         this.empNum = empNum;
@@ -21,10 +21,5 @@ public class MainAdjPaybandSubjectsResponse {
         this.hireDate = hireDate;
         this.rankName = rankName;
         this.subjectUse = subjectUse;
-    }
-
-    public static MainAdjPaybandSubjectsResponse of(Long employeeId, String empNum, String name, LocalDate hireDate,
-        String rankName, Boolean subjectUse) {
-        return new MainAdjPaybandSubjectsResponse(employeeId, empNum, name, hireDate, rankName, subjectUse);
     }
 }
