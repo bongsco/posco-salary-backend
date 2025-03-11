@@ -1,13 +1,13 @@
 package com.bongsco.poscosalarybackend.user.controller;
 
-import com.bongsco.poscosalarybackend.user.domain.Department;
-import com.bongsco.poscosalarybackend.user.dto.DepartmentDto;
-import com.bongsco.poscosalarybackend.user.repository.DepartmentRepository;
+import com.bongsco.poscosalarybackend.global.exception.CustomException;
+import com.bongsco.poscosalarybackend.user.dto.response.DepartmentResponse;
 import com.bongsco.poscosalarybackend.user.service.DepartmentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,14 +16,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+import static com.bongsco.poscosalarybackend.global.exception.ErrorCode.USER_NOT_FOUND;
+
 @Tag(name="Department API", description = "Department 관련 API 모음")
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/v1/department")
 public class DepartmentController {
     private final DepartmentService departmentService;
-    public DepartmentController(DepartmentService departmentService) {
-        this.departmentService = departmentService;
-    }
 
     @Operation(summary = "test",description = "test")
     @ApiResponses({
@@ -34,7 +34,13 @@ public class DepartmentController {
             @ApiResponse(responseCode = "500", description = "서버 내부 오류")
     })
     @GetMapping("/test")
-    public ResponseEntity<List<DepartmentDto>> test() {
+    public ResponseEntity<List<DepartmentResponse>> test() {
+        List<DepartmentResponse> departments = departmentService.getAllDepart();
+
+        if(departments == null){
+            throw new CustomException(USER_NOT_FOUND);
+        }
+
         return ResponseEntity.status(HttpStatus.OK)
                 .body(departmentService.getAllDepart());
     }
