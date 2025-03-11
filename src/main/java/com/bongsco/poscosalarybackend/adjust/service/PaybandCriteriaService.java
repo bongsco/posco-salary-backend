@@ -6,7 +6,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.bongsco.poscosalarybackend.adjust.domain.PaybandCriteria;
-import com.bongsco.poscosalarybackend.adjust.dto.MainAdjPaybandCriteriaResponse;
+import com.bongsco.poscosalarybackend.adjust.dto.response.MainAdjPaybandCriteriaResponse;
 import com.bongsco.poscosalarybackend.adjust.repository.PaybandCriteriaRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -66,6 +66,6 @@ public class PaybandCriteriaService {
     //         .reduce(BigDecimal.ZERO, BigDecimal::add);
     //
     //     return filteredSalaries.isEmpty() ? 0.0 :
-    //         sum.divide(BigDecimal.valueOf(filteredSalaries.size()), 100, RoundingMode.HALF_UP).doubleValue();
+    //         sum.divide(BigDecimal.valueOf(filteredSalaries.size()), 100, RoundingMode.HALF_UP).doubleValue(); //TODO : 평균에서 중위값으로 바꾸기
     // }
 }

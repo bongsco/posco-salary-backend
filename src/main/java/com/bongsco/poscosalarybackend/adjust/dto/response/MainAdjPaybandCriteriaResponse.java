@@ -1,4 +1,4 @@
-package com.bongsco.poscosalarybackend.adjust.dto;
+package com.bongsco.poscosalarybackend.adjust.dto.response;
 
 import java.math.BigDecimal;
 

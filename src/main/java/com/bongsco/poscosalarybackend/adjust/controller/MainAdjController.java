@@ -9,7 +9,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.bongsco.poscosalarybackend.adjust.dto.MainAdjPaybandCriteriaResponse;
+import com.bongsco.poscosalarybackend.adjust.dto.response.MainAdjPaybandBothSubjectsResponse;
+import com.bongsco.poscosalarybackend.adjust.dto.response.MainAdjPaybandCriteriaResponse;
 import com.bongsco.poscosalarybackend.adjust.service.PaybandCriteriaService;
 import com.bongsco.poscosalarybackend.global.dto.JsonResult;
 
@@ -24,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/v1/main-adj")
 public class MainAdjController {
     private final PaybandCriteriaService paybandCriteriaService;
+    //private final AdjustSubjectService adjustSubjectService;
 
     @Operation(summary = "payband 기준", description = "직급별 payband 기준 표 반환")
     @ApiResponses({
@@ -41,5 +43,23 @@ public class MainAdjController {
             adjInfoId);
         return ResponseEntity.status(HttpStatus.OK)
             .body(JsonResult.success(mainAdjPaybandCriteriaResponse));
+    }
+
+    @Operation(summary = "payband 대상자", description = "payband 대상자 반환")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "요청 성공, payband 대상자 반환"),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청"),
+        @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
+        @ApiResponse(responseCode = "403", description = "권한 없음"),
+        @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    })
+    @GetMapping("/{adj_info_id}/payband/subjects")
+    public ResponseEntity<JsonResult<MainAdjPaybandBothSubjectsResponse>> getPaybandSubjects(
+        @PathVariable("adj_info_id") Long adjInfoId) {
+
+        return null;
+        //adjustSubjectService.getBothUpperLowerSubjects();
+        // return ResponseEntity.status(HttpStatus.OK)
+        //     .body(JsonResult.success(MainAdjPaybandBothSubjectsResponse.of(adjustSubjectService.getBothUpperLowerSubjects())));
     }
 }
