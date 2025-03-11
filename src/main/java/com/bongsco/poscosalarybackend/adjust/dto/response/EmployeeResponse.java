@@ -15,8 +15,9 @@ public class EmployeeResponse {
     private final String rankName;
     private final boolean subjectUse;
 
-    private EmployeeResponse(long employeeId, String empNum, String name, LocalDate hireDate, String rankName,
-        boolean subjectUse) {
+    public EmployeeResponse(
+        long employeeId, String empNum, String name, LocalDate hireDate, String rankName, boolean subjectUse
+    ) {
         this.employeeId = employeeId;
         this.empNum = empNum;
         this.name = name;
@@ -25,13 +26,9 @@ public class EmployeeResponse {
         this.subjectUse = subjectUse;
     }
 
-    public static EmployeeResponse of(long employeeId, String empNum, String name, LocalDate hireDate,
-        String rankName, boolean subjectUse) {
-        return new EmployeeResponse(employeeId, empNum, name, hireDate, rankName, subjectUse);
-    }
-
     public static EmployeeResponse from(AdjSubject adjSubject) {
-        return EmployeeResponse.of(adjSubject.getEmployee().getId(), adjSubject.getEmployee().getEmpNum(),
+
+        return new EmployeeResponse(adjSubject.getEmployee().getId(), adjSubject.getEmployee().getEmpNum(),
             adjSubject.getEmployee().getName(), adjSubject.getEmployee().getHireDate(),
             adjSubject.getEmployee().getRank().getRankCode(),
             adjSubject.getSubjectUse());

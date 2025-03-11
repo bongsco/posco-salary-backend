@@ -1,6 +1,7 @@
 package com.bongsco.poscosalarybackend.adjust.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -14,6 +15,10 @@ public interface AdjSubjectRepository extends JpaRepository<AdjSubject, Long> {
     List<AdjSubject> findByAdjInfo_Id(long id);
 
     @Query("SELECT asj FROM AdjSubject asj JOIN asj.employee e WHERE asj.adjInfo.id = :adjInfoId AND (e.empNum = :searchKey or e.name = :searchKey)")
-    List<AdjSubject> findByAdjInfoIdAndEmployeeName(@Param("adjInfoId") long adjInfoId,
-        @Param("searchKey") String searchKey);
+    List<AdjSubject> findByAdjInfoIdAndEmployeeName(
+        @Param("adjInfoId") long adjInfoId,
+        @Param("searchKey") String searchKey
+    );
+
+    Optional<AdjSubject> findByAdjInfoIdAndEmployeeId(long adjInfoId, long employeeId);
 }

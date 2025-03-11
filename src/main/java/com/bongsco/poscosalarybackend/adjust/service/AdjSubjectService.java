@@ -1,13 +1,17 @@
 package com.bongsco.poscosalarybackend.adjust.service;
 
+import static com.bongsco.poscosalarybackend.global.exception.ErrorCode.*;
+
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.bongsco.poscosalarybackend.adjust.domain.AdjSubject;
 import com.bongsco.poscosalarybackend.adjust.dto.request.ChangedEmployeeRequest;
 import com.bongsco.poscosalarybackend.adjust.dto.response.EmployeeResponse;
 import com.bongsco.poscosalarybackend.adjust.repository.AdjSubjectRepository;
+import com.bongsco.poscosalarybackend.global.exception.CustomException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -30,7 +34,14 @@ public class AdjSubjectService {
         return subjects.stream().map(EmployeeResponse::from).toList();
     }
 
-    public void updateEmployeeUse(ChangedEmployeeRequest changedEmployeeRequest) {
-
+    @Transactional
+    public void updateEmployeeSubjectUse(long adjInfoId, ChangedEmployeeRequest changedEmployeeRequest) {
+        changedEmployeeRequest.getChangedEmployee().forEach(changedEmployee -> {
+            AdjSubject adjSubject = adjSubjectRepository.findByAdjInfoIdAndEmployeeId(adjInfoId,
+                    changedEmployee.getEmployeeId())
+                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+            adjSubject.setSubjectUse(changedEmployee.getSubjectUse());
+            adjSubjectRepository.save(adjSubject);
+        });
     }
 }

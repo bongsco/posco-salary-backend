@@ -43,8 +43,8 @@ public class PreprocessController {
     @GetMapping("/{adj_info_id}/employees")
     public ResponseEntity<List<EmployeeResponse>> getEmployees(
         @PathVariable("adj_info_id") long adjInfoId,
-        @RequestParam(value = "searchKey", required = false) String searchKey) {
-
+        @RequestParam(value = "searchKey", required = false) String searchKey
+    ) {
         if (searchKey != null) {
             return ResponseEntity.status(HttpStatus.OK).body(adjSubjectService.findOne(adjInfoId, searchKey));
         }
@@ -53,10 +53,14 @@ public class PreprocessController {
     }
 
     @PostMapping("{adj_info_id}/employees")
-    public ResponseEntity<?> updateEmployees(@RequestBody ChangedEmployeeRequest ChangedEmployeeRequest) {
-        adjSubjectService.updateEmployeeUse(ChangedEmployeeRequest);
+    public ResponseEntity<?> updateEmployees(
+        @PathVariable("adj_info_id") long adjInfoId,
+        @RequestBody ChangedEmployeeRequest ChangedEmployeeRequest
+    ) {
+        adjSubjectService.updateEmployeeSubjectUse(adjInfoId, ChangedEmployeeRequest);
         Map<String, String> response = new HashMap<>();
         response.put("message", "Successfully changed");
+        
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }
