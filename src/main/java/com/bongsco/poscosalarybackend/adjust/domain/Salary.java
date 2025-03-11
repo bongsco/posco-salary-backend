@@ -14,11 +14,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "salary")
-@Data
+@Getter
+@Setter
 @SQLDelete(sql = "UPDATE salary SET deleted = true WHERE adj_info_id = ? AND employee_id = ?")
 public class Salary extends BaseEntity {
     @Id

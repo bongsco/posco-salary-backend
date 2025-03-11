@@ -13,11 +13,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "adj_subject")
-@Data
+@Getter
+@Setter
 @SQLDelete(sql = "UPDATE adj_subject SET deleted = true WHERE id = ?")
 public class AdjSubject extends BaseEntity {
     @Id
