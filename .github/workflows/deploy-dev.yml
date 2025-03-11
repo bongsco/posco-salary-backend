@@ -68,7 +68,7 @@ jobs:
 
       - name: Decode and save ECS task definition JSON
         env:
-          ECS_TASK_DEFINITION: ${{ secrets.ECS_TASK_DEFINITION }}
+          ECS_TASK_DEFINITION: ${{ secrets.BONGSCO_TASK_JSON }}
         run: |
           echo "$ECS_TASK_DEFINITION" | base64 --decode > ecs-task-definition.json
           cat ecs-task-definition.json 
