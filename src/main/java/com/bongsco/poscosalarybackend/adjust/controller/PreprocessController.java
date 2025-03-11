@@ -61,7 +61,7 @@ public class PreprocessController {
         @ApiResponse(responseCode = "500", description = "서버 내부 오류")
     })
     @PostMapping("{adj_info_id}/employees")
-    public ResponseEntity<?> updateEmployees(
+    public ResponseEntity<Map<String, String>> updateEmployees(
         @PathVariable("adj_info_id") long adjInfoId,
         @RequestBody ChangedEmployeeRequest ChangedEmployeeRequest
     ) {
