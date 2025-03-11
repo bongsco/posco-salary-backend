@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import com.bongsco.poscosalarybackend.adjust.domain.AdjSubject;
 
 @Repository
-public interface EmployeeRepository extends JpaRepository<AdjSubject, Long> {
+public interface AdjSubjectRepository extends JpaRepository<AdjSubject, Long> {
     List<AdjSubject> findByAdjInfo_Id(long id);
 
     @Query("SELECT asj FROM AdjSubject asj JOIN asj.employee e WHERE asj.adjInfo.id = :adjInfoId AND (e.empNum = :searchKey or e.name = :searchKey)")

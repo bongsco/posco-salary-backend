@@ -1,17 +1,22 @@
 package com.bongsco.poscosalarybackend.adjust.controller;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.bongsco.poscosalarybackend.adjust.dto.request.ChangedEmployeeRequest;
 import com.bongsco.poscosalarybackend.adjust.dto.response.EmployeeResponse;
-import com.bongsco.poscosalarybackend.adjust.service.EmployeeService;
+import com.bongsco.poscosalarybackend.adjust.service.AdjSubjectService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -24,7 +29,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/preprocess")
 public class PreprocessController {
-    private final EmployeeService employeeService;
+    private final AdjSubjectService adjSubjectService;
 
     @Operation(summary = "test", description = "test")
     @ApiResponses({
@@ -41,9 +46,17 @@ public class PreprocessController {
         @RequestParam(value = "searchKey", required = false) String searchKey) {
 
         if (searchKey != null) {
-            return ResponseEntity.status(HttpStatus.OK).body(employeeService.findOne(adjInfoId, searchKey));
+            return ResponseEntity.status(HttpStatus.OK).body(adjSubjectService.findOne(adjInfoId, searchKey));
         }
 
-        return ResponseEntity.status(HttpStatus.OK).body(employeeService.findAll(adjInfoId));
+        return ResponseEntity.status(HttpStatus.OK).body(adjSubjectService.findAll(adjInfoId));
+    }
+
+    @PostMapping("{adj_info_id}/employees")
+    public ResponseEntity<?> updateEmployees(@RequestBody ChangedEmployeeRequest ChangedEmployeeRequest) {
+        adjSubjectService.updateEmployeeUse(ChangedEmployeeRequest);
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Successfully changed");
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }
