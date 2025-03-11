@@ -1,11 +1,17 @@
 package com.bongsco.poscosalarybackend.adjust.controller;
 
+import java.util.Map;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.bongsco.poscosalarybackend.adjust.dto.request.AdjInfoUpdateRequest;
 import com.bongsco.poscosalarybackend.adjust.dto.response.AdjustResponse;
 import com.bongsco.poscosalarybackend.adjust.service.AdjustService;
 
@@ -24,10 +30,11 @@ public class AdjustController {
 
     @Operation(summary = "조정 정보 조회", description = "startYear와 endYear를 통해 조정 정보를 조회합니다.")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "요청 성공, 'test' 문자열 반환"),
+        @ApiResponse(responseCode = "200", description = "Successfully brought information"),
         @ApiResponse(responseCode = "400", description = "잘못된 요청"),
         @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
         @ApiResponse(responseCode = "403", description = "권한 없음"),
+        @ApiResponse(responseCode = "404", description = "해당 유저 정보를 찾을 수 없습니다"),
         @ApiResponse(responseCode = "500", description = "서버 내부 오류")
     })
     @GetMapping
@@ -38,5 +45,25 @@ public class AdjustController {
         AdjustResponse response = adjustService.getAdjustInfo(startYear, endYear);
 
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "조정 정보 수정", description = "조정 정보를 수정합니다.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Successfully changed"),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청"),
+        @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
+        @ApiResponse(responseCode = "403", description = "권한 없음"),
+        @ApiResponse(responseCode = "404", description = "해당 유저 정보를 찾을 수 없습니다"),
+        @ApiResponse(responseCode = "500", description = "서버 내부 오류")
+    })
+
+    @PatchMapping
+    public ResponseEntity<Map<String, String>> updateAdjustInfo(
+        @RequestBody AdjInfoUpdateRequest updateRequest) {
+
+        adjustService.updateAdjustInfo(updateRequest);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(Map.of("message", "Successfully changed"));
     }
 }
