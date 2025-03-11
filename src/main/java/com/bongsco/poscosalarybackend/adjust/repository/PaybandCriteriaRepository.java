@@ -1,0 +1,13 @@
+package com.bongsco.poscosalarybackend.adjust.repository;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import com.bongsco.poscosalarybackend.adjust.domain.PaybandCriteria;
+
+@Repository
+public interface PaybandCriteriaRepository extends JpaRepository<PaybandCriteria, Long> {
+    public List<PaybandCriteria> findByAdjInfo_Id(Long id);
+}
