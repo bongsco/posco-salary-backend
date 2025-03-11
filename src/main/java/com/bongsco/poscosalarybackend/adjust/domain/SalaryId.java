@@ -6,16 +6,17 @@ import java.util.Objects;
 import jakarta.persistence.Embeddable;
 
 @Embeddable
-public class StationAdjInfoId implements Serializable {
-    private Long stationId;
-    private Long adjInfoId;
+public class SalaryId implements Serializable {
 
-    public StationAdjInfoId() {
+    private Long adjInfoId;
+    private Long employeeId;
+
+    public SalaryId() {
     }
 
-    public StationAdjInfoId(Long stationId, Long adjInfoId) {
-        this.stationId = stationId;
+    public SalaryId(Long adjInfoId, Long employeeId) {
         this.adjInfoId = adjInfoId;
+        this.employeeId = employeeId;
     }
 
     @Override
@@ -24,13 +25,14 @@ public class StationAdjInfoId implements Serializable {
             return true;
         if (o == null || getClass() != o.getClass())
             return false;
-        StationAdjInfoId that = (StationAdjInfoId)o;
-        return Objects.equals(stationId, that.stationId) &&
-            Objects.equals(adjInfoId, that.adjInfoId);
+        SalaryId salaryId = (SalaryId)o;
+        return Objects.equals(adjInfoId, salaryId.adjInfoId) &&
+            Objects.equals(employeeId, salaryId.employeeId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(stationId, adjInfoId);
+        return Objects.hash(adjInfoId, employeeId);
     }
 }
+

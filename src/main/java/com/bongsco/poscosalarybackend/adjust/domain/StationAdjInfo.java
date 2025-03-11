@@ -25,12 +25,13 @@ public class StationAdjInfo extends BaseEntity {
     private StationAdjInfoId id;
 
     @ManyToOne
-    @MapsId("station")
+    @MapsId("stationId")
     @JoinColumn(name = "station_id", nullable = false)
     private Station station;
 
     @ManyToOne
-    @MapsId("adjInfo")
+    @MapsId("adjInfoId")
     @JoinColumn(name = "adj_info_id", nullable = false)
     private AdjInfo adjInfo;
 }
+
