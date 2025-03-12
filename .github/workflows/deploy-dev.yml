@@ -11,9 +11,9 @@ on:
 env:
   AWS_REGION: ap-northeast-2
   ECR_REPOSITORY: bongsco/salary-management-backend
-  ECS_SERVICE: bonsco-springboot
+  ECS_SERVICE: bongsco-springboot-new-service
   ECS_CLUSTER: bongsco-salary-management-ecs-cluster
-  CONTAINER_NAME: bongsco-springboot
+  CONTAINER_NAME: bongsco-springboot-container
 
 jobs:
 
