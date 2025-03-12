@@ -10,12 +10,20 @@ phases:
       - ./gradlew --version
       - echo "설치 완료"
 
+  pre_build:
+    commands:
+      - echo "pre_build 시작"
+      - mkdir -p src/main/resources
+      - rm -f src/main/resources/application-dev.yml
+      - echo $BONGSCO_DEV_APP_YML | base64 --decode > src/main/resources/application-dev.yml
+      - echo "pre_build 종료"
+
   build:
     commands:
       - echo "빌드 시작"
       - ./gradlew clean build
       - echo "빌드 완료"
-      
+
   post_build:
     commands:
       - echo "빌드 후 작업 진행해라."
