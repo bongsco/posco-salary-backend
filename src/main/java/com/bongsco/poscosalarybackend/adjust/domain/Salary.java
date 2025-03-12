@@ -10,7 +10,6 @@ import com.bongsco.poscosalarybackend.user.domain.Employee;
 import com.bongsco.poscosalarybackend.user.domain.Grade;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -19,20 +18,24 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "salary")
 @Getter
-@Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SQLDelete(sql = "UPDATE salary SET deleted = 1 WHERE adj_info_id = ? AND employee_id = ?")
 public class Salary extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
 
     @ManyToOne
     @MapsId("adjInfoId")

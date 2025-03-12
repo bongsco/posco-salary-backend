@@ -16,13 +16,18 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "rank_increment_rate")
 @Getter
-@Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SQLDelete(sql = "UPDATE rank_increment_rate SET deleted = true WHERE rank_id = ? AND adj_info_id = ? AND grade_id = ?ß")
 public class RankIncrementRate extends BaseEntity {
     @Id
@@ -36,7 +41,7 @@ public class RankIncrementRate extends BaseEntity {
     @ManyToOne
     @JoinColumn(name = "adj_info_id", nullable = false)
     private AdjInfo adjInfo;
-    
+
     @ManyToOne
     @JoinColumn(name = "grade_id", nullable = false)
     private Grade grade;

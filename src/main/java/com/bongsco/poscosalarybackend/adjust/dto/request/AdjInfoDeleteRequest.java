@@ -2,9 +2,16 @@ package com.bongsco.poscosalarybackend.adjust.dto.request;
 
 import java.util.List;
 
-import lombok.Data;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Getter
 public class AdjInfoDeleteRequest {
     private List<Long> deleted_ids;
 }

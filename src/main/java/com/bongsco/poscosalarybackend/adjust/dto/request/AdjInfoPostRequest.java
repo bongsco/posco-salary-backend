@@ -4,13 +4,16 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Getter
-@NoArgsConstructor
+@Builder
 @AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Getter
 public class AdjInfoPostRequest {
     private final List<AdjInfoDto> added_adj_infos;
 

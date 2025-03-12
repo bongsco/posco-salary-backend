@@ -4,9 +4,17 @@ import java.util.List;
 
 import com.bongsco.poscosalarybackend.adjust.domain.AdjInfo;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Getter
 public class AdjustResponse {
     private String message;
     private AdjInfoData data;

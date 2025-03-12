@@ -2,11 +2,17 @@ package com.bongsco.poscosalarybackend.adjust.dto.request;
 
 import java.util.List;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Data
-@NoArgsConstructor
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Getter
 public class AdjInfoUpdateRequest {
     private List<AdjInfoUpdateDto> changed_adj_infos;
 

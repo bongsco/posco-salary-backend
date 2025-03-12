@@ -12,13 +12,18 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "station_adj_info")
 @Getter
-@Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SQLDelete(sql = "UPDATE station_adj_info SET deleted = true WHERE station_id = ? AND adj_info_id = ?")
 public class StationAdjInfo extends BaseEntity {
     @Id
