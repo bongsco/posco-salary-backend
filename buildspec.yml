@@ -6,13 +6,16 @@ phases:
       java: corretto17 
     commands:
       - echo "설치 시작"
+      - chmod +x ./gradlew
       - ./gradlew --version
       - echo "설치 완료"
+
   build:
     commands:
       - echo "빌드 시작"
       - ./gradlew clean build
       - echo "빌드 완료"
+      
   post_build:
     commands:
       - echo "빌드 후 작업 진행해라."
