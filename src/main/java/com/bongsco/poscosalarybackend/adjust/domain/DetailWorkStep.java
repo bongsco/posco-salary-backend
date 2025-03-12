@@ -11,11 +11,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "detail_work_step")
-@Data
+@Getter
+@Setter
 @SQLDelete(sql = "UPDATE detail_work_step SET deleted = true WHERE id = ?")
 public class DetailWorkStep extends BaseEntity {
     @Id

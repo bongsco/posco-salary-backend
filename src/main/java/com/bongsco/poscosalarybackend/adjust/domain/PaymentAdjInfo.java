@@ -11,13 +11,16 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "payment_adj_info")
-@Data
-@SQLDelete(sql = "UPDATE payment_adj_info SET deleted = true WHERE payment_id = ? AND adj_info_id = ?ß")
+@Getter
+@Setter
+@SQLDelete(sql = "UPDATE payment_adj_info SET deleted = 1 WHERE payment_id = ? AND adj_info_id = ?")
 public class PaymentAdjInfo extends BaseEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

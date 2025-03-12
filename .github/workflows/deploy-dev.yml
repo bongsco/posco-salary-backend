@@ -11,10 +11,9 @@ on:
 env:
   AWS_REGION: ap-northeast-2
   ECR_REPOSITORY: bongsco/salary-management-backend
-  ECS_SERVICE: bonsco-springboot
+  ECS_SERVICE: bonsco-springboot-new-service
   ECS_CLUSTER: bongsco-salary-management-ecs-cluster
-  ECS_TASK_DEFINITION: ${{secrets.BONGSCO_TASK_JSON}}
-  CONTAINER_NAME: bongsco-springboot
+  CONTAINER_NAME: bongsco-springboot-container
 
 jobs:
 
@@ -27,10 +26,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Set up JDK 11
+      - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
-          java-version: '11'
+          java-version: '21'
           distribution: 'adopt'
 
       - name: Grant execute permission for gradlew
@@ -40,7 +39,7 @@ jobs:
         env:
           CREATE_SECRET: ${{secrets.BONGSCO_DEV_APP_YML}}
           CREATE_SECRET_DIR: src/main/resources
-          CREATE_SECRET_DIR_FILE_NAME: application.yml
+          CREATE_SECRET_DIR_FILE_NAME: application-dev.yml
         run: echo $CREATE_SECRET | base64 --decode > $CREATE_SECRET_DIR/$CREATE_SECRET_DIR_FILE_NAME
 
       - name: Build with Gradle
@@ -63,18 +62,23 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          # Build a docker container and
-          # push it to ECR so that it can
-          # be deployed to ECS.
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Decode and save ECS task definition JSON
+        env:
+          ECS_TASK_DEFINITION: ${{ secrets.BONGSCO_TASK_JSON }}
+        run: |
+          echo "$ECS_TASK_DEFINITION" | base64 --decode > ecs-task-definition.json
+          cat ecs-task-definition.json 
+
 
       - name: Fill in the new image ID in the Amazon ECS task definition
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: ${{ env.ECS_TASK_DEFINITION }}
+          task-definition: ecs-task-definition.json
           container-name: ${{ env.CONTAINER_NAME }}
           image: ${{ steps.build-image.outputs.image }}
 

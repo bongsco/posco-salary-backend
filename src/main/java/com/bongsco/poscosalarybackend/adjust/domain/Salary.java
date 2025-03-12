@@ -10,29 +10,37 @@ import com.bongsco.poscosalarybackend.user.domain.Employee;
 import com.bongsco.poscosalarybackend.user.domain.Grade;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "salary")
-@Data
-@SQLDelete(sql = "UPDATE salary SET deleted = true WHERE adj_info_id = ? AND employee_id = ?")
+@Getter
+@Setter
+@SQLDelete(sql = "UPDATE salary SET deleted = 1 WHERE adj_info_id = ? AND employee_id = ?")
 public class Salary extends BaseEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+
     @ManyToOne
+    @MapsId("adjInfoId")
     @JoinColumn(name = "adj_info_id", nullable = false)
     private AdjInfo adjInfo;
 
     @ManyToOne
+    @MapsId("employeeId")
     @JoinColumn(name = "employee_id", nullable = false)
     private Employee employee;
 
@@ -52,4 +60,3 @@ public class Salary extends BaseEntity {
     @JoinColumn(name = "grade_id", nullable = false)
     private Grade grade;
 }
-
