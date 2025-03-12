@@ -41,25 +41,19 @@ public class AdjustService {
         adjustResponse.setData(adjInfoData);
 
         return adjustResponse;
-        // return AdjustResponse.builder()
-        //     .message("Successfully brought information")
-        //     .data(AdjInfoData.builder()
-        //         .adj_info(adjInfoList)
-        //         .build())
-        //     .build();
     }
 
     @Transactional
-    public void updateAdjustInfo(AdjInfoUpdateRequest request) {
-        for (AdjInfoUpdateRequest.AdjInfoUpdateDto dto : request.getChanged_adj_infos()) {
-            AdjInfo adjInfo = adjustRepository.findById(dto.getId())
-                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+    public void updateAdjustInfo(Long id, AdjInfoUpdateRequest request) {
+        AdjInfo adjInfo = adjustRepository.findById(id)
+            .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
-            adjInfo.setYear(dto.getYear());
-            adjInfo.setMonth(dto.getMonth());
-            adjInfo.setAdjType(AdjType.valueOf(dto.getAdj_type()));
-            adjInfo.setRemarks(dto.getRemarks());
-        }
+        AdjInfoUpdateRequest.AdjInfoUpdateDto dto = request.getChanged_adj_infos().get(0);
+
+        adjInfo.setYear(dto.getYear());
+        adjInfo.setMonth(dto.getMonth());
+        adjInfo.setAdjType(AdjType.valueOf(dto.getAdj_type()));
+        adjInfo.setRemarks(dto.getRemarks());
     }
 
     @Transactional
@@ -78,7 +72,7 @@ public class AdjustService {
 
             adjInfo.setYear(dto.getYear());
             adjInfo.setMonth(dto.getMonth());
-            adjInfo.setAdjType(AdjType.valueOf(dto.getAdj_type()));
+            adjInfo.setAdjType(AdjType.valueOf(dto.getAdjType()));
             adjInfo.setRemarks(dto.getRemarks());
             adjInfo.setCreationTimestamp(dto.getCreationTimestamp());
             adjInfo.setCreator(dto.getCreator());

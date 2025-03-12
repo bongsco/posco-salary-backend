@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,14 +44,14 @@ public class AdjustController {
     }
 
     @Operation(summary = "조정 정보 수정", description = "조정 정보를 수정합니다.")
-    @PatchMapping
+    @PatchMapping("/{id}")
     public ResponseEntity<Map<String, String>> updateAdjustInfo(
+        @PathVariable Long id,
         @RequestBody AdjInfoUpdateRequest updateRequest) {
 
-        adjustService.updateAdjustInfo(updateRequest);
+        adjustService.updateAdjustInfo(id, updateRequest);
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-            .body(Map.of("message", "Successfully changed"));
+        return ResponseEntity.ok(Map.of("message", "Successfully changed"));
     }
 
     @Operation(summary = "조정 정보 삭제", description = "조정 정보를 삭제합니다.")
