@@ -1,7 +1,5 @@
 package com.bongsco.poscosalarybackend.adjust.controller;
 
-import java.util.List;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,10 +29,10 @@ public class MainAdjController {
 
     @Operation(summary = "payband 기준", description = "직급별 payband 기준 표 반환")
     @GetMapping("/{adj_info_id}/payband/criteria")
-    public ResponseEntity<JsonResult<List<MainAdjPaybandCriteriaResponse>>> getPaybandCriteria(
+    public ResponseEntity<JsonResult<MainAdjPaybandCriteriaResponse>> getPaybandCriteria(
         @PathVariable("adj_info_id") Long adjInfoId
     ) {
-        List<MainAdjPaybandCriteriaResponse> mainAdjPaybandCriteriaResponse = paybandCriteriaService.findAllPaybandCriteria(
+        MainAdjPaybandCriteriaResponse mainAdjPaybandCriteriaResponse = paybandCriteriaService.findAllPaybandCriteria(
             adjInfoId);
         return ResponseEntity.status(HttpStatus.OK)
             .body(JsonResult.success(mainAdjPaybandCriteriaResponse));

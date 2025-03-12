@@ -13,15 +13,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public class CompensationEmployeeResponse {
-    private final Long adjSubjectId;
-    private final String empNum;
-    private final String name;
-    private final String depName;
-    private final String gradeName;
-    private final String rankName;
-    private final Boolean inHighPerformGroup;
-    private final BigDecimal evalAnnualSalaryIncrement;
-    private final BigDecimal evalPerformProvideRate;
+    private Long adjSubjectId;
+    private String empNum;
+    private String name;
+    private String depName;
+    private String gradeName;
+    private String rankName;
+    private Boolean inHighPerformGroup;
+    private BigDecimal evalAnnualSalaryIncrement;
+    private BigDecimal evalPerformProvideRate;
     private BigDecimal evalDiffIncrement;
     private BigDecimal evalDiffBonus;
 
