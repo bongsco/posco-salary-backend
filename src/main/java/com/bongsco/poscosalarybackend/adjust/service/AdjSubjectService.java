@@ -162,7 +162,9 @@ public class AdjSubjectService {
             .filter(adjSubjectSalaryDto -> {
                 BigDecimal upperLimitPrice = paybandCriteriaRepository.findByAdjInfo_IdAndGrade_Id(adj_info_id,
                     adjSubjectSalaryDto.getGradeId()).getUpperLimitPrice();
-                adjSubjectSalaryDto.setLimitPrice(upperLimitPrice);
+                AdjSubjectSalaryDto newAdjSubjectSalaryDto = adjSubjectSalaryDto.toBuilder()
+                    .limitPrice(upperLimitPrice)
+                    .build();
                 return adjSubjectSalaryDto.getStdSalary().compareTo(upperLimitPrice) > 0;
             })
             .map(MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse::from)
@@ -180,7 +182,9 @@ public class AdjSubjectService {
             .filter(adjSubjectSalaryDto -> {
                 BigDecimal lowerLimitPrice = paybandCriteriaRepository.findByAdjInfo_IdAndGrade_Id(adj_info_id,
                     adjSubjectSalaryDto.getGradeId()).getLowerLimitPrice();
-                adjSubjectSalaryDto.setLimitPrice(lowerLimitPrice);
+                AdjSubjectSalaryDto newAdjSubjectSalaryDto = adjSubjectSalaryDto.toBuilder()
+                    .limitPrice(lowerLimitPrice)
+                    .build();
                 return adjSubjectSalaryDto.getStdSalary().compareTo(lowerLimitPrice) < 0;
             })
             .map(MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse::from)

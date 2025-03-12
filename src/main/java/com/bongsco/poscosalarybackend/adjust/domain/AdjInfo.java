@@ -25,7 +25,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "adj_info")
 @Getter
-@Builder
+@Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SQLDelete(sql = "UPDATE adj_info SET deleted = true WHERE id = ?")
@@ -59,12 +59,13 @@ public class AdjInfo extends BaseEntity {
     @Column(length = 50, nullable = false)
     private String creator;
 
+    @Column
     private Integer orderNumber;
 
-    @Column(precision = 5, scale = 2, nullable = false)
+    @Column(precision = 5, scale = 2)
     private BigDecimal evalAnnualSalaryIncrement;
 
-    @Column(precision = 5, scale = 2, nullable = false)
+    @Column(precision = 5, scale = 2)
     private BigDecimal evalPerformProvideRate;
 
     @Column

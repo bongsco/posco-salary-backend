@@ -46,7 +46,7 @@ public class AdjustController {
     @Operation(summary = "조정 정보 수정", description = "조정 정보를 수정합니다.")
     @PatchMapping("/{id}")
     public ResponseEntity<Map<String, String>> updateAdjustInfo(
-        @PathVariable Long id,
+        @Valid @PathVariable Long id,
         @RequestBody AdjInfoUpdateRequest updateRequest) {
 
         adjustService.updateAdjustInfo(id, updateRequest);

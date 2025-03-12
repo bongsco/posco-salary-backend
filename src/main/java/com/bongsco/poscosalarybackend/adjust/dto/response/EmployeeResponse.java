@@ -20,7 +20,7 @@ public class EmployeeResponse {
     private LocalDate hireDate;
     private String rankName;
     private boolean subjectUse;
-    
+
     public static EmployeeResponse from(AdjSubject adjSubject) {
 
         return new EmployeeResponse(adjSubject.getEmployee().getId(), adjSubject.getEmployee().getEmpNum(),
