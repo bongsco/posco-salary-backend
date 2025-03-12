@@ -26,7 +26,7 @@ public class PaybandCriteriaService {
     private final EmployeeRepository employeeRepository;
     private final SalaryRepository salaryRepository;
 
-    public List<MainAdjPaybandCriteriaResponse> findAllPaybandCriteria(Long adjInfoId) {
+    public MainAdjPaybandCriteriaResponse findAllPaybandCriteria(Long adjInfoId) {
         List<PaybandCriteria> paybandCriterias = paybandCriteriaRepository.findByAdjInfo_Id(adjInfoId);
         List<Employee> employees = employeeRepository.findAll();
         employees = employees.stream().filter(employee -> employee.getGrade() != null).toList();
@@ -49,15 +49,15 @@ public class PaybandCriteriaService {
                 )
             ));
 
-        return paybandCriterias
+        return new MainAdjPaybandCriteriaResponse(paybandCriterias
             .stream()
             .map(pc -> {
                 Integer count = countEmpl.getOrDefault(pc.getGrade().getId(), 0); // null이면 0 반환
                 BigDecimal representative = representativeVal.getOrDefault(pc.getGrade().getId(),
                     BigDecimal.valueOf(0)); // null이면 0 반환
-                return MainAdjPaybandCriteriaResponse.from(pc, count, representative);
+                return MainAdjPaybandCriteriaResponse.PaybandCriteriaResponse.from(pc, count, representative);
             })
-            .toList();
+            .toList());
     }
 
     private BigDecimal calculateMedian(List<Salary> salaries) {
