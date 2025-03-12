@@ -10,4 +10,6 @@ import com.bongsco.poscosalarybackend.adjust.domain.PaybandCriteria;
 @Repository
 public interface PaybandCriteriaRepository extends JpaRepository<PaybandCriteria, Long> {
     public List<PaybandCriteria> findByAdjInfo_Id(Long id);
+
+    public PaybandCriteria findByAdjInfo_IdAndGrade_Id(Long id, Long gradeId);
 }

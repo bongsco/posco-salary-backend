@@ -2,6 +2,7 @@ package com.bongsco.poscosalarybackend.adjust.service;
 
 import static com.bongsco.poscosalarybackend.global.exception.ErrorCode.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -10,11 +11,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.bongsco.poscosalarybackend.adjust.domain.AdjSubject;
 import com.bongsco.poscosalarybackend.adjust.domain.RankIncrementRate;
+import com.bongsco.poscosalarybackend.adjust.dto.AdjSubjectSalaryDto;
+import com.bongsco.poscosalarybackend.adjust.dto.request.ChangedEmployeeRequest;
 import com.bongsco.poscosalarybackend.adjust.dto.request.ChangedHighPerformGroupEmployeeRequest;
 import com.bongsco.poscosalarybackend.adjust.dto.request.ChangedSubjectUseEmployeeRequest;
 import com.bongsco.poscosalarybackend.adjust.dto.response.CompensationEmployeeResponse;
 import com.bongsco.poscosalarybackend.adjust.dto.response.EmployeeResponse;
+import com.bongsco.poscosalarybackend.adjust.dto.response.MainAdjPaybandBothSubjectsResponse;
+import com.bongsco.poscosalarybackend.adjust.dto.response.MainAdjPaybandSubjectsResponse;
 import com.bongsco.poscosalarybackend.adjust.repository.AdjSubjectRepository;
+import com.bongsco.poscosalarybackend.adjust.repository.PaybandCriteriaRepository;
 import com.bongsco.poscosalarybackend.adjust.repository.RankIncrementRateRepository;
 import com.bongsco.poscosalarybackend.global.exception.CustomException;
 
@@ -25,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 public class AdjSubjectService {
     private final AdjSubjectRepository adjSubjectRepository;
     private final RankIncrementRateRepository rankIncrementRateRepository;
+    private final PaybandCriteriaRepository paybandCriteriaRepository;
 
     public List<EmployeeResponse> findAll(long adjInfoId) {
         // 연봉조정차수를 이용해 정기연봉조정대상자 테이블 가져오기
@@ -117,5 +124,63 @@ public class AdjSubjectService {
                 adjSubject.setInHighPerformGroup(changedHighPerformGroupEmployee.getInHighPerformGroup());
                 adjSubjectRepository.save(adjSubject);
             });
+    }
+
+    public List<EmployeeResponse> findOne(long adjInfoId, String searchKey) {
+        // 연봉조정차수&검색정보를 이용해 정기연봉조정대상자 테이블 가져오기
+        List<AdjSubject> subjects = adjSubjectRepository.findByAdjInfoIdAndEmployeeName(adjInfoId, searchKey);
+
+        return subjects.stream().map(EmployeeResponse::from).toList();
+    }
+
+    @Transactional
+    public void updateEmployeeSubjectUse(long adjInfoId, ChangedEmployeeRequest changedEmployeeRequest) {
+        changedEmployeeRequest.getChangedEmployee().forEach(changedEmployee -> {
+            AdjSubject adjSubject = adjSubjectRepository.findByAdjInfoIdAndEmployeeId(adjInfoId,
+                    changedEmployee.getEmployeeId())
+                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+            adjSubject.setSubjectUse(changedEmployee.getSubjectUse());
+            adjSubjectRepository.save(adjSubject);
+        });
+    }
+
+    public MainAdjPaybandBothSubjectsResponse getBothUpperLowerSubjects(Long adj_info_id) { //상한, 하한 초과자 가져오기
+        return new MainAdjPaybandBothSubjectsResponse(getUpperSubjects(adj_info_id), getLowerSubjects(adj_info_id));
+    }
+
+    public List<MainAdjPaybandSubjectsResponse> getUpperSubjects(Long adj_info_id) { //상한초과자 가져오기
+        List<AdjSubjectSalaryDto> adjSubjectSalaryDtos = adjSubjectRepository.findAllAdjSubjectAndStdSalary(
+            adj_info_id);
+
+        return adjSubjectSalaryDtos.stream()
+            .filter(adjSubjectSalaryDto -> {
+                BigDecimal upperLimitPrice = paybandCriteriaRepository.findByAdjInfo_IdAndGrade_Id(adj_info_id,
+                    adjSubjectSalaryDto.getGradeId()).getUpperLimitPrice();
+                adjSubjectSalaryDto.setLimitPrice(upperLimitPrice);
+                return adjSubjectSalaryDto.getStdSalary().compareTo(upperLimitPrice) > 0;
+            })
+            .map(MainAdjPaybandSubjectsResponse::from)
+            .toList();
+
+        //pc에서의 직급 id가 dto와 똑같은걸찾고, 그 pc의 상한값과 비교
+    }
+
+    public List<MainAdjPaybandSubjectsResponse> getLowerSubjects(Long adj_info_id) { //하한초과자 가져오기
+        List<AdjSubjectSalaryDto> adjSubjectSalaryDtos = adjSubjectRepository.findAllAdjSubjectAndStdSalary(
+            adj_info_id);
+
+        return adjSubjectSalaryDtos.stream()
+            .filter(adjSubjectSalaryDto -> {
+                BigDecimal lowerLimitPrice = paybandCriteriaRepository.findByAdjInfo_IdAndGrade_Id(adj_info_id,
+                    adjSubjectSalaryDto.getGradeId()).getLowerLimitPrice();
+                adjSubjectSalaryDto.setLimitPrice(lowerLimitPrice);
+                return adjSubjectSalaryDto.getStdSalary().compareTo(lowerLimitPrice) < 0;
+            })
+            .map(MainAdjPaybandSubjectsResponse::from)
+            .toList();
+    }
+
+    public Boolean modifyAdjustSubject(Long adjSubjectId, Boolean paybandUse) {
+        return adjSubjectRepository.updateAdjSubjectPaybandUse(adjSubjectId, paybandUse) > 0;
     }
 }

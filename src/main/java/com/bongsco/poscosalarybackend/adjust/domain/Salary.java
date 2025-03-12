@@ -7,9 +7,12 @@ import org.hibernate.annotations.SQLDelete;
 
 import com.bongsco.poscosalarybackend.global.domain.BaseEntity;
 import com.bongsco.poscosalarybackend.user.domain.Employee;
+import com.bongsco.poscosalarybackend.user.domain.Grade;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -22,11 +25,13 @@ import lombok.Data;
 @SQLDelete(sql = "UPDATE salary SET deleted = true WHERE adj_info_id = ? AND employee_id = ?")
 public class Salary extends BaseEntity {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     @ManyToOne
     @JoinColumn(name = "adj_info_id", nullable = false)
     private AdjInfo adjInfo;
 
-    @Id
     @ManyToOne
     @JoinColumn(name = "employee_id", nullable = false)
     private Employee employee;
@@ -42,5 +47,9 @@ public class Salary extends BaseEntity {
 
     @Column(nullable = false)
     private LocalDate endDate;
+
+    @ManyToOne
+    @JoinColumn(name = "grade_id", nullable = false)
+    private Grade grade;
 }
 
