@@ -77,9 +77,7 @@ public class AdjSubjectService {
             adjSubject.getEmployee().getRank().getRankCode(),
             adjSubject.getInHighPerformGroup(),
             adjSubject.getAdjInfo().getEvalAnnualSalaryIncrement(),
-            adjSubject.getAdjInfo().getEvalPerformProvideRate(),
-            null,
-            null
+            adjSubject.getAdjInfo().getEvalPerformProvideRate()
         );
 
         RankIncrementRate rankIncrementRate = rankIncrementRateRepository.findByRankIdAndAdjInfoIdAndGradeId(

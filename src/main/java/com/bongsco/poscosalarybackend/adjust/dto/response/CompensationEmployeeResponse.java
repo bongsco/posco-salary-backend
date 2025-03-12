@@ -6,22 +6,21 @@ import lombok.Getter;
 
 @Getter
 public class CompensationEmployeeResponse {
-    private Long adjSubjectId;
-    private String empNum;
-    private String name;
-    private String depName;
-    private String gradeName;
-    private String rankName;
-    private Boolean inHighPerformGroup;
-    private BigDecimal evalAnnualSalaryIncrement;
-    private BigDecimal evalPerformProvideRate;
+    private final Long adjSubjectId;
+    private final String empNum;
+    private final String name;
+    private final String depName;
+    private final String gradeName;
+    private final String rankName;
+    private final Boolean inHighPerformGroup;
+    private final BigDecimal evalAnnualSalaryIncrement;
+    private final BigDecimal evalPerformProvideRate;
     private BigDecimal evalDiffIncrement;
     private BigDecimal evalDiffBonus;
 
     public CompensationEmployeeResponse(Long adjSubjectId, String empNum, String name, String depName, String gradeName,
         String rankName, Boolean inHighPerformGroup, BigDecimal evalAnnualSalaryIncrement,
-        BigDecimal evalPerformProvideRate,
-        BigDecimal evalDiffIncrement, BigDecimal evalDiffBonus) {
+        BigDecimal evalPerformProvideRate) {
         this.adjSubjectId = adjSubjectId;
         this.empNum = empNum;
         this.name = name;
@@ -31,8 +30,6 @@ public class CompensationEmployeeResponse {
         this.inHighPerformGroup = inHighPerformGroup;
         this.evalAnnualSalaryIncrement = evalAnnualSalaryIncrement;
         this.evalPerformProvideRate = evalPerformProvideRate;
-        this.evalDiffIncrement = evalDiffIncrement;
-        this.evalDiffBonus = evalDiffBonus;
     }
 
     public void setEvalDiffIncrement(BigDecimal evalDiffIncrement) {
