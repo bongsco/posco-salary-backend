@@ -9,13 +9,13 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ChangedEmployeeRequest {
-    private List<ChangedEmployee> changedEmployee;
+public class ChangedSubjectUseEmployeeRequest {
+    private List<ChangedSubjectUseEmployee> changedSubjectUseEmployee;
 
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
-    public static class ChangedEmployee {
+    public static class ChangedSubjectUseEmployee {
         private Long employeeId;
         private Boolean subjectUse;
     }
