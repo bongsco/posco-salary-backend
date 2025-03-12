@@ -1,0 +1,35 @@
+package com.bongsco.poscosalarybackend.adjust.dto.response;
+
+import java.math.BigDecimal;
+
+import com.bongsco.poscosalarybackend.adjust.domain.PaybandCriteria;
+
+import lombok.Getter;
+
+@Getter
+public class MainAdjPaybandCriteriaResponse {
+    private final String gradeName;
+    private final int numberOfEmpl;
+    private final BigDecimal representativeVal;
+    private final BigDecimal upperLimitPrice;
+    private final BigDecimal lowerLimitPrice;
+    private final BigDecimal gradeBaseSalary;
+
+    public MainAdjPaybandCriteriaResponse(String gradeName, int numberOfEmpl, BigDecimal representativeVal,
+        BigDecimal upperLimitPrice, BigDecimal lowerLimitPrice, BigDecimal gradeBaseSalary) {
+        this.gradeName = gradeName;
+        this.numberOfEmpl = numberOfEmpl;
+        this.representativeVal = representativeVal;
+        this.upperLimitPrice = upperLimitPrice;
+        this.lowerLimitPrice = lowerLimitPrice;
+        this.gradeBaseSalary = gradeBaseSalary;
+    }
+
+    public static MainAdjPaybandCriteriaResponse from(PaybandCriteria paybandCriteria, int numberOfEmpl,
+        BigDecimal representativeVal) {
+        return new MainAdjPaybandCriteriaResponse(paybandCriteria.getGrade().getGradeName(), numberOfEmpl,
+            representativeVal,
+            paybandCriteria.getUpperLimitPrice(), paybandCriteria.getLowerLimitPrice(),
+            paybandCriteria.getGrade().getGradeBaseSalary());
+    }
+}

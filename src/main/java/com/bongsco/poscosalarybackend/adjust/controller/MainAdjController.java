@@ -1,0 +1,67 @@
+package com.bongsco.poscosalarybackend.adjust.controller;
+
+import java.util.List;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.bongsco.poscosalarybackend.adjust.dto.request.ChangedSubjectListRequest;
+import com.bongsco.poscosalarybackend.adjust.dto.response.MainAdjPaybandBothSubjectsResponse;
+import com.bongsco.poscosalarybackend.adjust.dto.response.MainAdjPaybandCriteriaResponse;
+import com.bongsco.poscosalarybackend.adjust.service.AdjSubjectService;
+import com.bongsco.poscosalarybackend.adjust.service.PaybandCriteriaService;
+import com.bongsco.poscosalarybackend.global.dto.JsonResult;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+@Tag(name = "MainAdjAPI", description = "Department 관련 API 모음")
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/v1/main-adj")
+public class MainAdjController {
+    private final PaybandCriteriaService paybandCriteriaService;
+    private final AdjSubjectService adjSubjectService;
+
+    @Operation(summary = "payband 기준", description = "직급별 payband 기준 표 반환")
+    @GetMapping("/{adj_info_id}/payband/criteria")
+    public ResponseEntity<JsonResult<List<MainAdjPaybandCriteriaResponse>>> getPaybandCriteria(
+        @PathVariable("adj_info_id") Long adjInfoId
+    ) {
+        List<MainAdjPaybandCriteriaResponse> mainAdjPaybandCriteriaResponse = paybandCriteriaService.findAllPaybandCriteria(
+            adjInfoId);
+        return ResponseEntity.status(HttpStatus.OK)
+            .body(JsonResult.success(mainAdjPaybandCriteriaResponse));
+    }
+
+    @Operation(summary = "payband 대상자", description = "payband 대상자 반환")
+    @GetMapping("/{adj_info_id}/payband/subjects")
+    public ResponseEntity<JsonResult<MainAdjPaybandBothSubjectsResponse>> getPaybandSubjects(
+        @PathVariable("adj_info_id") Long adjInfoId
+    ) {
+        return ResponseEntity.status(HttpStatus.OK)
+            .body(JsonResult.success(adjSubjectService.getBothUpperLowerSubjects(adjInfoId)));
+    }
+
+    @Operation(summary = "payband 여부 수정", description = "payband 여부 수정")
+    @PatchMapping("/{adj_info_id}/payband/subjects")
+    public ResponseEntity<JsonResult<String>> modifyPaybandSubjects(
+        @PathVariable("adj_info_id") Long adjInfoId, @RequestBody ChangedSubjectListRequest changedSubjectListRequest
+    ) {
+        changedSubjectListRequest
+            .getChangedSubject()
+            .stream()
+            .forEach(subject -> {
+                adjSubjectService.modifyAdjustSubject(subject.getAdjSubjectId(), subject.getPaybandUse());
+            });
+        //에러 핸들
+        return ResponseEntity.status(HttpStatus.OK)
+            .body(JsonResult.success("Successfully changed"));
+    }
+}
