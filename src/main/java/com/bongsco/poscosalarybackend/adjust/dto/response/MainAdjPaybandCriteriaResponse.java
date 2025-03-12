@@ -28,7 +28,7 @@ public class MainAdjPaybandCriteriaResponse {
     public static MainAdjPaybandCriteriaResponse from(PaybandCriteria paybandCriteria, int numberOfEmpl,
         BigDecimal representativeVal) {
         return new MainAdjPaybandCriteriaResponse(paybandCriteria.getGrade().getGradeName(), numberOfEmpl,
-            BigDecimal.valueOf(0),
+            representativeVal,
             paybandCriteria.getUpperLimitPrice(), paybandCriteria.getLowerLimitPrice(),
             paybandCriteria.getGrade().getGradeBaseSalary());
     }
