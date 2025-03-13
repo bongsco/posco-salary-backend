@@ -48,6 +48,7 @@ public class PaybandCriteriaService {
             throw new CustomException(CANNOT_NULL_INPUT);
         }
 
+
         List<Salary> salaries = salaryRepository.findByAdjInfo_Id(beforeAdjInfoId);
 
         Map<Long, BigDecimal> representativeVal = salaries.stream() //gradeId:대표값

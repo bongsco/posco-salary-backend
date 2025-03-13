@@ -2,6 +2,7 @@ package com.bongsco.poscosalarybackend.adjust.dto;
 
 import java.math.BigDecimal;
 
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

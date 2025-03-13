@@ -67,7 +67,7 @@ public class MainAdjController {
             .forEach(subject -> {
                 adjSubjectService.modifyAdjustSubject(subject.getAdjSubjectId(), subject.getPaybandUse());
             });
-        
+
         return ResponseEntity.status(HttpStatus.OK)
             .body(JsonResult.success("Successfully changed"));
     }

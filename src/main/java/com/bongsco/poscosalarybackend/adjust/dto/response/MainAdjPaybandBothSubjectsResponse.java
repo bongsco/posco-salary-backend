@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import com.bongsco.poscosalarybackend.adjust.dto.AdjSubjectSalaryDto;
-
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -36,7 +35,8 @@ public class MainAdjPaybandBothSubjectsResponse {
         private Boolean paybandUse;
 
         public static MainAdjPaybandSubjectsResponse from(
-            AdjSubjectSalaryDto adjSubjectSalaryDto) {
+            AdjSubjectSalaryDto adjSubjectSalaryDto
+        ) {
             return new MainAdjPaybandSubjectsResponse(
                 adjSubjectSalaryDto.getAdjSubjectId(),
                 adjSubjectSalaryDto.getEmpNum(), adjSubjectSalaryDto.getName(), adjSubjectSalaryDto.getDepName(),
@@ -44,6 +44,7 @@ public class MainAdjPaybandBothSubjectsResponse {
                 adjSubjectSalaryDto.getRankName(), adjSubjectSalaryDto.getStdSalary(),
                 adjSubjectSalaryDto.getLimitPrice(),
                 adjSubjectSalaryDto.getPaybandUse());
+
         }
     }
 }

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.bongsco.poscosalarybackend.adjust.domain.AdjSubject;
+import com.bongsco.poscosalarybackend.adjust.domain.PaybandCriteria;
 import com.bongsco.poscosalarybackend.adjust.domain.RankIncrementRate;
 import com.bongsco.poscosalarybackend.adjust.dto.AdjSubjectSalaryDto;
 import com.bongsco.poscosalarybackend.adjust.dto.request.ChangedEmployeeRequest;
@@ -94,8 +95,9 @@ public class AdjSubjectService {
         RankIncrementRate rankIncrementRate = rankIncrementRateRepository.findByRankIdAndAdjInfoIdAndGradeId(
             adjSubject.getEmployee().getRank().getId(), //rank는 도메인 바꾸고 바꾸기, 당시 랭크가 저장 되어 있어야함
             adjSubject.getAdjInfo().getId(),
-            adjSubject.getEmployee().getGrade().getId() //rank는 도메인 바꾸고 바꾸기, 당시 직급이 저장 되어 있어야함 얘도,,,
-        );
+            adjSubject.getEmployee().getGrade().getId()
+        ).orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
+
 
         if (rankIncrementRate != null) {
             response.setEvalDiffIncrement(rankIncrementRate.getEvalDiffIncrement());
@@ -146,7 +148,7 @@ public class AdjSubjectService {
                     changedEmployee.getEmployeeId())
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
             AdjSubject saveAdjSubject = adjSubject.toBuilder().subjectUse(changedEmployee.getSubjectUse()).build();
-            adjSubjectRepository.save(adjSubject);
+            adjSubjectRepository.save(saveAdjSubject);
         });
     }
 
@@ -262,5 +264,6 @@ public class AdjSubjectService {
                 return MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse.from(dto);
             })
             .toList();
+
     }
 }
