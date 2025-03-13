@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.bongsco.poscosalarybackend.adjust.dto.AdjSubjectSalaryDto;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -12,7 +13,7 @@ import lombok.NoArgsConstructor;
 
 @Builder
 @AllArgsConstructor
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public class MainAdjPaybandBothSubjectsResponse {
     private List<MainAdjPaybandSubjectsResponse> upperAdjSubjects;
@@ -20,7 +21,7 @@ public class MainAdjPaybandBothSubjectsResponse {
 
     @Builder
     @AllArgsConstructor
-    @NoArgsConstructor
+    @NoArgsConstructor(access = AccessLevel.PROTECTED)
     @Getter
     public static class MainAdjPaybandSubjectsResponse {
         private Long adjSubjectId;

@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 import com.bongsco.poscosalarybackend.adjust.domain.AdjSubject;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -11,7 +12,7 @@ import lombok.NoArgsConstructor;
 
 @Builder
 @AllArgsConstructor
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public class EmployeeResponse {
     private Long employeeId;
