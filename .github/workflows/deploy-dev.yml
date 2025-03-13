@@ -23,53 +23,53 @@ jobs:
     environment: production
 
     steps:
-      - name: Monitor GitHub Commit Status
+      - name: Start CodeBuild Project
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: "ap-northeast-2"
         run: |
-          REPO="bongsco/posco-salary-backend"
-          SHA="${{ github.sha }}"
-          API_URL="https://api.github.com/repos/$REPO/commits/$SHA/status"
+          # AWS CLI를 사용하여 CodeBuild 프로젝트 시작하고 빌드 ID 가져오기
+          BUILD_ID=$(aws codebuild start-build \
+            --project-name bongsco-salary-management-dev-cb \
+            --region $AWS_REGION \
+            --query build.id \
+            --output text)
 
-          # Get the initial build status
-          CURRENT_STATUS=$(curl -s --url "$API_URL" \
-            --header "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" | jq -r '.state')
+          echo "CodeBuild project started. Build ID: $BUILD_ID"
 
-          echo "Current status is: $CURRENT_STATUS"
+          # 빌드 상태 확인
+          BUILD_STATUS="IN_PROGRESS"
+          TIMEOUT_SECONDS=3600 # 1시간 타임아웃 설정 (필요에 따라 조정)
+          START_TIME=$(date +%s)
 
-          # Start the timer
-          START_TIME=$SECONDS
-          MAX_WAIT_TIME=300  # 5 minutes in seconds
+          while [ "$BUILD_STATUS" == "IN_PROGRESS" ]; do
+            sleep 30
 
-          # Poll until the status is no longer pending or timeout after 5 minutes
-          while [ "${CURRENT_STATUS^^}" = "PENDING" ]; do
-            # Check if 5 minutes have passed
-            ELAPSED_TIME=$((SECONDS - START_TIME))
-            if [ $ELAPSED_TIME -ge $MAX_WAIT_TIME ]; then
-              echo "Timeout reached. The build is still pending after 5 minutes."
+            CURRENT_TIME=$(date +%s)
+            ELAPSED_TIME=$((CURRENT_TIME - START_TIME))
+
+            if [ "$ELAPSED_TIME" -gt "$TIMEOUT_SECONDS" ]; then
+              echo "CodeBuild build timed out."
               exit 1
             fi
 
-            sleep 20
-            CURRENT_STATUS=$(curl -s --url "$API_URL" \
-              --header "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" | jq -r '.state')
-            echo "Polling... Current status is: $CURRENT_STATUS"
+            BUILD_STATUS=$(aws codebuild batch-get-builds \
+              --ids "$BUILD_ID" \
+              --region $AWS_REGION \
+              --query builds[0].buildStatus \
+              --output text)
+            echo "Current build status: $BUILD_STATUS"
           done
 
-          echo "Final status is: $CURRENT_STATUS"
+          echo "CodeBuild build finished. Final status: $BUILD_STATUS"
 
-          # Exit if the build failed
-          if [ "${CURRENT_STATUS^^}" = "FAILURE" ]; then
-            echo "Commit status failed. Canceling execution."
+          if [ "$BUILD_STATUS" != "SUCCEEDED" ]; then
+            echo "CodeBuild build failed. Canceling execution."
             exit 1
           fi
-          echo "Final status is: $CURRENT_STATUS"
 
-          # Exit if the build failed
-          if [ "${CURRENT_STATUS^^}" = "FAILURE" ]; then
-            echo "Commit status failed. Canceling execution."
-            exit 1
-          fi
+          echo "CodeBuild build succeeded."
 
       - name: Checkout
         uses: actions/checkout@v3
