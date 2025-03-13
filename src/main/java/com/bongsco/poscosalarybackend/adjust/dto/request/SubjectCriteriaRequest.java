@@ -15,18 +15,18 @@ import lombok.NoArgsConstructor;
 @Getter
 public class SubjectCriteriaRequest {
 
-    @NotNull
+    @NotNull(message = "baseDate는 null 일 수 없습니다.")
     private LocalDate baseDate;
 
-    @NotNull
+    @NotNull(message = "exceptionStartDate는 null 일 수 없습니다.")
     private LocalDate exceptionStartDate;
 
-    @NotNull
+    @NotNull(message = "exceptionEndDate는 null 일 수 없습니다.")
     private LocalDate exceptionEndDate;
 
-    @NotNull
+    @NotNull(message = "gradeIds는 null 일 수 없습니다.")
     private List<Long> gradeIds;
 
-    @NotNull
+    @NotNull(message = "paymentCriteriaIds는 null 일 수 없습니다.")
     private List<Long> paymentCriteriaIds;
 }

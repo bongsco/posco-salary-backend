@@ -21,6 +21,7 @@ import com.bongsco.poscosalarybackend.global.dto.JsonResult;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @Tag(name = "Preprocess API", description = "Preprocess 관련 API 모음")
@@ -44,11 +45,11 @@ public class PreprocessController {
         return ResponseEntity.status(HttpStatus.OK).body(JsonResult.success(adjSubjectService.findAll(adjInfoId)));
     }
 
-    @Operation(summary = "대상자 편성 페이지 POST API", description = "대상자 편성 페이지에서 변하는 조정 정보를 업데이트")
+    @Operation(summary = "대상자 편성 페이지 PATCH API", description = "대상자 편성 페이지에서 변하는 조정 정보를 업데이트")
     @PatchMapping("/{adj_info_id}/employees")
     public ResponseEntity<JsonResult<String>> updateSubjectUseEmployee(
         @PathVariable("adj_info_id") Long adjInfoId,
-        @RequestBody ChangedSubjectUseEmployeeRequest ChangedSubjectUseEmployeeRequest
+        @Valid @RequestBody ChangedSubjectUseEmployeeRequest ChangedSubjectUseEmployeeRequest
     ) {
         adjSubjectService.updateSubjectUseEmployee(adjInfoId, ChangedSubjectUseEmployeeRequest);
 
@@ -70,11 +71,11 @@ public class PreprocessController {
             .body(JsonResult.success(adjSubjectService.findCompensationAll(adjInfoId)));
     }
 
-    @Operation(summary = "고성과조직 가산 여부 페이지 POST API", description = "고성과조직 가산 여부 업데이트")
+    @Operation(summary = "고성과조직 가산 여부 페이지 PATCH API", description = "고성과조직 가산 여부 업데이트")
     @PatchMapping("/{adj_info_id}/compensation")
     public ResponseEntity<JsonResult<String>> updateHighPerformGroupEmployees(
         @PathVariable("adj_info_id") Long adjInfoId,
-        @RequestBody ChangedHighPerformGroupEmployeeRequest changedHighPerformGroupEmployeeRequest
+        @Valid @RequestBody ChangedHighPerformGroupEmployeeRequest changedHighPerformGroupEmployeeRequest
     ) {
         adjSubjectService.updateHighPerformGroupEmployee(adjInfoId, changedHighPerformGroupEmployeeRequest);
 

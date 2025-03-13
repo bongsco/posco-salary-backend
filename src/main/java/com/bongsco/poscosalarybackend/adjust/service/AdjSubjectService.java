@@ -9,10 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.bongsco.poscosalarybackend.adjust.domain.AdjSubject;
-import com.bongsco.poscosalarybackend.adjust.domain.PaybandCriteria;
 import com.bongsco.poscosalarybackend.adjust.domain.RankIncrementRate;
 import com.bongsco.poscosalarybackend.adjust.dto.AdjSubjectSalaryDto;
-import com.bongsco.poscosalarybackend.adjust.dto.request.ChangedEmployeeRequest;
 import com.bongsco.poscosalarybackend.adjust.dto.request.ChangedHighPerformGroupEmployeeRequest;
 import com.bongsco.poscosalarybackend.adjust.dto.request.ChangedSubjectUseEmployeeRequest;
 import com.bongsco.poscosalarybackend.adjust.dto.response.CompensationEmployeeResponse;
@@ -98,7 +96,6 @@ public class AdjSubjectService {
             adjSubject.getEmployee().getGrade().getId()
         ).orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
 
-
         if (rankIncrementRate != null) {
             response.setEvalDiffIncrement(rankIncrementRate.getEvalDiffIncrement());
             response.setEvalDiffBonus(rankIncrementRate.getEvalDiffBonus());
@@ -139,17 +136,6 @@ public class AdjSubjectService {
         List<AdjSubject> subjects = adjSubjectRepository.findByAdjInfoIdAndEmployeeName(adjInfoId, searchKey);
 
         return subjects.stream().map(EmployeeResponse::from).toList();
-    }
-
-    @Transactional
-    public void updateEmployeeSubjectUse(Long adjInfoId, ChangedEmployeeRequest changedEmployeeRequest) {
-        changedEmployeeRequest.getChangedEmployee().forEach(changedEmployee -> {
-            AdjSubject adjSubject = adjSubjectRepository.findByAdjInfoIdAndEmployeeId(adjInfoId,
-                    changedEmployee.getEmployeeId())
-                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
-            AdjSubject saveAdjSubject = adjSubject.toBuilder().subjectUse(changedEmployee.getSubjectUse()).build();
-            adjSubjectRepository.save(saveAdjSubject);
-        });
     }
 
     public MainAdjPaybandBothSubjectsResponse getBothUpperLowerSubjects(Long adjInfoId) { //상한, 하한 초과자 가져오기
@@ -264,6 +250,5 @@ public class AdjSubjectService {
                 return MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse.from(dto);
             })
             .toList();
-
     }
 }

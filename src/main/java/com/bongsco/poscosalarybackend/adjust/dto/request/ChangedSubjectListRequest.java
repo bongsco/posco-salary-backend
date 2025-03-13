@@ -2,6 +2,7 @@ package com.bongsco.poscosalarybackend.adjust.dto.request;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,5 +13,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public class ChangedSubjectListRequest {
+    @Valid
     private List<ChangedSubjectRequest> changedSubject;
 }

@@ -49,8 +49,8 @@ public class AdjustController {
 
     public ResponseEntity<JsonResult<Map<String, String>>> updateAdjustInfo(
 
-        @Valid @PathVariable Long id,
-        @RequestBody AdjInfoUpdateRequest updateRequest) {
+        @PathVariable Long id,
+        @Valid @RequestBody AdjInfoUpdateRequest updateRequest) {
 
         adjustService.updateAdjustInfo(id, updateRequest);
 
@@ -72,7 +72,6 @@ public class AdjustController {
     @PostMapping
     public ResponseEntity<JsonResult<Map<String, String>>> postAdjustInfo(
         @Valid @RequestBody AdjInfoPostRequest postRequest) {
-
         adjustService.postAdjustInfo(postRequest);
 
         return ResponseEntity.status(HttpStatus.CREATED)

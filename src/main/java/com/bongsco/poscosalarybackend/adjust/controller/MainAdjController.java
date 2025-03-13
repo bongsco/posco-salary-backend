@@ -19,6 +19,7 @@ import com.bongsco.poscosalarybackend.global.dto.JsonResult;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 @Tag(name = "MainAdjAPI", description = "Department 관련 API 모음")
 @RestController
@@ -59,7 +60,8 @@ public class MainAdjController {
     @Operation(summary = "payband 여부 수정", description = "payband 여부 수정")
     @PatchMapping("/{adj_info_id}/payband/subjects")
     public ResponseEntity<JsonResult<String>> modifyPaybandSubjects(
-        @PathVariable("adj_info_id") Long adjInfoId, @RequestBody ChangedSubjectListRequest changedSubjectListRequest
+        @PathVariable("adj_info_id") Long adjInfoId,
+        @Valid @RequestBody ChangedSubjectListRequest changedSubjectListRequest
     ) {
         changedSubjectListRequest
             .getChangedSubject()

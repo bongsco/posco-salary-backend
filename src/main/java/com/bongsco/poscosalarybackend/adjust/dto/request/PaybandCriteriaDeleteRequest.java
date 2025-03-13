@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PaybandCriteriaDeleteRequest {
-    @NotEmpty
+    @NotEmpty(message = "요청된 삭제가 없습니다.")
     private List<Long> paybandIds;
 }
 
