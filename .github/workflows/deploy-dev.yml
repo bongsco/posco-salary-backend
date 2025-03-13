@@ -23,53 +23,16 @@ jobs:
     environment: production
 
     steps:
-      - name: Start CodeBuild Project
+      - name: Run AWS CodeBuild
+        uses: aws-actions/aws-codebuild-run-build@v1
+        with:
+          project-name: "bongsco-salary-management-dev-cb"
+          wait-for: "true"
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: "ap-northeast-2"
-        run: |
-          # AWS CLI를 사용하여 CodeBuild 프로젝트 시작하고 빌드 ID 가져오기
-          BUILD_ID=$(aws codebuild start-build \
-            --project-name bongsco-salary-management-dev-cb \
-            --region $AWS_REGION \
-            --query build.id \
-            --output text)
+          AWS_REGION: ${{ env.AWS_REGION }}
 
-          echo "CodeBuild project started. Build ID: $BUILD_ID"
-
-          # 빌드 상태 확인
-          BUILD_STATUS="IN_PROGRESS"
-          TIMEOUT_SECONDS=3600 # 1시간 타임아웃 설정 (필요에 따라 조정)
-          START_TIME=$(date +%s)
-
-          while [ "$BUILD_STATUS" == "IN_PROGRESS" ]; do
-            sleep 30
-
-            CURRENT_TIME=$(date +%s)
-            ELAPSED_TIME=$((CURRENT_TIME - START_TIME))
-
-            if [ "$ELAPSED_TIME" -gt "$TIMEOUT_SECONDS" ]; then
-              echo "CodeBuild build timed out."
-              exit 1
-            fi
-
-            BUILD_STATUS=$(aws codebuild batch-get-builds \
-              --ids "$BUILD_ID" \
-              --region $AWS_REGION \
-              --query builds[0].buildStatus \
-              --output text)
-            echo "Current build status: $BUILD_STATUS"
-          done
-
-          echo "CodeBuild build finished. Final status: $BUILD_STATUS"
-
-          if [ "$BUILD_STATUS" != "SUCCEEDED" ]; then
-            echo "CodeBuild build failed. Canceling execution."
-            exit 1
-          fi
-
-          echo "CodeBuild build succeeded."
 
       - name: Checkout
         uses: actions/checkout@v3
