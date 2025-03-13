@@ -11,11 +11,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public class ChangedSubjectRequest {
-    private final Long adjSubjectId;
-    private final Boolean paybandUse;
-
-    public ChangedSubjectRequest(Long adjSubjectId, Boolean paybandUse) {
-        this.adjSubjectId = adjSubjectId;
-        this.paybandUse = paybandUse;
-    }
+    private Long adjSubjectId;
+    private Boolean paybandUse;
 }

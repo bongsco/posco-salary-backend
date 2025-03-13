@@ -24,7 +24,7 @@ public interface AdjSubjectRepository extends JpaRepository<AdjSubject, Long> {
 
     Optional<AdjSubject> findByAdjInfoIdAndEmployeeId(long adjInfoId, long employeeId);
 
-    @Query("SELECT asj.id as adjSubjectId, asj.employee.empNum, asj.employee.name,  asj.employee.department.depName, asj.employee.grade.gradeName, asj.employee.grade.id, asj.employee.positionName, asj.employee.rank.rankName, s.stdSalary, asj.paybandUse FROM AdjSubject asj JOIN Salary s ON asj.employee.id = s.employee.id  WHERE asj.adjInfo.id = :adjInfoId AND asj.subjectUse = true")
+    @Query("SELECT asj.id as adjSubjectId, asj.employee.id as employeeId, s.stdSalary, asj.paybandUse FROM AdjSubject asj JOIN Salary s ON asj.employee.id = s.employee.id  WHERE asj.adjInfo.id = :adjInfoId AND asj.subjectUse = true")
     List<AdjSubjectSalaryDto> findAllAdjSubjectAndStdSalary(@Param("adjInfoId") Long adjInfoId);
 
     @Modifying(clearAutomatically = true)
