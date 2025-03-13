@@ -3,6 +3,7 @@ package com.bongsco.poscosalarybackend.adjust.service;
 import static com.bongsco.poscosalarybackend.global.exception.ErrorCode.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,15 +33,10 @@ public class AdjustService {
             adjInfoList = adjustRepository.findAll();
         }
 
-        AdjustResponse adjustResponse = new AdjustResponse();
-        adjustResponse.setMessage("Successfully brought information");
-
-        AdjustResponse.AdjInfoData adjInfoData = new AdjustResponse.AdjInfoData();
-        adjInfoData.setAdj_info(adjInfoList);
-
-        adjustResponse.setData(adjInfoData);
-
-        return adjustResponse;
+        return AdjustResponse.builder()
+            .message("Successfully brought information")
+            .data(AdjustResponse.AdjInfoData.builder().adjInfo(adjInfoList).build())
+            .build();
     }
 
     @Transactional
@@ -48,12 +44,15 @@ public class AdjustService {
         AdjInfo adjInfo = adjustRepository.findById(id)
             .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
-        AdjInfoUpdateRequest.AdjInfoUpdateDto dto = request.getChanged_adj_infos().get(0);
+        AdjInfoUpdateRequest.AdjInfoUpdateDto dto = request.getChangedAdjInfos().get(0);
 
-        adjInfo.setYear(dto.getYear());
-        adjInfo.setMonth(dto.getMonth());
-        adjInfo.setAdjType(AdjType.valueOf(dto.getAdj_type()));
-        adjInfo.setRemarks(dto.getRemarks());
+        AdjInfo updatedAdjInfo = adjInfo.toBuilder()
+            .year(dto.getYear())
+            .month(dto.getMonth())
+            .adjType(AdjType.valueOf(dto.getAdjType()))
+            .remarks(dto.getRemarks())
+            .build();
+        adjustRepository.save(updatedAdjInfo);
     }
 
     @Transactional
@@ -67,20 +66,17 @@ public class AdjustService {
 
     @Transactional
     public void postAdjustInfo(AdjInfoPostRequest postRequest) {
-        for (AdjInfoPostRequest.AdjInfoDto dto : postRequest.getAdded_adj_infos()) {
-            AdjInfo adjInfo = new AdjInfo();
+        List<AdjInfo> adjInfoList = postRequest.getAddedAdjInfos().stream()
+            .map(dto -> AdjInfo.builder()
+                .year(dto.getYear())
+                .month(dto.getMonth())
+                .adjType(AdjType.valueOf(dto.getAdjType()))
+                .remarks(dto.getRemarks())
+                .creationTimestamp(dto.getCreationTimestamp())
+                .creator(dto.getCreator())
+                .build())
+            .collect(Collectors.toList());
 
-            adjInfo.setYear(dto.getYear());
-            adjInfo.setMonth(dto.getMonth());
-            adjInfo.setAdjType(AdjType.valueOf(dto.getAdjType()));
-            adjInfo.setRemarks(dto.getRemarks());
-            adjInfo.setCreationTimestamp(dto.getCreationTimestamp());
-            adjInfo.setCreator(dto.getCreator());
-            adjInfo.setEvalAnnualSalaryIncrement(dto.getEvalAnnualSalaryIncrement());
-            adjInfo.setEvalPerformProvideRate(dto.getEvalPerformProvideRate());
-            adjInfo.setOrderNumber(dto.getOrderNumber());
-
-            adjustRepository.save(adjInfo);
-        }
+        adjustRepository.saveAll(adjInfoList);
     }
 }

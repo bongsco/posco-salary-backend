@@ -4,28 +4,23 @@ import java.time.LocalDate;
 
 import com.bongsco.poscosalarybackend.adjust.domain.AdjSubject;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Getter
 public class EmployeeResponse {
-    private final long employeeId;
-    private final String empNum;
-    private final String name;
-    private final LocalDate hireDate;
-    private final String rankName;
-    private final boolean subjectUse;
-
-    public EmployeeResponse(
-        long employeeId, String empNum, String name, LocalDate hireDate, String rankName, boolean subjectUse
-    ) {
-        this.employeeId = employeeId;
-        this.empNum = empNum;
-        this.name = name;
-        this.hireDate = hireDate;
-        this.rankName = rankName;
-        this.subjectUse = subjectUse;
-    }
-
+    private long employeeId;
+    private String empNum;
+    private String name;
+    private LocalDate hireDate;
+    private String rankName;
+    private boolean subjectUse;
+    
     public static EmployeeResponse from(AdjSubject adjSubject) {
 
         return new EmployeeResponse(adjSubject.getEmployee().getId(), adjSubject.getEmployee().getEmpNum(),

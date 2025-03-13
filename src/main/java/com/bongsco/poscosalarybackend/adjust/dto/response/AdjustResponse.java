@@ -7,7 +7,6 @@ import com.bongsco.poscosalarybackend.adjust.domain.AdjInfo;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -19,8 +18,11 @@ public class AdjustResponse {
     private String message;
     private AdjInfoData data;
 
-    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor(access = AccessLevel.PROTECTED)
+    @Getter
     public static class AdjInfoData {
-        private List<AdjInfo> adj_info;
+        private List<AdjInfo> adjInfo;
     }
 }

@@ -1,35 +1,40 @@
 package com.bongsco.poscosalarybackend.adjust.dto.response;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import com.bongsco.poscosalarybackend.adjust.domain.PaybandCriteria;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Getter
 public class MainAdjPaybandCriteriaResponse {
-    private final String gradeName;
-    private final int numberOfEmpl;
-    private final BigDecimal representativeVal;
-    private final BigDecimal upperLimitPrice;
-    private final BigDecimal lowerLimitPrice;
-    private final BigDecimal gradeBaseSalary;
+    private List<PaybandCriteriaResponse> PaybandCriteriaResponse;
 
-    public MainAdjPaybandCriteriaResponse(String gradeName, int numberOfEmpl, BigDecimal representativeVal,
-        BigDecimal upperLimitPrice, BigDecimal lowerLimitPrice, BigDecimal gradeBaseSalary) {
-        this.gradeName = gradeName;
-        this.numberOfEmpl = numberOfEmpl;
-        this.representativeVal = representativeVal;
-        this.upperLimitPrice = upperLimitPrice;
-        this.lowerLimitPrice = lowerLimitPrice;
-        this.gradeBaseSalary = gradeBaseSalary;
-    }
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Getter
+    public static class PaybandCriteriaResponse {
+        private String gradeName;
+        private int numberOfEmpl;
+        private BigDecimal representativeVal;
+        private BigDecimal upperLimitPrice;
+        private BigDecimal lowerLimitPrice;
+        private BigDecimal gradeBaseSalary;
 
-    public static MainAdjPaybandCriteriaResponse from(PaybandCriteria paybandCriteria, int numberOfEmpl,
-        BigDecimal representativeVal) {
-        return new MainAdjPaybandCriteriaResponse(paybandCriteria.getGrade().getGradeName(), numberOfEmpl,
-            representativeVal,
-            paybandCriteria.getUpperLimitPrice(), paybandCriteria.getLowerLimitPrice(),
-            paybandCriteria.getGrade().getGradeBaseSalary());
+        public static PaybandCriteriaResponse from(PaybandCriteria paybandCriteria, int numberOfEmpl,
+            BigDecimal representativeVal) {
+            return new PaybandCriteriaResponse(paybandCriteria.getGrade().getGradeName(), numberOfEmpl,
+                representativeVal,
+                paybandCriteria.getUpperLimitPrice(), paybandCriteria.getLowerLimitPrice(),
+                paybandCriteria.getGrade().getGradeBaseSalary());
+        }
     }
 }

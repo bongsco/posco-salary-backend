@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.bongsco.poscosalarybackend.adjust.domain.AdjSubject;
+import com.bongsco.poscosalarybackend.adjust.domain.PaybandCriteria;
 import com.bongsco.poscosalarybackend.adjust.domain.RankIncrementRate;
 import com.bongsco.poscosalarybackend.adjust.dto.AdjSubjectSalaryDto;
 import com.bongsco.poscosalarybackend.adjust.dto.request.ChangedEmployeeRequest;
@@ -18,11 +19,12 @@ import com.bongsco.poscosalarybackend.adjust.dto.request.ChangedSubjectUseEmploy
 import com.bongsco.poscosalarybackend.adjust.dto.response.CompensationEmployeeResponse;
 import com.bongsco.poscosalarybackend.adjust.dto.response.EmployeeResponse;
 import com.bongsco.poscosalarybackend.adjust.dto.response.MainAdjPaybandBothSubjectsResponse;
-import com.bongsco.poscosalarybackend.adjust.dto.response.MainAdjPaybandSubjectsResponse;
 import com.bongsco.poscosalarybackend.adjust.repository.AdjSubjectRepository;
 import com.bongsco.poscosalarybackend.adjust.repository.PaybandCriteriaRepository;
 import com.bongsco.poscosalarybackend.adjust.repository.RankIncrementRateRepository;
 import com.bongsco.poscosalarybackend.global.exception.CustomException;
+import com.bongsco.poscosalarybackend.user.domain.Employee;
+import com.bongsco.poscosalarybackend.user.repository.EmployeeRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -32,6 +34,7 @@ public class AdjSubjectService {
     private final AdjSubjectRepository adjSubjectRepository;
     private final RankIncrementRateRepository rankIncrementRateRepository;
     private final PaybandCriteriaRepository paybandCriteriaRepository;
+    private final EmployeeRepository employeeRepository;
 
     public List<EmployeeResponse> findAll(long adjInfoId) {
         // 연봉조정차수를 이용해 정기연봉조정대상자 테이블 가져오기
@@ -58,7 +61,11 @@ public class AdjSubjectService {
                         changedSubjectUseEmployee.getEmployeeId())
                     .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
                 /* subjectUse값 세팅 및 저장 */
-                adjSubject.setSubjectUse(changedSubjectUseEmployee.getSubjectUse());
+                //adjSubject.setSubjectUse(changedSubjectUseEmployee.getSubjectUse());
+                AdjSubject saveAdjSubject = adjSubject
+                    .toBuilder()
+                    .subjectUse(changedSubjectUseEmployee.getSubjectUse())
+                    .build();
                 adjSubjectRepository.save(adjSubject);
             });
     }
@@ -121,7 +128,9 @@ public class AdjSubjectService {
                         changedHighPerformGroupEmployee.getEmployeeId())
                     .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
                 /* setInHighPerformGroup값 세팅 및 저장 */
-                adjSubject.setInHighPerformGroup(changedHighPerformGroupEmployee.getInHighPerformGroup());
+                AdjSubject saveAdjSubject = adjSubject.toBuilder()
+                    .inHighPerformGroup(changedHighPerformGroupEmployee.getInHighPerformGroup())
+                    .build();
                 adjSubjectRepository.save(adjSubject);
             });
     }
@@ -139,7 +148,7 @@ public class AdjSubjectService {
             AdjSubject adjSubject = adjSubjectRepository.findByAdjInfoIdAndEmployeeId(adjInfoId,
                     changedEmployee.getEmployeeId())
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
-            adjSubject.setSubjectUse(changedEmployee.getSubjectUse());
+            AdjSubject saveAdjSubject = adjSubject.toBuilder().subjectUse(changedEmployee.getSubjectUse()).build();
             adjSubjectRepository.save(adjSubject);
         });
     }
@@ -148,39 +157,50 @@ public class AdjSubjectService {
         return new MainAdjPaybandBothSubjectsResponse(getUpperSubjects(adj_info_id), getLowerSubjects(adj_info_id));
     }
 
-    public List<MainAdjPaybandSubjectsResponse> getUpperSubjects(Long adj_info_id) { //상한초과자 가져오기
+    public List<MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse> getUpperSubjects(
+        Long adj_info_id
+    ) {     //상한초과자 가져오기
         List<AdjSubjectSalaryDto> adjSubjectSalaryDtos = adjSubjectRepository.findAllAdjSubjectAndStdSalary(
             adj_info_id);
+        List<PaybandCriteria> paybandCriterias = paybandCriteriaRepository.findByAdjInfo_Id(adj_info_id);
 
         return adjSubjectSalaryDtos.stream()
             .filter(adjSubjectSalaryDto -> {
-                BigDecimal upperLimitPrice = paybandCriteriaRepository.findByAdjInfo_IdAndGrade_Id(adj_info_id,
-                    adjSubjectSalaryDto.getGradeId()).getUpperLimitPrice();
-                adjSubjectSalaryDto.setLimitPrice(upperLimitPrice);
+                Employee employee = employeeRepository.findById(adjSubjectSalaryDto.getEmployeeId()).get();
+                BigDecimal upperLimitPrice = paybandCriterias.stream()
+                    .filter(p -> p.getGrade().getId() == employee.getGrade().getId())
+                    .collect(Collectors.toList()).getFirst().getUpperLimitPrice();
+                //adjSubjectSalaryDto.toBuilder().limitPrice(upperLimitPrice);
                 return adjSubjectSalaryDto.getStdSalary().compareTo(upperLimitPrice) > 0;
             })
-            .map(MainAdjPaybandSubjectsResponse::from)
+            .map(MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse::from)
             .toList();
 
         //pc에서의 직급 id가 dto와 똑같은걸찾고, 그 pc의 상한값과 비교
     }
 
-    public List<MainAdjPaybandSubjectsResponse> getLowerSubjects(Long adj_info_id) { //하한초과자 가져오기
-        List<AdjSubjectSalaryDto> adjSubjectSalaryDtos = adjSubjectRepository.findAllAdjSubjectAndStdSalary(
-            adj_info_id);
-
-        return adjSubjectSalaryDtos.stream()
-            .filter(adjSubjectSalaryDto -> {
-                BigDecimal lowerLimitPrice = paybandCriteriaRepository.findByAdjInfo_IdAndGrade_Id(adj_info_id,
-                    adjSubjectSalaryDto.getGradeId()).getLowerLimitPrice();
-                adjSubjectSalaryDto.setLimitPrice(lowerLimitPrice);
-                return adjSubjectSalaryDto.getStdSalary().compareTo(lowerLimitPrice) < 0;
-            })
-            .map(MainAdjPaybandSubjectsResponse::from)
-            .toList();
+    public List<MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse> getLowerSubjects(
+        Long adj_info_id) { //하한초과자 가져오기
+        // List<AdjSubjectSalaryDto> adjSubjectSalaryDtos = adjSubjectRepository.findAllAdjSubjectAndStdSalary(
+        //     adj_info_id);
+        //
+        // return adjSubjectSalaryDtos.stream()
+        //     .filter(adjSubjectSalaryDto -> {
+        //         BigDecimal lowerLimitPrice = paybandCriteriaRepository.findByAdjInfo_IdAndGrade_Id(adj_info_id,
+        //             adjSubjectSalaryDto.getGradeId()).getLowerLimitPrice();
+        //         AdjSubjectSalaryDto newAdjSubjectSalaryDto = adjSubjectSalaryDto.toBuilder()
+        //             .limitPrice(lowerLimitPrice)
+        //             .build();
+        //         return adjSubjectSalaryDto.getStdSalary().compareTo(lowerLimitPrice) < 0;
+        //     })
+        //     .map(MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse::from)
+        //     .toList();
+        return null;
     }
 
-    public Boolean modifyAdjustSubject(Long adjSubjectId, Boolean paybandUse) {
-        return adjSubjectRepository.updateAdjSubjectPaybandUse(adjSubjectId, paybandUse) > 0;
+    public void modifyAdjustSubject(Long adjSubjectId, Boolean paybandUse) {
+        if (adjSubjectRepository.updateAdjSubjectPaybandUse(adjSubjectId, paybandUse) < 0) {
+            throw new CustomException(USER_NOT_FOUND);
+        }
     }
 }

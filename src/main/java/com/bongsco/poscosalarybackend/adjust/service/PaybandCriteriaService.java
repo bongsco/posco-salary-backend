@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import com.bongsco.poscosalarybackend.adjust.domain.PaybandCriteria;
 import com.bongsco.poscosalarybackend.adjust.domain.Salary;
 import com.bongsco.poscosalarybackend.adjust.dto.response.MainAdjPaybandCriteriaResponse;
+import com.bongsco.poscosalarybackend.adjust.repository.AdjustRepository;
 import com.bongsco.poscosalarybackend.adjust.repository.PaybandCriteriaRepository;
 import com.bongsco.poscosalarybackend.user.domain.Employee;
 import com.bongsco.poscosalarybackend.user.repository.EmployeeRepository;
@@ -25,8 +26,9 @@ public class PaybandCriteriaService {
     private final PaybandCriteriaRepository paybandCriteriaRepository;
     private final EmployeeRepository employeeRepository;
     private final SalaryRepository salaryRepository;
+    private final AdjustRepository adjustRepository;
 
-    public List<MainAdjPaybandCriteriaResponse> findAllPaybandCriteria(Long adjInfoId) {
+    public MainAdjPaybandCriteriaResponse findAllPaybandCriteria(Long adjInfoId) {
         List<PaybandCriteria> paybandCriterias = paybandCriteriaRepository.findByAdjInfo_Id(adjInfoId);
         List<Employee> employees = employeeRepository.findAll();
         employees = employees.stream().filter(employee -> employee.getGrade() != null).toList();
@@ -37,7 +39,9 @@ public class PaybandCriteriaService {
                 Collectors.summingInt(e -> 1) // 각 그룹의 개수 세기
             ));
 
-        Long beforeAdjInfoId = adjInfoId; //TODO: 현아 언니 끝나면 직전 정기연봉 id 가져오는 코드 작성
+        Long beforeAdjInfoId = adjustRepository.findLatestAdjustInfo(adjInfoId).get(0).getId();
+        //없으면 에러
+
         List<Salary> salaries = salaryRepository.findByAdjInfo_Id(beforeAdjInfoId);
 
         Map<Long, BigDecimal> representativeVal = salaries.stream() //gradeId:대표값
@@ -49,15 +53,15 @@ public class PaybandCriteriaService {
                 )
             ));
 
-        return paybandCriterias
+        return new MainAdjPaybandCriteriaResponse(paybandCriterias
             .stream()
             .map(pc -> {
                 Integer count = countEmpl.getOrDefault(pc.getGrade().getId(), 0); // null이면 0 반환
                 BigDecimal representative = representativeVal.getOrDefault(pc.getGrade().getId(),
                     BigDecimal.valueOf(0)); // null이면 0 반환
-                return MainAdjPaybandCriteriaResponse.from(pc, count, representative);
+                return MainAdjPaybandCriteriaResponse.PaybandCriteriaResponse.from(pc, count, representative);
             })
-            .toList();
+            .toList());
     }
 
     private BigDecimal calculateMedian(List<Salary> salaries) {

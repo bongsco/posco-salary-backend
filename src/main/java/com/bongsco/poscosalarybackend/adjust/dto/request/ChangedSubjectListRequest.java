@@ -12,9 +12,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public class ChangedSubjectListRequest {
-    private final List<ChangedSubjectRequest> changedSubject;
-
-    public ChangedSubjectListRequest(List<ChangedSubjectRequest> changedSubject) {
-        this.changedSubject = changedSubject;
-    }
+    private List<ChangedSubjectRequest> changedSubject;
 }
