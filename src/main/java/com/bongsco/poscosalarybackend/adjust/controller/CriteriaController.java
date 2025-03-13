@@ -75,7 +75,7 @@ public class CriteriaController {
         return ResponseEntity.ok(JsonResult.success(updatedData));
     }
 
-    @DeleteMapping
+    @DeleteMapping("/{adj_info_id}/payband")
     public ResponseEntity<Void> deletePaybandCriteria(
         @Valid @RequestBody PaybandCriteriaDeleteRequest request) {
         criteriaService.deletePaybandCriteria(request);
