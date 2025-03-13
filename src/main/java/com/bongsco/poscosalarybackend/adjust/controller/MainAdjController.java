@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.bongsco.poscosalarybackend.adjust.dto.request.ChangedSubjectListRequest;
@@ -41,8 +42,14 @@ public class MainAdjController {
     @Operation(summary = "payband 대상자", description = "payband 대상자 반환")
     @GetMapping("/{adj_info_id}/payband/subjects")
     public ResponseEntity<JsonResult<MainAdjPaybandBothSubjectsResponse>> getPaybandSubjects(
-        @PathVariable("adj_info_id") Long adjInfoId
+        @PathVariable("adj_info_id") Long adjInfoId,
+        @RequestParam(value = "searchKey", required = false) String searchKey
     ) {
+        if (searchKey != null) {
+            return ResponseEntity.status(HttpStatus.OK)
+                .body(
+                    JsonResult.success(adjSubjectService.getBothUpperLowerSubjectsWithSearchKey(adjInfoId, searchKey)));
+        }
         return ResponseEntity.status(HttpStatus.OK)
             .body(JsonResult.success(adjSubjectService.getBothUpperLowerSubjects(adjInfoId)));
     }

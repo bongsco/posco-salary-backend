@@ -2,7 +2,6 @@ package com.bongsco.poscosalarybackend.adjust.service;
 
 import static com.bongsco.poscosalarybackend.global.exception.ErrorCode.*;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -10,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.bongsco.poscosalarybackend.adjust.domain.AdjSubject;
-import com.bongsco.poscosalarybackend.adjust.domain.PaybandCriteria;
 import com.bongsco.poscosalarybackend.adjust.domain.RankIncrementRate;
 import com.bongsco.poscosalarybackend.adjust.dto.AdjSubjectSalaryDto;
 import com.bongsco.poscosalarybackend.adjust.dto.request.ChangedEmployeeRequest;
@@ -160,47 +158,107 @@ public class AdjSubjectService {
     public List<MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse> getUpperSubjects(
         Long adj_info_id
     ) {     //상한초과자 가져오기
-        List<AdjSubjectSalaryDto> adjSubjectSalaryDtos = adjSubjectRepository.findAllAdjSubjectAndStdSalary(
+        List<AdjSubjectSalaryDto> adjSubjectSalaryDtos = adjSubjectRepository.findAllAdjSubjectAndStdSalaryAndUpper(
             adj_info_id);
-        List<PaybandCriteria> paybandCriterias = paybandCriteriaRepository.findByAdjInfo_Id(adj_info_id);
-
         return adjSubjectSalaryDtos.stream()
             .filter(adjSubjectSalaryDto -> {
-                Employee employee = employeeRepository.findById(adjSubjectSalaryDto.getEmployeeId()).get();
-                BigDecimal upperLimitPrice = paybandCriterias.stream()
-                    .filter(p -> p.getGrade().getId() == employee.getGrade().getId())
-                    .collect(Collectors.toList()).getFirst().getUpperLimitPrice();
-                //adjSubjectSalaryDto.toBuilder().limitPrice(upperLimitPrice);
-                return adjSubjectSalaryDto.getStdSalary().compareTo(upperLimitPrice) > 0;
+                return adjSubjectSalaryDto.getStdSalary().compareTo(adjSubjectSalaryDto.getLimitPrice()) > 0;
             })
-            .map(MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse::from)
+            .map(dto -> {
+                Employee employee = employeeRepository.findById(dto.getEmployeeId()).get();
+                dto = dto.toBuilder()
+                    .empNum(employee.getEmpNum())
+                    .name(employee.getName())
+                    .depName(employee.getDepartment().getDepName())
+                    .positionName(employee.getPositionName())
+                    .rankName(employee.getRank().getRankName())
+                    .build();
+                return MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse.from(dto);
+            })
             .toList();
 
         //pc에서의 직급 id가 dto와 똑같은걸찾고, 그 pc의 상한값과 비교
     }
 
     public List<MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse> getLowerSubjects(
-        Long adj_info_id) { //하한초과자 가져오기
-        // List<AdjSubjectSalaryDto> adjSubjectSalaryDtos = adjSubjectRepository.findAllAdjSubjectAndStdSalary(
-        //     adj_info_id);
-        //
-        // return adjSubjectSalaryDtos.stream()
-        //     .filter(adjSubjectSalaryDto -> {
-        //         BigDecimal lowerLimitPrice = paybandCriteriaRepository.findByAdjInfo_IdAndGrade_Id(adj_info_id,
-        //             adjSubjectSalaryDto.getGradeId()).getLowerLimitPrice();
-        //         AdjSubjectSalaryDto newAdjSubjectSalaryDto = adjSubjectSalaryDto.toBuilder()
-        //             .limitPrice(lowerLimitPrice)
-        //             .build();
-        //         return adjSubjectSalaryDto.getStdSalary().compareTo(lowerLimitPrice) < 0;
-        //     })
-        //     .map(MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse::from)
-        //     .toList();
-        return null;
+        Long adj_info_id
+    ) { //하한초과자 가져오기
+        List<AdjSubjectSalaryDto> adjSubjectSalaryDtos = adjSubjectRepository.findAllAdjSubjectAndStdSalaryAndLower(
+            adj_info_id);
+        return adjSubjectSalaryDtos.stream()
+            .filter(adjSubjectSalaryDto -> {
+                return adjSubjectSalaryDto.getStdSalary().compareTo(adjSubjectSalaryDto.getLimitPrice()) < 0;
+            })
+            .map(dto -> {
+                Employee employee = employeeRepository.findById(dto.getEmployeeId()).get();
+                dto = dto.toBuilder()
+                    .empNum(employee.getEmpNum())
+                    .name(employee.getName())
+                    .depName(employee.getDepartment().getDepName())
+                    .gradeName(employee.getGrade().getGradeName())
+                    .positionName(employee.getPositionName())
+                    .rankName(employee.getRank().getRankName())
+                    .build();
+                return MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse.from(dto);
+            })
+            .toList();
     }
 
     public void modifyAdjustSubject(Long adjSubjectId, Boolean paybandUse) {
-        if (adjSubjectRepository.updateAdjSubjectPaybandUse(adjSubjectId, paybandUse) < 0) {
-            throw new CustomException(USER_NOT_FOUND);
-        }
+        AdjSubject saveAdjSubject = adjSubjectRepository.findById(adjSubjectId)
+            .get()
+            .toBuilder()
+            .paybandUse(paybandUse)
+            .build();
+        adjSubjectRepository.save(saveAdjSubject);
+    }
+
+    public MainAdjPaybandBothSubjectsResponse getBothUpperLowerSubjectsWithSearchKey(Long adjInfoId, String searchKey) {
+        return new MainAdjPaybandBothSubjectsResponse(getUpperSubjectsWithSearchKey(adjInfoId, searchKey),
+            getLowerSubjectsWithSearchKey(adjInfoId, searchKey));
+    }
+
+    private List<MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse> getUpperSubjectsWithSearchKey(
+        Long adjInfoId, String searchKey) {
+        List<AdjSubjectSalaryDto> adjSubjectSalaryDtos = adjSubjectRepository.findAllAdjSubjectAndStdSalaryAndUpperWithSearchKey(
+            adjInfoId, searchKey);
+        return adjSubjectSalaryDtos.stream()
+            .filter(adjSubjectSalaryDto -> {
+                return adjSubjectSalaryDto.getStdSalary().compareTo(adjSubjectSalaryDto.getLimitPrice()) > 0;
+            })
+            .map(dto -> {
+                Employee employee = employeeRepository.findById(dto.getEmployeeId()).get();
+                dto = dto.toBuilder()
+                    .empNum(employee.getEmpNum())
+                    .name(employee.getName())
+                    .depName(employee.getDepartment().getDepName())
+                    .positionName(employee.getPositionName())
+                    .rankName(employee.getRank().getRankName())
+                    .build();
+                return MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse.from(dto);
+            })
+            .toList();
+    }
+
+    private List<MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse> getLowerSubjectsWithSearchKey(
+        Long adjInfoId, String searchKey) {
+        List<AdjSubjectSalaryDto> adjSubjectSalaryDtos = adjSubjectRepository.findAllAdjSubjectAndStdSalaryAndLowerWithSearchKey(
+            adjInfoId, searchKey);
+        return adjSubjectSalaryDtos.stream()
+            .filter(adjSubjectSalaryDto -> {
+                return adjSubjectSalaryDto.getStdSalary().compareTo(adjSubjectSalaryDto.getLimitPrice()) < 0;
+            })
+            .map(dto -> {
+                Employee employee = employeeRepository.findById(dto.getEmployeeId()).get();
+                dto = dto.toBuilder()
+                    .empNum(employee.getEmpNum())
+                    .name(employee.getName())
+                    .depName(employee.getDepartment().getDepName())
+                    .positionName(employee.getPositionName())
+                    .rankName(employee.getRank().getRankName())
+                    .build();
+                return MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse.from(dto);
+            })
+            .toList();
     }
 }

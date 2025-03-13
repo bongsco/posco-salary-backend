@@ -36,14 +36,13 @@ public class MainAdjPaybandBothSubjectsResponse {
 
         public static MainAdjPaybandSubjectsResponse from(
             AdjSubjectSalaryDto adjSubjectSalaryDto) {
-            // return new MainAdjPaybandSubjectsResponse(
-            //     adjSubjectSalaryDto.getAdjSubjectId(),
-            //     adjSubjectSalaryDto.getEmpNum(), adjSubjectSalaryDto.getName(), adjSubjectSalaryDto.getDepName(),
-            //     adjSubjectSalaryDto.getGradeName(), adjSubjectSalaryDto.getPositionName(),
-            //     adjSubjectSalaryDto.getRankName(), adjSubjectSalaryDto.getStdSalary(),
-            //     adjSubjectSalaryDto.getLimitPrice(),
-            //     adjSubjectSalaryDto.getPaybandUse());
-            return null;
+            return new MainAdjPaybandSubjectsResponse(
+                adjSubjectSalaryDto.getAdjSubjectId(),
+                adjSubjectSalaryDto.getEmpNum(), adjSubjectSalaryDto.getName(), adjSubjectSalaryDto.getDepName(),
+                adjSubjectSalaryDto.getGradeName(), adjSubjectSalaryDto.getPositionName(),
+                adjSubjectSalaryDto.getRankName(), adjSubjectSalaryDto.getStdSalary(),
+                adjSubjectSalaryDto.getLimitPrice(),
+                adjSubjectSalaryDto.getPaybandUse());
         }
     }
 }
