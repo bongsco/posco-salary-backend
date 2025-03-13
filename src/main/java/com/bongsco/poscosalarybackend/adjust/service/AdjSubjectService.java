@@ -204,9 +204,9 @@ public class AdjSubjectService {
     }
 
     public void modifyAdjustSubject(Long adjSubjectId, Boolean paybandUse) {
-        AdjSubject saveAdjSubject = adjSubjectRepository.findById(adjSubjectId)
-            .get()
-            .toBuilder()
+        AdjSubject adjSubject = adjSubjectRepository.findById(adjSubjectId)
+            .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+        AdjSubject saveAdjSubject = adjSubject.toBuilder()
             .paybandUse(paybandUse)
             .build();
         adjSubjectRepository.save(saveAdjSubject);
