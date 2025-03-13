@@ -5,13 +5,10 @@ import java.math.BigDecimal;
 import org.hibernate.annotations.SQLDelete;
 
 import com.bongsco.poscosalarybackend.global.domain.BaseEntity;
-import com.bongsco.poscosalarybackend.global.domain.Status;
 import com.bongsco.poscosalarybackend.user.domain.Grade;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -27,7 +24,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "payband_criteria")
 @Getter
-@Builder
+@Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SQLDelete(sql = "UPDATE payband_criteria SET deleted = true WHERE id = ?")
@@ -43,9 +40,6 @@ public class PaybandCriteria extends BaseEntity {
     @ManyToOne
     @JoinColumn(name = "grade_id", nullable = false)
     private Grade grade;
-
-    @Enumerated(EnumType.STRING)
-    private Status status;
 
     @Column(precision = 20, scale = 2)
     private BigDecimal upperLimitPrice;

@@ -66,7 +66,7 @@ public class AdjSubjectService {
                     .toBuilder()
                     .subjectUse(changedSubjectUseEmployee.getSubjectUse())
                     .build();
-                adjSubjectRepository.save(adjSubject);
+                adjSubjectRepository.save(saveAdjSubject);
             });
     }
 
@@ -98,7 +98,7 @@ public class AdjSubjectService {
             adjSubject.getEmployee().getRank().getId(),
             adjSubject.getAdjInfo().getId(),
             adjSubject.getEmployee().getGrade().getId()
-        );
+        ).orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
 
         if (rankIncrementRate != null) {
             response.setEvalDiffIncrement(rankIncrementRate.getEvalDiffIncrement());
@@ -149,7 +149,7 @@ public class AdjSubjectService {
                     changedEmployee.getEmployeeId())
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
             AdjSubject saveAdjSubject = adjSubject.toBuilder().subjectUse(changedEmployee.getSubjectUse()).build();
-            adjSubjectRepository.save(adjSubject);
+            adjSubjectRepository.save(saveAdjSubject);
         });
     }
 
