@@ -22,7 +22,7 @@ public interface AdjSubjectRepository extends JpaRepository<AdjSubject, Long> {
         @Param("searchKey") String searchKey
     );
 
-    Optional<AdjSubject> findByAdjInfoIdAndEmployeeId(long adjInfoId, long employeeId);
+    Optional<AdjSubject> findByAdjInfoIdAndEmployeeId(Long adjInfoId, Long employeeId);
 
     @Query(
         "SELECT new com.bongsco.poscosalarybackend.adjust.dto.AdjSubjectSalaryDto(asj.id, asj.employee.id, s.stdSalary, asj.paybandUse, asj.employee.grade.id, pc.upperLimitPrice, pc.grade.gradeName) "

@@ -67,7 +67,7 @@ public class AdjSubjectService {
             });
     }
 
-    public PreprocessAdjSubjectsResponse findCompensationAll(long adjInfoId) {
+    public PreprocessAdjSubjectsResponse findCompensationAll(Long adjInfoId) {
         // 연봉조정차수를 이용해 고성과조직 가산 대상 테이블 가져오기
         List<AdjSubject> subjects = adjSubjectRepository.findByAdjInfo_Id(adjInfoId);
 
@@ -105,7 +105,7 @@ public class AdjSubjectService {
         return response;
     }
 
-    public PreprocessAdjSubjectsResponse findCompensationBySearchKey(long adjInfoId, String searchKey) {
+    public PreprocessAdjSubjectsResponse findCompensationBySearchKey(Long adjInfoId, String searchKey) {
         // 연봉조정차수&검색정보를 이용해 고성과조직 가산 대상 테이블 가져오기
         List<AdjSubject> subjects = adjSubjectRepository.findByAdjInfoIdAndEmployeeName(adjInfoId, searchKey);
 
@@ -116,7 +116,7 @@ public class AdjSubjectService {
     }
 
     public void updateHighPerformGroupEmployee(
-        long adjInfoId,
+        Long adjInfoId,
         ChangedHighPerformGroupEmployeeRequest changedHighPerformGroupEmployeeRequest
     ) {
         changedHighPerformGroupEmployeeRequest.getChangedHighPerformGroupEmployee()
@@ -132,7 +132,7 @@ public class AdjSubjectService {
             });
     }
 
-    public List<EmployeeResponse> findOne(long adjInfoId, String searchKey) {
+    public List<EmployeeResponse> findOne(Long adjInfoId, String searchKey) {
         // 연봉조정차수&검색정보를 이용해 정기연봉조정대상자 테이블 가져오기
         List<AdjSubject> subjects = adjSubjectRepository.findByAdjInfoIdAndEmployeeName(adjInfoId, searchKey);
 
@@ -140,7 +140,7 @@ public class AdjSubjectService {
     }
 
     @Transactional
-    public void updateEmployeeSubjectUse(long adjInfoId, ChangedEmployeeRequest changedEmployeeRequest) {
+    public void updateEmployeeSubjectUse(Long adjInfoId, ChangedEmployeeRequest changedEmployeeRequest) {
         changedEmployeeRequest.getChangedEmployee().forEach(changedEmployee -> {
             AdjSubject adjSubject = adjSubjectRepository.findByAdjInfoIdAndEmployeeId(adjInfoId,
                     changedEmployee.getEmployeeId())

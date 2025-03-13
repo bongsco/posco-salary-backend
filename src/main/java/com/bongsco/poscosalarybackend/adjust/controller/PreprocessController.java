@@ -73,7 +73,7 @@ public class PreprocessController {
     @Operation(summary = "고성과조직 가산 여부 페이지 POST API", description = "고성과조직 가산 여부 업데이트")
     @PatchMapping("/{adj_info_id}/compensation")
     public ResponseEntity<JsonResult<String>> updateHighPerformGroupEmployees(
-        @PathVariable("adj_info_id") long adjInfoId,
+        @PathVariable("adj_info_id") Long adjInfoId,
         @RequestBody ChangedHighPerformGroupEmployeeRequest changedHighPerformGroupEmployeeRequest
     ) {
         adjSubjectService.updateHighPerformGroupEmployee(adjInfoId, changedHighPerformGroupEmployeeRequest);
