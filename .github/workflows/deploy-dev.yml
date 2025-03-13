@@ -23,16 +23,19 @@ jobs:
     environment: production
 
     steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+
       - name: Run AWS CodeBuild
         uses: aws-actions/aws-codebuild-run-build@v1
         with:
           project-name: "bongsco-salary-management-dev-cb"
-          wait-for: "true"
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ env.AWS_REGION }}
-
+          buildspec-override: "buildspec.yml" 
 
       - name: Checkout
         uses: actions/checkout@v3
