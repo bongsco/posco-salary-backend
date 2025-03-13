@@ -15,7 +15,7 @@ env:
   ECS_CLUSTER: bongsco-salary-management-ecs-cluster
   CONTAINER_NAME: bongsco-springboot-container
   CODEBUILD_PROJECT_NAME : bongsco-salary-management-dev-cb
-  
+
 jobs:
 
   deploy:
@@ -38,7 +38,26 @@ jobs:
         uses: aws-actions/aws-codebuild-run-build@v1
         with:
           project-name: ${{ env.CODEBUILD_PROJECT_NAME }}
-          buildspec-override: "buildspec.yml" 
+          buildspec-override: "buildspec.yml"
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'adopt'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Copy Secret
+        env:
+          CREATE_SECRET: ${{ secrets.BONGSCO_DEV_APP_YML }}
+          CREATE_SECRET_DIR: src/main/resources
+          CREATE_SECRET_DIR_FILE_NAME: application-dev.yml
+        run: echo $CREATE_SECRET | base64 --decode > $CREATE_SECRET_DIR/$CREATE_SECRET_DIR_FILE_NAME
+
+      - name: Build with Gradle
+        run: ./gradlew build
 
       - name: Login to Amazon ECR
         id: login-ecr
