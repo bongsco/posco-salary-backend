@@ -1,6 +1,7 @@
 package com.bongsco.poscosalarybackend.adjust.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -11,5 +12,7 @@ import com.bongsco.poscosalarybackend.adjust.domain.PaybandCriteria;
 public interface PaybandCriteriaRepository extends JpaRepository<PaybandCriteria, Long> {
     public List<PaybandCriteria> findByAdjInfo_Id(Long id);
 
-    public PaybandCriteria findByAdjInfo_IdAndGrade_Id(Long id, Long gradeId);
+    public Optional<PaybandCriteria> findByAdjInfo_IdAndGrade_Id(Long adjInfoId, Long gradeId);
+
+    void deleteByIdIn(List<Long> paybandIds);
 }
