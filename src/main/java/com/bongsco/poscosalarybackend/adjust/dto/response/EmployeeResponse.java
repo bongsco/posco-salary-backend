@@ -14,13 +14,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Getter
 public class EmployeeResponse {
-    private long employeeId;
+    private Long employeeId;
     private String empNum;
     private String name;
     private LocalDate hireDate;
     private String rankName;
-    private boolean subjectUse;
-    
+    private Boolean subjectUse;
+
     public static EmployeeResponse from(AdjSubject adjSubject) {
 
         return new EmployeeResponse(adjSubject.getEmployee().getId(), adjSubject.getEmployee().getEmpNum(),

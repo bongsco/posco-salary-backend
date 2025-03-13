@@ -35,6 +35,7 @@ public class MainAdjController {
     ) {
         MainAdjPaybandCriteriaResponse mainAdjPaybandCriteriaResponse = paybandCriteriaService.findAllPaybandCriteria(
             adjInfoId);
+
         return ResponseEntity.status(HttpStatus.OK)
             .body(JsonResult.success(mainAdjPaybandCriteriaResponse));
     }
@@ -50,6 +51,7 @@ public class MainAdjController {
                 .body(
                     JsonResult.success(adjSubjectService.getBothUpperLowerSubjectsWithSearchKey(adjInfoId, searchKey)));
         }
+
         return ResponseEntity.status(HttpStatus.OK)
             .body(JsonResult.success(adjSubjectService.getBothUpperLowerSubjects(adjInfoId)));
     }
@@ -65,6 +67,7 @@ public class MainAdjController {
             .forEach(subject -> {
                 adjSubjectService.modifyAdjustSubject(subject.getAdjSubjectId(), subject.getPaybandUse());
             });
+        
         return ResponseEntity.status(HttpStatus.OK)
             .body(JsonResult.success("Successfully changed"));
     }

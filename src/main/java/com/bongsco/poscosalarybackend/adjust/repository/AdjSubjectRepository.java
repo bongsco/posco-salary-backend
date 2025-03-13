@@ -13,12 +13,12 @@ import com.bongsco.poscosalarybackend.adjust.dto.AdjSubjectSalaryDto;
 
 @Repository
 public interface AdjSubjectRepository extends JpaRepository<AdjSubject, Long> {
-    List<AdjSubject> findByAdjInfo_Id(long id);
+    List<AdjSubject> findByAdjInfo_Id(Long id);
 
     @Query("SELECT asj FROM AdjSubject asj JOIN asj.employee e WHERE asj.adjInfo.id = :adjInfoId "
         + "AND (e.empNum LIKE %:searchKey% OR e.name LIKE %:searchKey%)")
     List<AdjSubject> findByAdjInfoIdAndEmployeeName(
-        @Param("adjInfoId") long adjInfoId,
+        @Param("adjInfoId") Long adjInfoId,
         @Param("searchKey") String searchKey
     );
 

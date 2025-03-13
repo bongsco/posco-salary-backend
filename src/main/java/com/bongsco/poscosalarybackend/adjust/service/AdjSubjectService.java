@@ -17,6 +17,7 @@ import com.bongsco.poscosalarybackend.adjust.dto.request.ChangedSubjectUseEmploy
 import com.bongsco.poscosalarybackend.adjust.dto.response.CompensationEmployeeResponse;
 import com.bongsco.poscosalarybackend.adjust.dto.response.EmployeeResponse;
 import com.bongsco.poscosalarybackend.adjust.dto.response.MainAdjPaybandBothSubjectsResponse;
+import com.bongsco.poscosalarybackend.adjust.dto.response.PreprocessAdjSubjectsResponse;
 import com.bongsco.poscosalarybackend.adjust.repository.AdjSubjectRepository;
 import com.bongsco.poscosalarybackend.adjust.repository.PaybandCriteriaRepository;
 import com.bongsco.poscosalarybackend.adjust.repository.RankIncrementRateRepository;
@@ -34,14 +35,14 @@ public class AdjSubjectService {
     private final PaybandCriteriaRepository paybandCriteriaRepository;
     private final EmployeeRepository employeeRepository;
 
-    public List<EmployeeResponse> findAll(long adjInfoId) {
+    public List<EmployeeResponse> findAll(Long adjInfoId) {
         // 연봉조정차수를 이용해 정기연봉조정대상자 테이블 가져오기
         List<AdjSubject> subjects = adjSubjectRepository.findByAdjInfo_Id(adjInfoId);
 
         return subjects.stream().map(EmployeeResponse::from).toList();
     }
 
-    public List<EmployeeResponse> findBySearchKey(long adjInfoId, String searchKey) {
+    public List<EmployeeResponse> findBySearchKey(Long adjInfoId, String searchKey) {
         // 연봉조정차수&검색정보를 이용해 정기연봉조정대상자 테이블 가져오기
         List<AdjSubject> subjects = adjSubjectRepository.findByAdjInfoIdAndEmployeeName(adjInfoId, searchKey);
 
@@ -50,7 +51,7 @@ public class AdjSubjectService {
 
     @Transactional
     public void updateSubjectUseEmployee(
-        long adjInfoId,
+        Long adjInfoId,
         ChangedSubjectUseEmployeeRequest changedSubjectUseEmployeeRequest
     ) {
         changedSubjectUseEmployeeRequest.getChangedSubjectUseEmployee()
@@ -58,24 +59,22 @@ public class AdjSubjectService {
                 AdjSubject adjSubject = adjSubjectRepository.findByAdjInfoIdAndEmployeeId(adjInfoId,
                         changedSubjectUseEmployee.getEmployeeId())
                     .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
-                /* subjectUse값 세팅 및 저장 */
-                //adjSubject.setSubjectUse(changedSubjectUseEmployee.getSubjectUse());
                 AdjSubject saveAdjSubject = adjSubject
                     .toBuilder()
                     .subjectUse(changedSubjectUseEmployee.getSubjectUse())
                     .build();
-                adjSubjectRepository.save(adjSubject);
+                adjSubjectRepository.save(saveAdjSubject);
             });
     }
 
-    public List<CompensationEmployeeResponse> findCompensationAll(long adjInfoId) {
+    public PreprocessAdjSubjectsResponse findCompensationAll(long adjInfoId) {
         // 연봉조정차수를 이용해 고성과조직 가산 대상 테이블 가져오기
         List<AdjSubject> subjects = adjSubjectRepository.findByAdjInfo_Id(adjInfoId);
 
-        return subjects.stream()
+        return new PreprocessAdjSubjectsResponse(subjects.stream()
             .filter(AdjSubject::getSubjectUse)
             .map(this::convertToResponse)
-            .collect(Collectors.toList());
+            .collect(Collectors.toList()));
     }
 
     private CompensationEmployeeResponse convertToResponse(AdjSubject adjSubject) {
@@ -93,9 +92,9 @@ public class AdjSubjectService {
         );
 
         RankIncrementRate rankIncrementRate = rankIncrementRateRepository.findByRankIdAndAdjInfoIdAndGradeId(
-            adjSubject.getEmployee().getRank().getId(),
+            adjSubject.getEmployee().getRank().getId(), //rank는 도메인 바꾸고 바꾸기, 당시 랭크가 저장 되어 있어야함
             adjSubject.getAdjInfo().getId(),
-            adjSubject.getEmployee().getGrade().getId()
+            adjSubject.getEmployee().getGrade().getId() //rank는 도메인 바꾸고 바꾸기, 당시 직급이 저장 되어 있어야함 얘도,,,
         );
 
         if (rankIncrementRate != null) {
@@ -106,14 +105,14 @@ public class AdjSubjectService {
         return response;
     }
 
-    public List<CompensationEmployeeResponse> findCompensationBySearchKey(long adjInfoId, String searchKey) {
+    public PreprocessAdjSubjectsResponse findCompensationBySearchKey(long adjInfoId, String searchKey) {
         // 연봉조정차수&검색정보를 이용해 고성과조직 가산 대상 테이블 가져오기
         List<AdjSubject> subjects = adjSubjectRepository.findByAdjInfoIdAndEmployeeName(adjInfoId, searchKey);
 
-        return subjects.stream()
+        return new PreprocessAdjSubjectsResponse(subjects.stream()
             .filter(AdjSubject::getSubjectUse)
             .map(this::convertToResponse)
-            .collect(Collectors.toList());
+            .collect(Collectors.toList()));
     }
 
     public void updateHighPerformGroupEmployee(
@@ -129,7 +128,7 @@ public class AdjSubjectService {
                 AdjSubject saveAdjSubject = adjSubject.toBuilder()
                     .inHighPerformGroup(changedHighPerformGroupEmployee.getInHighPerformGroup())
                     .build();
-                adjSubjectRepository.save(adjSubject);
+                adjSubjectRepository.save(saveAdjSubject);
             });
     }
 
@@ -160,6 +159,7 @@ public class AdjSubjectService {
     ) {     //상한초과자 가져오기
         List<AdjSubjectSalaryDto> adjSubjectSalaryDtos = adjSubjectRepository.findAllAdjSubjectAndStdSalaryAndUpper(
             adj_info_id);
+
         return adjSubjectSalaryDtos.stream()
             .filter(adjSubjectSalaryDto -> {
                 return adjSubjectSalaryDto.getStdSalary().compareTo(adjSubjectSalaryDto.getLimitPrice()) > 0;
@@ -176,15 +176,14 @@ public class AdjSubjectService {
                 return MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse.from(dto);
             })
             .toList();
-
-        //pc에서의 직급 id가 dto와 똑같은걸찾고, 그 pc의 상한값과 비교
     }
 
     public List<MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse> getLowerSubjects(
         Long adj_info_id
-    ) { //하한초과자 가져오기
+    ) {     //하한초과자 가져오기
         List<AdjSubjectSalaryDto> adjSubjectSalaryDtos = adjSubjectRepository.findAllAdjSubjectAndStdSalaryAndLower(
             adj_info_id);
+
         return adjSubjectSalaryDtos.stream()
             .filter(adjSubjectSalaryDto -> {
                 return adjSubjectSalaryDto.getStdSalary().compareTo(adjSubjectSalaryDto.getLimitPrice()) < 0;
@@ -219,9 +218,11 @@ public class AdjSubjectService {
     }
 
     private List<MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse> getUpperSubjectsWithSearchKey(
-        Long adjInfoId, String searchKey) {
+        Long adjInfoId, String searchKey
+    ) {
         List<AdjSubjectSalaryDto> adjSubjectSalaryDtos = adjSubjectRepository.findAllAdjSubjectAndStdSalaryAndUpperWithSearchKey(
             adjInfoId, searchKey);
+
         return adjSubjectSalaryDtos.stream()
             .filter(adjSubjectSalaryDto -> {
                 return adjSubjectSalaryDto.getStdSalary().compareTo(adjSubjectSalaryDto.getLimitPrice()) > 0;
@@ -241,7 +242,8 @@ public class AdjSubjectService {
     }
 
     private List<MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse> getLowerSubjectsWithSearchKey(
-        Long adjInfoId, String searchKey) {
+        Long adjInfoId, String searchKey
+    ) {
         List<AdjSubjectSalaryDto> adjSubjectSalaryDtos = adjSubjectRepository.findAllAdjSubjectAndStdSalaryAndLowerWithSearchKey(
             adjInfoId, searchKey);
         return adjSubjectSalaryDtos.stream()
