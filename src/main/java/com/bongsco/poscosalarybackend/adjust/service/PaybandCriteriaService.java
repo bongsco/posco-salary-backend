@@ -1,5 +1,7 @@
 package com.bongsco.poscosalarybackend.adjust.service;
 
+import static com.bongsco.poscosalarybackend.global.exception.ErrorCode.*;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Comparator;
@@ -14,6 +16,7 @@ import com.bongsco.poscosalarybackend.adjust.domain.Salary;
 import com.bongsco.poscosalarybackend.adjust.dto.response.MainAdjPaybandCriteriaResponse;
 import com.bongsco.poscosalarybackend.adjust.repository.AdjustRepository;
 import com.bongsco.poscosalarybackend.adjust.repository.PaybandCriteriaRepository;
+import com.bongsco.poscosalarybackend.global.exception.CustomException;
 import com.bongsco.poscosalarybackend.user.domain.Employee;
 import com.bongsco.poscosalarybackend.user.repository.EmployeeRepository;
 import com.bongsco.poscosalarybackend.user.repository.SalaryRepository;
@@ -40,7 +43,11 @@ public class PaybandCriteriaService {
             ));
 
         Long beforeAdjInfoId = adjustRepository.findLatestAdjustInfo(adjInfoId).get(0).getId();
-        //없으면 에러
+
+        if (beforeAdjInfoId == null) {
+            throw new CustomException(CANNOT_NULL_INPUT);
+        }
+
 
         List<Salary> salaries = salaryRepository.findByAdjInfo_Id(beforeAdjInfoId);
 

@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import com.bongsco.poscosalarybackend.adjust.dto.AdjSubjectSalaryDto;
-
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 
 @Builder
 @AllArgsConstructor
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public class MainAdjPaybandBothSubjectsResponse {
     private List<MainAdjPaybandSubjectsResponse> upperAdjSubjects;
@@ -20,7 +20,7 @@ public class MainAdjPaybandBothSubjectsResponse {
 
     @Builder
     @AllArgsConstructor
-    @NoArgsConstructor
+    @NoArgsConstructor(access = AccessLevel.PROTECTED)
     @Getter
     public static class MainAdjPaybandSubjectsResponse {
         private Long adjSubjectId;
@@ -35,15 +35,16 @@ public class MainAdjPaybandBothSubjectsResponse {
         private Boolean paybandUse;
 
         public static MainAdjPaybandSubjectsResponse from(
-            AdjSubjectSalaryDto adjSubjectSalaryDto) {
-            // return new MainAdjPaybandSubjectsResponse(
-            //     adjSubjectSalaryDto.getAdjSubjectId(),
-            //     adjSubjectSalaryDto.getEmpNum(), adjSubjectSalaryDto.getName(), adjSubjectSalaryDto.getDepName(),
-            //     adjSubjectSalaryDto.getGradeName(), adjSubjectSalaryDto.getPositionName(),
-            //     adjSubjectSalaryDto.getRankName(), adjSubjectSalaryDto.getStdSalary(),
-            //     adjSubjectSalaryDto.getLimitPrice(),
-            //     adjSubjectSalaryDto.getPaybandUse());
-            return null;
+            AdjSubjectSalaryDto adjSubjectSalaryDto
+        ) {
+            return new MainAdjPaybandSubjectsResponse(
+                adjSubjectSalaryDto.getAdjSubjectId(),
+                adjSubjectSalaryDto.getEmpNum(), adjSubjectSalaryDto.getName(), adjSubjectSalaryDto.getDepName(),
+                adjSubjectSalaryDto.getGradeName(), adjSubjectSalaryDto.getPositionName(),
+                adjSubjectSalaryDto.getRankName(), adjSubjectSalaryDto.getStdSalary(),
+                adjSubjectSalaryDto.getLimitPrice(),
+                adjSubjectSalaryDto.getPaybandUse());
+
         }
     }
 }
