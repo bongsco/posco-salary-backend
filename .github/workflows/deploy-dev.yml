@@ -23,19 +23,52 @@ jobs:
     environment: production
 
     steps:
-      - name: Check commit status
-        id: commit-status
+      - name: Monitor GitHub Commit Status
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          CURRENT_STATUS=$(curl --url https://api.github.com/repos/${{ github.repository }}/commits/${{ github.sha }}/status --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' | jq -r '.state');
+          REPO="bongsco/posco-salary-backend"
+          SHA="${{ github.sha }}"
+          API_URL="https://api.github.com/repos/$REPO/commits/$SHA/status"
+
+          # Get the initial build status
+          CURRENT_STATUS=$(curl -s --url "$API_URL" \
+            --header "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" | jq -r '.state')
+
           echo "Current status is: $CURRENT_STATUS"
-          while [ "${CURRENT_STATUS^^}" = "PENDING" ]; 
-            do sleep 20; 
-            CURRENT_STATUS=$(curl --url https://api.github.com/repos/${{ github.repository }}/commits/${{ github.sha }}/status --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' | jq -r '.state');
-          done;
-          echo "Current status is: $CURRENT_STATUS"
-          if [ "${CURRENT_STATUS^^}" = "FAILURE" ]; 
-            then echo "Commit status failed. Canceling execution"; 
-            exit 1; 
+
+          # Start the timer
+          START_TIME=$SECONDS
+          MAX_WAIT_TIME=300  # 5 minutes in seconds
+
+          # Poll until the status is no longer pending or timeout after 5 minutes
+          while [ "${CURRENT_STATUS^^}" = "PENDING" ]; do
+            # Check if 5 minutes have passed
+            ELAPSED_TIME=$((SECONDS - START_TIME))
+            if [ $ELAPSED_TIME -ge $MAX_WAIT_TIME ]; then
+              echo "Timeout reached. The build is still pending after 5 minutes."
+              exit 1
+            fi
+
+            sleep 20
+            CURRENT_STATUS=$(curl -s --url "$API_URL" \
+              --header "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" | jq -r '.state')
+            echo "Polling... Current status is: $CURRENT_STATUS"
+          done
+
+          echo "Final status is: $CURRENT_STATUS"
+
+          # Exit if the build failed
+          if [ "${CURRENT_STATUS^^}" = "FAILURE" ]; then
+            echo "Commit status failed. Canceling execution."
+            exit 1
+          fi
+          echo "Final status is: $CURRENT_STATUS"
+
+          # Exit if the build failed
+          if [ "${CURRENT_STATUS^^}" = "FAILURE" ]; then
+            echo "Commit status failed. Canceling execution."
+            exit 1
           fi
 
       - name: Checkout
