@@ -150,15 +150,15 @@ public class AdjSubjectService {
         });
     }
 
-    public MainAdjPaybandBothSubjectsResponse getBothUpperLowerSubjects(Long adj_info_id) { //상한, 하한 초과자 가져오기
-        return new MainAdjPaybandBothSubjectsResponse(getUpperSubjects(adj_info_id), getLowerSubjects(adj_info_id));
+    public MainAdjPaybandBothSubjectsResponse getBothUpperLowerSubjects(Long adjInfoId) { //상한, 하한 초과자 가져오기
+        return new MainAdjPaybandBothSubjectsResponse(getUpperSubjects(adjInfoId), getLowerSubjects(adjInfoId));
     }
 
     public List<MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse> getUpperSubjects(
-        Long adj_info_id
+        Long adjInfoId
     ) {     //상한초과자 가져오기
         List<AdjSubjectSalaryDto> adjSubjectSalaryDtos = adjSubjectRepository.findAllAdjSubjectAndStdSalaryAndUpper(
-            adj_info_id);
+            adjInfoId);
 
         return adjSubjectSalaryDtos.stream()
             .filter(adjSubjectSalaryDto -> {
@@ -179,10 +179,10 @@ public class AdjSubjectService {
     }
 
     public List<MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse> getLowerSubjects(
-        Long adj_info_id
+        Long adjInfoId
     ) {     //하한초과자 가져오기
         List<AdjSubjectSalaryDto> adjSubjectSalaryDtos = adjSubjectRepository.findAllAdjSubjectAndStdSalaryAndLower(
-            adj_info_id);
+            adjInfoId);
 
         return adjSubjectSalaryDtos.stream()
             .filter(adjSubjectSalaryDto -> {
