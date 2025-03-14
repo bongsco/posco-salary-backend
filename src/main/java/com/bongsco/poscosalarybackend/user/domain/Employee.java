@@ -1,6 +1,5 @@
 package com.bongsco.poscosalarybackend.user.domain;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import org.hibernate.annotations.SQLDelete;
@@ -72,7 +71,7 @@ public class Employee extends BaseEntity {
     @Column(length = 10)
     private String positionArea;
 
-    @Column(precision = 5, scale = 2)
-    private BigDecimal stdSalaryIncrementRate;
+    @Column
+    private Double stdSalaryIncrementRate;
 }
 

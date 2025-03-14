@@ -1,7 +1,5 @@
 package com.bongsco.poscosalarybackend.adjust.domain;
 
-import java.math.BigDecimal;
-
 import org.hibernate.annotations.SQLDelete;
 
 import com.bongsco.poscosalarybackend.global.domain.BaseEntity;
@@ -46,9 +44,9 @@ public class RankIncrementRate extends BaseEntity {
     @JoinColumn(name = "grade_id", nullable = false)
     private Grade grade;
 
-    @Column(precision = 5, scale = 2)
-    private BigDecimal evalDiffIncrement;
+    @Column
+    private Double evalDiffIncrement;
 
-    @Column(precision = 5, scale = 2)
-    private BigDecimal evalDiffBonus;
+    @Column
+    private Double evalDiffBonus;
 }

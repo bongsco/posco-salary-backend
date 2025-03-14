@@ -1,7 +1,5 @@
 package com.bongsco.poscosalarybackend.adjust.domain;
 
-import java.math.BigDecimal;
-
 import org.hibernate.annotations.SQLDelete;
 
 import com.bongsco.poscosalarybackend.global.domain.BaseEntity;
@@ -41,10 +39,10 @@ public class PaybandCriteria extends BaseEntity {
     @JoinColumn(name = "grade_id", nullable = false)
     private Grade grade;
 
-    @Column(precision = 20, scale = 2)
-    private BigDecimal upperLimitPrice;
+    @Column
+    private Double upperLimitPrice;
 
-    @Column(precision = 20, scale = 2)
-    private BigDecimal lowerLimitPrice;
+    @Column
+    private Double lowerLimitPrice;
 }
 

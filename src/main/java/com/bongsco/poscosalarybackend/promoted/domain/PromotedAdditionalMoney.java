@@ -1,7 +1,5 @@
 package com.bongsco.poscosalarybackend.promoted.domain;
 
-import java.math.BigDecimal;
-
 import org.hibernate.annotations.SQLDelete;
 
 import com.bongsco.poscosalarybackend.adjust.domain.AdjInfo;
@@ -48,7 +46,7 @@ public class PromotedAdditionalMoney extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private Status status;
 
-    @Column(precision = 20, scale = 2)
-    private BigDecimal monthlyAdditionalMoney;
+    @Column
+    private Double monthlyAdditionalMoney;
 }
 

@@ -1,6 +1,5 @@
 package com.bongsco.poscosalarybackend.adjust.dto.request;
 
-import java.math.BigDecimal;
 import java.util.Map;
 
 import jakarta.validation.Valid;
@@ -20,10 +19,10 @@ public class RankIncrementRateRequest {
     private Map<Long, Map<Long, RankIncrementRateDetail>> rankData;
 
     @NotNull(message = "evalDiffBonusPromoted가 null 일 수 없습니다.")
-    private BigDecimal evalDiffBonusPromoted;
+    private Double evalDiffBonusPromoted;
 
     @NotNull(message = "evalDiffIncrementPromoted가 null 일 수 없습니다.")
-    private BigDecimal evalDiffIncrementPromoted;
+    private Double evalDiffIncrementPromoted;
 
     @Builder
     @AllArgsConstructor
@@ -31,9 +30,9 @@ public class RankIncrementRateRequest {
     @Getter
     public static class RankIncrementRateDetail {
         @NotNull(message = "evalDiffBonus가 null 일 수 없습니다.")
-        private BigDecimal evalDiffBonus;
+        private Double evalDiffBonus;
         @NotNull(message = "evalDiffIncrement가 null 일 수 없습니다.")
-        private BigDecimal evalDiffIncrement;
+        private Double evalDiffIncrement;
     }
 }
 

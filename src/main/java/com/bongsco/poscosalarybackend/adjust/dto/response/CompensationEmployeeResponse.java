@@ -1,7 +1,5 @@
 package com.bongsco.poscosalarybackend.adjust.dto.response;
 
-import java.math.BigDecimal;
-
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,14 +18,14 @@ public class CompensationEmployeeResponse {
     private String gradeName;
     private String rankName;
     private Boolean inHighPerformGroup;
-    private BigDecimal evalAnnualSalaryIncrement;
-    private BigDecimal evalPerformProvideRate;
-    private BigDecimal evalDiffIncrement;
-    private BigDecimal evalDiffBonus;
+    private Double evalAnnualSalaryIncrement;
+    private Double evalPerformProvideRate;
+    private Double evalDiffIncrement;
+    private Double evalDiffBonus;
 
     public CompensationEmployeeResponse(Long adjSubjectId, String empNum, String name, String depName, String gradeName,
-        String rankName, Boolean inHighPerformGroup, BigDecimal evalAnnualSalaryIncrement,
-        BigDecimal evalPerformProvideRate) {
+        String rankName, Boolean inHighPerformGroup, Double evalAnnualSalaryIncrement,
+        Double evalPerformProvideRate) {
         this.adjSubjectId = adjSubjectId;
         this.empNum = empNum;
         this.name = name;
@@ -39,11 +37,11 @@ public class CompensationEmployeeResponse {
         this.evalPerformProvideRate = evalPerformProvideRate;
     }
 
-    public void setEvalDiffIncrement(BigDecimal evalDiffIncrement) {
+    public void setEvalDiffIncrement(Double evalDiffIncrement) {
         this.evalDiffIncrement = evalDiffIncrement;
     }
 
-    public void setEvalDiffBonus(BigDecimal evalDiffBonus) {
+    public void setEvalDiffBonus(Double evalDiffBonus) {
         this.evalDiffBonus = evalDiffBonus;
     }
 }

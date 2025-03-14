@@ -1,9 +1,9 @@
 package com.bongsco.poscosalarybackend.adjust.dto.response;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 import com.bongsco.poscosalarybackend.adjust.domain.PaybandCriteria;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,13 +24,13 @@ public class MainAdjPaybandCriteriaResponse {
     public static class PaybandCriteriaResponse {
         private String gradeName;
         private int numberOfEmpl;
-        private BigDecimal representativeVal;
-        private BigDecimal upperLimitPrice;
-        private BigDecimal lowerLimitPrice;
-        private BigDecimal gradeBaseSalary;
+        private Double representativeVal;
+        private Double upperLimitPrice;
+        private Double lowerLimitPrice;
+        private Double gradeBaseSalary;
 
         public static PaybandCriteriaResponse from(PaybandCriteria paybandCriteria, int numberOfEmpl,
-            BigDecimal representativeVal) {
+            Double representativeVal) {
             return new PaybandCriteriaResponse(paybandCriteria.getGrade().getGradeName(), numberOfEmpl,
                 representativeVal,
                 paybandCriteria.getUpperLimitPrice(), paybandCriteria.getLowerLimitPrice(),

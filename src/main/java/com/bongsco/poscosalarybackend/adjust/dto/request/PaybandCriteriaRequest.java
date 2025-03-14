@@ -1,6 +1,5 @@
 package com.bongsco.poscosalarybackend.adjust.dto.request;
 
-import java.math.BigDecimal;
 import java.util.Map;
 
 import jakarta.validation.Valid;
@@ -27,9 +26,9 @@ public class PaybandCriteriaRequest {
     @NoArgsConstructor(access = AccessLevel.PROTECTED)
     public static class PaybandCriteriaDetail {
         @NotNull(message = "상한값이 null 일 수 없습니다.")
-        private BigDecimal upperLimitPrice;
+        private Double upperLimitPrice;
         @NotNull(message = "하한값이 null 일 수 없습니다.")
-        private BigDecimal lowerLimitPrice;
+        private Double lowerLimitPrice;
     }
 }
 

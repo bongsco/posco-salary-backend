@@ -1,7 +1,5 @@
 package com.bongsco.poscosalarybackend.baseup.domain;
 
-import java.math.BigDecimal;
-
 import org.hibernate.annotations.SQLDelete;
 
 import com.bongsco.poscosalarybackend.adjust.domain.AdjInfo;
@@ -48,9 +46,9 @@ public class BaseupCriteria extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private Status status;
 
-    @Column(precision = 20, scale = 2)
-    private BigDecimal fixedAmount;
+    @Column
+    private Double fixedAmount;
 
-    @Column(precision = 10, scale = 2)
-    private BigDecimal fixedRate;
+    @Column
+    private Double fixedRate;
 }

@@ -1,8 +1,5 @@
 package com.bongsco.poscosalarybackend.adjust.dto;
 
-import java.math.BigDecimal;
-
-
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,7 +13,7 @@ import lombok.NoArgsConstructor;
 public class AdjSubjectSalaryDto {
     private Long adjSubjectId;
     private Long employeeId;
-    private BigDecimal stdSalary;
+    private Double stdSalary;
     private Boolean paybandUse;
     private Long gradeId;
     private String empNum;
@@ -25,10 +22,10 @@ public class AdjSubjectSalaryDto {
     private String gradeName;
     private String positionName;
     private String rankName;
-    private BigDecimal limitPrice;
+    private Double limitPrice;
 
-    public AdjSubjectSalaryDto(Long adjSubjectId, Long employeeId, BigDecimal stdSalary, Boolean paybandUse,
-        Long gradeId, BigDecimal limitPrice, String gradeName) {
+    public AdjSubjectSalaryDto(Long adjSubjectId, Long employeeId, Double stdSalary, Boolean paybandUse,
+        Long gradeId, Double limitPrice, String gradeName) {
         this.adjSubjectId = adjSubjectId;
         this.employeeId = employeeId;
         this.stdSalary = stdSalary;

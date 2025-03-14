@@ -1,9 +1,9 @@
 package com.bongsco.poscosalarybackend.adjust.dto.response;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 import com.bongsco.poscosalarybackend.adjust.dto.AdjSubjectSalaryDto;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,8 +30,8 @@ public class MainAdjPaybandBothSubjectsResponse {
         private String gradeName;
         private String positionName;
         private String rankName;
-        private BigDecimal stdSalary;
-        private BigDecimal limitPrice;
+        private Double stdSalary;
+        private Double limitPrice;
         private Boolean paybandUse;
 
         public static MainAdjPaybandSubjectsResponse from(
@@ -44,7 +44,6 @@ public class MainAdjPaybandBothSubjectsResponse {
                 adjSubjectSalaryDto.getRankName(), adjSubjectSalaryDto.getStdSalary(),
                 adjSubjectSalaryDto.getLimitPrice(),
                 adjSubjectSalaryDto.getPaybandUse());
-
         }
     }
 }

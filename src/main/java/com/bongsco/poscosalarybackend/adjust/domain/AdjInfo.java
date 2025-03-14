@@ -1,6 +1,5 @@
 package com.bongsco.poscosalarybackend.adjust.domain;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import org.hibernate.annotations.SQLDelete;
@@ -62,11 +61,11 @@ public class AdjInfo extends BaseEntity {
     @Column
     private Integer orderNumber;
 
-    @Column(precision = 5, scale = 2)
-    private BigDecimal evalAnnualSalaryIncrement;
+    @Column
+    private Double evalAnnualSalaryIncrement;
 
-    @Column(precision = 5, scale = 2)
-    private BigDecimal evalPerformProvideRate;
+    @Column
+    private Double evalPerformProvideRate;
 
     @Column
     private LocalDate baseDate;

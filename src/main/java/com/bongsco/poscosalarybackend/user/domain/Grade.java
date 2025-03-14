@@ -1,7 +1,5 @@
 package com.bongsco.poscosalarybackend.user.domain;
 
-import java.math.BigDecimal;
-
 import org.hibernate.annotations.SQLDelete;
 
 import com.bongsco.poscosalarybackend.global.domain.BaseEntity;
@@ -33,7 +31,7 @@ public class Grade extends BaseEntity {
     @Column(length = 100, nullable = false)
     private String gradeName;
 
-    @Column(precision = 20, scale = 2, nullable = false)
-    private BigDecimal gradeBaseSalary;
+    @Column(nullable = false)
+    private Double gradeBaseSalary;
 }
 

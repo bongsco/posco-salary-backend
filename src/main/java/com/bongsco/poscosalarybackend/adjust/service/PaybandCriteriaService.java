@@ -2,8 +2,6 @@ package com.bongsco.poscosalarybackend.adjust.service;
 
 import static com.bongsco.poscosalarybackend.global.exception.ErrorCode.*;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +9,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.bongsco.poscosalarybackend.adjust.domain.AdjInfo;
 import com.bongsco.poscosalarybackend.adjust.domain.PaybandCriteria;
 import com.bongsco.poscosalarybackend.adjust.domain.Salary;
 import com.bongsco.poscosalarybackend.adjust.dto.response.MainAdjPaybandCriteriaResponse;
@@ -42,16 +41,15 @@ public class PaybandCriteriaService {
                 Collectors.summingInt(e -> 1) // 각 그룹의 개수 세기
             ));
 
-        Long beforeAdjInfoId = adjustRepository.findLatestAdjustInfo(adjInfoId).get(0).getId();
-
-        if (beforeAdjInfoId == null) {
+        List<AdjInfo> adjInfos = adjustRepository.findLatestAdjustInfo(adjInfoId);
+        if (adjInfos.isEmpty()) {
             throw new CustomException(CANNOT_NULL_INPUT);
         }
-
+        Long beforeAdjInfoId = adjustRepository.findLatestAdjustInfo(adjInfoId).get(0).getId();
 
         List<Salary> salaries = salaryRepository.findByAdjInfo_Id(beforeAdjInfoId);
 
-        Map<Long, BigDecimal> representativeVal = salaries.stream() //gradeId:대표값
+        Map<Long, Double> representativeVal = salaries.stream() //gradeId:대표값
             .collect(Collectors.groupingBy(
                 s -> s.getGrade().getId(), // 1차 그룹화 (gradeId 기준)
                 Collectors.collectingAndThen(
@@ -64,20 +62,20 @@ public class PaybandCriteriaService {
             .stream()
             .map(pc -> {
                 Integer count = countEmpl.getOrDefault(pc.getGrade().getId(), 0); // null이면 0 반환
-                BigDecimal representative = representativeVal.getOrDefault(pc.getGrade().getId(),
-                    BigDecimal.valueOf(0)); // null이면 0 반환
+                Double representative = representativeVal.getOrDefault(pc.getGrade().getId(),
+                    0.0); // null이면 0 반환
                 return MainAdjPaybandCriteriaResponse.PaybandCriteriaResponse.from(pc, count, representative);
             })
             .toList());
     }
 
-    private BigDecimal calculateMedian(List<Salary> salaries) {
+    private Double calculateMedian(List<Salary> salaries) {
         List<Salary> salaryPerGrade = salaries.stream()
             .sorted(Comparator.comparing(Salary::getStdSalary))
             .toList();
 
         if (salaryPerGrade.isEmpty()) {
-            return BigDecimal.valueOf(0);
+            return 0.0;
         }
 
         int size = salaryPerGrade.size();
@@ -85,18 +83,12 @@ public class PaybandCriteriaService {
 
         if (size % 2 == 0) {
             // 짝수 개수일 때: 중앙 두 값의 평균 반환
-            return roundToThousands(salaryPerGrade.get(middle - 1)
+            return Math.round((salaryPerGrade.get(middle - 1)
                 .getStdSalary()
-                .add(salaryPerGrade.get(middle).getStdSalary()).divide(BigDecimal.valueOf(2),
-                    RoundingMode.HALF_UP));
+                + salaryPerGrade.get(middle).getStdSalary()) / 2.0 / 1000.0) * 1000.0;
         } else {
             // 홀수 개수일 때: 가운데 값 반환
-            return roundToThousands(salaryPerGrade.get(middle).getStdSalary());
+            return Math.round(salaryPerGrade.get(middle).getStdSalary() / 1000.0) * 1000.0;
         }
-    }
-
-    private BigDecimal roundToThousands(BigDecimal value) {
-        BigDecimal thousand = BigDecimal.valueOf(1000);
-        return value.divide(thousand, 0, RoundingMode.HALF_UP).multiply(thousand);
     }
 }
