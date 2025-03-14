@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.bongsco.poscosalarybackend.adjust.dto.request.ChangedSubjectListRequest;
+import com.bongsco.poscosalarybackend.adjust.dto.response.AdjResultResponse;
 import com.bongsco.poscosalarybackend.adjust.dto.response.MainAdjPaybandBothSubjectsResponse;
 import com.bongsco.poscosalarybackend.adjust.dto.response.MainAdjPaybandCriteriaResponse;
 import com.bongsco.poscosalarybackend.adjust.service.AdjSubjectService;
@@ -76,7 +77,8 @@ public class MainAdjController {
 
     @Operation(summary = "기준 연봉 계산", description = "사전 작업에서 입력한 내용을 기준으로 일괄적으로 기준 연봉 계산, payband 넘어가기전에 넣어줘야함")
     @PatchMapping("/{adj_info_id}/calculate-salary")
-    public ResponseEntity<JsonResult<String>> calculateSalary(@PathVariable("adj_info_id") Long adjInfoId) {
+    public ResponseEntity<JsonResult<String>> calculateSalary(@PathVariable("adj_info_id") Long adjInfoId
+    ) {
         adjSubjectService.calculateSalary(adjInfoId);
         return ResponseEntity.status(HttpStatus.OK)
             .body(JsonResult.success("success"));
@@ -84,9 +86,20 @@ public class MainAdjController {
 
     @Operation(summary = "성과금 계산", description = "사전 작업에서 입력한 내용을 기준으로 일괄적으로 성과금 계산, payband 넘어가기전에 넣어줘야함")
     @PatchMapping("/{adj_info_id}/calculate-add-payment")
-    public ResponseEntity<JsonResult<String>> calculateAddPayment(@PathVariable("adj_info_id") Long adjInfoId) {
+    public ResponseEntity<JsonResult<String>> calculateAddPayment(@PathVariable("adj_info_id") Long adjInfoId
+    ) {
         adjSubjectService.calculateAddPayment(adjInfoId);
         return ResponseEntity.status(HttpStatus.OK)
             .body(JsonResult.success("success"));
+    }
+
+    @Operation(summary = "정기 연봉 조정", description = "마지막 페이지, 계산값 모두 보여줌")
+    @PatchMapping("/{adj_info_id}/annual-adj")
+    public ResponseEntity<JsonResult<AdjResultResponse>> showResult(@PathVariable("adj_info_id") Long adjInfoId,
+        @RequestParam(value = "searchKey", required = false) String searchKey
+    ) {
+
+        return ResponseEntity.status(HttpStatus.OK)
+            .body(JsonResult.success(adjSubjectService.getFinalResult(adjInfoId)));
     }
 }

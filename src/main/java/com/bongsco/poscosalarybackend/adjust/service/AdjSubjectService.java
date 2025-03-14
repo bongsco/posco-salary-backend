@@ -3,6 +3,7 @@ package com.bongsco.poscosalarybackend.adjust.service;
 import static com.bongsco.poscosalarybackend.global.exception.ErrorCode.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -11,10 +12,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.bongsco.poscosalarybackend.adjust.domain.AdjInfo;
 import com.bongsco.poscosalarybackend.adjust.domain.AdjSubject;
+import com.bongsco.poscosalarybackend.adjust.domain.PaybandCriteria;
 import com.bongsco.poscosalarybackend.adjust.domain.RankIncrementRate;
 import com.bongsco.poscosalarybackend.adjust.dto.AdjSubjectSalaryDto;
 import com.bongsco.poscosalarybackend.adjust.dto.request.ChangedHighPerformGroupEmployeeRequest;
 import com.bongsco.poscosalarybackend.adjust.dto.request.ChangedSubjectUseEmployeeRequest;
+import com.bongsco.poscosalarybackend.adjust.dto.response.AdjResultResponse;
 import com.bongsco.poscosalarybackend.adjust.dto.response.CompensationEmployeeResponse;
 import com.bongsco.poscosalarybackend.adjust.dto.response.EmployeeResponse;
 import com.bongsco.poscosalarybackend.adjust.dto.response.MainAdjPaybandBothSubjectsResponse;
@@ -335,5 +338,90 @@ public class AdjSubjectService {
             AdjSubject saveAdjSubject = adjSubject.toBuilder().performAddPayment(newPerformAddPayment).build();
             adjSubjectRepository.save(saveAdjSubject);
         });
+    }
+
+    public AdjResultResponse getFinalResult(Long adjInfoId) {
+        List<AdjSubject> adjSubjects = adjSubjectRepository.findByAdjInfo_Id(adjInfoId)
+            .stream()
+            .filter(adjSubject -> !adjSubject.getDeleted())
+            .filter(AdjSubject::getSubjectUse)
+            .toList();
+
+        AdjInfo adjInfo = adjustRepository.findById(adjInfoId).get();
+        List<PaybandCriteria> paybandCriterias = paybandCriteriaRepository.findByAdjInfo_Id(adjInfoId)
+            .stream()
+            .filter(pc -> !pc.getDeleted())
+            .toList();
+
+        List<AdjInfo> adjInfos = adjustRepository.findLatestAdjustInfo(adjInfoId)
+            .stream()
+            .filter(adjInfo1 -> !adjInfo1.getDeleted())
+            .toList();
+        if (adjInfos.isEmpty()) {
+            throw new CustomException(CANNOT_NULL_INPUT);
+        }
+        Long beforeAdjInfoId = adjInfos.get(0).getId();
+
+        List<AdjSubject> beforeAdjSubjects = adjSubjectRepository.findByAdjInfo_Id(beforeAdjInfoId);
+
+        Map<Long, Double> representativeVals = beforeAdjSubjects.stream()
+            .filter(adjSubject -> !adjSubject.getDeleted())
+            .filter(adjSubject -> adjSubject.getStdSalary() != null)//gradeId:대표값
+            .collect(Collectors.groupingBy(
+                s -> s.getGrade().getId(), // 1차 그룹화 (gradeId 기준)
+                Collectors.collectingAndThen(
+                    Collectors.toList(),
+                    list -> PaybandCriteriaService.calculateMedian(list) // 상위 5% 제외 후 중간값
+                )
+            ));
+
+        return new AdjResultResponse(beforeAdjSubjects.stream().map(adjSubject -> {
+            Employee employee = adjSubject.getEmployee();
+            //상한값 하한값 가져오기,..
+            PaybandCriteria paybandCriteria = paybandCriterias.stream()
+                .filter(pc -> pc.getGrade().getId() == adjSubject.getGrade().getId()).findFirst().orElse(null);
+
+            //전년도 기준연봉 불러옴
+            AdjSubject beforeAdjSubject = adjSubjectRepository.findBeforeAdjSubject(adjInfoId,
+                employee.getId());
+
+            Double beforeFinalStdSalary = beforeAdjSubject.getStdSalary();
+            if (beforeAdjSubject.getPaybandUse()) {
+                PaybandCriteria beforePaybandCriteria = paybandCriteriaRepository.findByAdjInfo_IdAndGrade_Id(
+                    beforeAdjSubject.getAdjInfo().getId(), beforeAdjSubject.getGrade().getId()).orElse(null);
+                if (beforePaybandCriteria == null) {
+                    beforePaybandCriteria = paybandCriteria;
+                } //임시조치,,
+                if (beforeFinalStdSalary > beforePaybandCriteria.getUpperLimitPrice()) {
+                    beforeFinalStdSalary = beforePaybandCriteria.getUpperLimitPrice();
+                } else if (beforeFinalStdSalary < beforePaybandCriteria.getLowerLimitPrice()) {
+                    beforeFinalStdSalary = beforePaybandCriteria.getLowerLimitPrice();
+                }
+            }
+
+            Double finalStdSalary = adjSubject.getStdSalary();
+            if (adjSubject.getPaybandUse()) {
+                if (finalStdSalary > paybandCriteria.getUpperLimitPrice()) {
+                    finalStdSalary = paybandCriteria.getUpperLimitPrice();
+                } else if (finalStdSalary < paybandCriteria.getLowerLimitPrice()) {
+                    finalStdSalary = paybandCriteria.getLowerLimitPrice();
+                }
+            }
+
+            Double representativeVal = representativeVals.get(adjSubject.getGrade().getId());
+            Double finalStdSalaryIncrementRate = ((finalStdSalary - beforeFinalStdSalary) / beforeFinalStdSalary) * 100;
+
+            return new AdjResultResponse.AdjResult(employee.getEmpNum(), employee.getName(), employee.getBirth(),
+                employee.getHireDate(), employee.getStation().getStationName(), employee.getPaymentCriteria()
+                .getPaymentName(), employee.getDepartment().getDepName(), employee.getPositionName(),
+                adjSubject.getGrade().getGradeName(), employee.getPositionArea(),
+                adjInfo.getEvalAnnualSalaryIncrement(), adjInfo.getEvalPerformProvideRate(),
+                paybandCriteria.getUpperLimitPrice(), paybandCriteria.getLowerLimitPrice(), adjSubject.getStdSalary(),
+                beforeAdjSubject.getAdjInfo().getYear(), beforeAdjSubject.getAdjInfo().getOrderNumber(), finalStdSalary,
+                beforeAdjSubject.getPerformAddPayment(),
+                beforeAdjSubject.getStdSalary() + beforeAdjSubject.getPerformAddPayment(), representativeVal,
+                adjInfo.getYear(), adjInfo.getOrderNumber(), finalStdSalaryIncrementRate, adjSubject.getStdSalary(),
+                adjSubject.getPerformAddPayment(), adjSubject.getStdSalary() + adjSubject.getPerformAddPayment());
+        }).toList());
     }
 }
