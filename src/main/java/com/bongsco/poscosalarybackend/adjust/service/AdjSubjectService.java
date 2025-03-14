@@ -296,4 +296,44 @@ public class AdjSubjectService {
             adjSubjectRepository.save(saveAdjSubject);
         });
     }
+
+    public void calculateAddPayment(Long adjInfoId) {
+
+        List<AdjSubject> adjSubjects = adjSubjectRepository.findByAdjInfo_Id(adjInfoId)
+            .stream()
+            .filter(adjSubject -> !adjSubject.getDeleted())
+            .filter(AdjSubject::getSubjectUse)
+            .toList();
+
+        AdjInfo adjInfo = adjustRepository.findById(adjInfoId).get();
+        Double evalPerformProvideRate =
+            Optional.ofNullable(adjInfo.getEvalPerformProvideRate()).orElse(100.0) / 100;
+        //400% 이런식으로 들어옴
+
+        adjSubjects.stream().forEach(adjSubject -> {
+            // 평가차등 경영 성과금 = 평차금기준임금(업적연봉기본지금) * 평가차등경영성과금지급률
+            // 평차금기준임금 = ((기준연봉월할액 + 직무기본연봉) / 2 ) + 12만원
+
+            // 직무기본연봉 가져옴
+            Double gradeBaseSalary = adjSubject.getGrade().getGradeBaseSalary();
+            Double rankBaseStandardSalary = (adjSubject.getStdSalary() + gradeBaseSalary) / 12 + 12;
+
+            //평가차등경영성과금지급률 가져옴
+            RankIncrementRate rankIncrementRate = rankIncrementRateRepository.findByRankIdAndAdjInfoIdAndGradeId(
+                adjSubject.getRank().getId(), adjInfoId, adjSubject.getGrade().getId()).orElse(null);
+            Double evalDiffBonus =
+                rankIncrementRate == null ? 0.0 : rankIncrementRate.getEvalDiffBonus() / 100;
+
+            //고성과 조직일 경우
+            //평가차등경영성과금 지급률 = 평가차등경영성과금 지급률+고성과 경영성과금지급률
+            if (adjSubject.getInHighPerformGroup()) {
+                evalDiffBonus = evalDiffBonus + evalPerformProvideRate;
+            }
+
+            Double newPerformAddPayment = (double)Math.round(rankBaseStandardSalary * evalDiffBonus);
+
+            AdjSubject saveAdjSubject = adjSubject.toBuilder().performAddPayment(newPerformAddPayment).build();
+            adjSubjectRepository.save(saveAdjSubject);
+        });
+    }
 }
