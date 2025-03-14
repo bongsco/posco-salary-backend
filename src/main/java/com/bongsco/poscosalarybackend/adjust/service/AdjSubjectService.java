@@ -38,14 +38,14 @@ public class AdjSubjectService {
         // 연봉조정차수를 이용해 정기연봉조정대상자 테이블 가져오기
         List<AdjSubject> subjects = adjSubjectRepository.findByAdjInfo_Id(adjInfoId);
 
-        return subjects.stream().map(EmployeeResponse::from).toList();
+        return subjects.stream().filter(adjSubject -> !adjSubject.getDeleted()).map(EmployeeResponse::from).toList();
     }
 
     public List<EmployeeResponse> findBySearchKey(Long adjInfoId, String searchKey) {
         // 연봉조정차수&검색정보를 이용해 정기연봉조정대상자 테이블 가져오기
         List<AdjSubject> subjects = adjSubjectRepository.findByAdjInfoIdAndEmployeeName(adjInfoId, searchKey);
 
-        return subjects.stream().map(EmployeeResponse::from).toList();
+        return subjects.stream().filter(adjSubject -> !adjSubject.getDeleted()).map(EmployeeResponse::from).toList();
     }
 
     @Transactional
@@ -71,6 +71,7 @@ public class AdjSubjectService {
         List<AdjSubject> subjects = adjSubjectRepository.findByAdjInfo_Id(adjInfoId);
 
         return new PreprocessAdjSubjectsResponse(subjects.stream()
+            .filter(adjSubject -> !adjSubject.getDeleted())
             .filter(AdjSubject::getSubjectUse)
             .map(this::convertToResponse)
             .collect(Collectors.toList()));
@@ -83,17 +84,17 @@ public class AdjSubjectService {
             adjSubject.getEmployee().getEmpNum(),
             adjSubject.getEmployee().getName(),
             adjSubject.getEmployee().getDepartment().getDepName(),
-            adjSubject.getEmployee().getGrade().getGradeName(),
-            adjSubject.getEmployee().getRank().getRankCode(),
+            adjSubject.getGrade().getGradeName(),
+            adjSubject.getRank().getRankCode(),
             adjSubject.getInHighPerformGroup(),
             adjSubject.getAdjInfo().getEvalAnnualSalaryIncrement(),
             adjSubject.getAdjInfo().getEvalPerformProvideRate()
         );
 
         RankIncrementRate rankIncrementRate = rankIncrementRateRepository.findByRankIdAndAdjInfoIdAndGradeId(
-            adjSubject.getEmployee().getRank().getId(), //rank는 도메인 바꾸고 바꾸기, 당시 랭크가 저장 되어 있어야함
+            adjSubject.getRank().getId(),
             adjSubject.getAdjInfo().getId(),
-            adjSubject.getEmployee().getGrade().getId()
+            adjSubject.getGrade().getId()
         ).orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
 
         if (rankIncrementRate != null) {
@@ -109,6 +110,7 @@ public class AdjSubjectService {
         List<AdjSubject> subjects = adjSubjectRepository.findByAdjInfoIdAndEmployeeName(adjInfoId, searchKey);
 
         return new PreprocessAdjSubjectsResponse(subjects.stream()
+            .filter(adjSubject -> !adjSubject.getDeleted())
             .filter(AdjSubject::getSubjectUse)
             .map(this::convertToResponse)
             .collect(Collectors.toList()));
@@ -159,7 +161,6 @@ public class AdjSubjectService {
                     .name(employee.getName())
                     .depName(employee.getDepartment().getDepName())
                     .positionName(employee.getPositionName())
-                    .rankName(employee.getRank().getRankName())
                     .build();
                 return MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse.from(dto);
             })
@@ -184,7 +185,6 @@ public class AdjSubjectService {
                     .depName(employee.getDepartment().getDepName())
                     .gradeName(employee.getGrade().getGradeName())
                     .positionName(employee.getPositionName())
-                    .rankName(employee.getRank().getRankName())
                     .build();
                 return MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse.from(dto);
             })
@@ -222,7 +222,6 @@ public class AdjSubjectService {
                     .name(employee.getName())
                     .depName(employee.getDepartment().getDepName())
                     .positionName(employee.getPositionName())
-                    .rankName(employee.getRank().getRankName())
                     .build();
                 return MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse.from(dto);
             })
@@ -245,7 +244,6 @@ public class AdjSubjectService {
                     .name(employee.getName())
                     .depName(employee.getDepartment().getDepName())
                     .positionName(employee.getPositionName())
-                    .rankName(employee.getRank().getRankName())
                     .build();
                 return MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse.from(dto);
             })

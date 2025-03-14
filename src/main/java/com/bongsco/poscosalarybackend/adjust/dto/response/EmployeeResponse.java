@@ -3,6 +3,7 @@ package com.bongsco.poscosalarybackend.adjust.dto.response;
 import java.time.LocalDate;
 
 import com.bongsco.poscosalarybackend.adjust.domain.AdjSubject;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,7 +26,7 @@ public class EmployeeResponse {
 
         return new EmployeeResponse(adjSubject.getEmployee().getId(), adjSubject.getEmployee().getEmpNum(),
             adjSubject.getEmployee().getName(), adjSubject.getEmployee().getHireDate(),
-            adjSubject.getEmployee().getRank().getRankCode(),
+            adjSubject.getRank().getRankCode(),
             adjSubject.getSubjectUse());
     }
 }

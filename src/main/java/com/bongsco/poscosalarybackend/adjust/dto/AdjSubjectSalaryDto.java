@@ -25,12 +25,13 @@ public class AdjSubjectSalaryDto {
     private Double limitPrice;
 
     public AdjSubjectSalaryDto(Long adjSubjectId, Long employeeId, Double stdSalary, Boolean paybandUse,
-        Long gradeId, Double limitPrice, String gradeName) {
+        Long gradeId, String rankName, Double limitPrice, String gradeName) {
         this.adjSubjectId = adjSubjectId;
         this.employeeId = employeeId;
         this.stdSalary = stdSalary;
         this.paybandUse = paybandUse;
         this.gradeId = gradeId;
+        this.rankName = rankName;
         this.limitPrice = limitPrice;
         this.gradeName = gradeName;
     }

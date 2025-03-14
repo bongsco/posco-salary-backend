@@ -10,15 +10,15 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import com.bongsco.poscosalarybackend.adjust.domain.AdjInfo;
+import com.bongsco.poscosalarybackend.adjust.domain.AdjSubject;
 import com.bongsco.poscosalarybackend.adjust.domain.PaybandCriteria;
-import com.bongsco.poscosalarybackend.adjust.domain.Salary;
 import com.bongsco.poscosalarybackend.adjust.dto.response.MainAdjPaybandCriteriaResponse;
+import com.bongsco.poscosalarybackend.adjust.repository.AdjSubjectRepository;
 import com.bongsco.poscosalarybackend.adjust.repository.AdjustRepository;
 import com.bongsco.poscosalarybackend.adjust.repository.PaybandCriteriaRepository;
 import com.bongsco.poscosalarybackend.global.exception.CustomException;
 import com.bongsco.poscosalarybackend.user.domain.Employee;
 import com.bongsco.poscosalarybackend.user.repository.EmployeeRepository;
-import com.bongsco.poscosalarybackend.user.repository.SalaryRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -27,8 +27,8 @@ import lombok.RequiredArgsConstructor;
 public class PaybandCriteriaService {
     private final PaybandCriteriaRepository paybandCriteriaRepository;
     private final EmployeeRepository employeeRepository;
-    private final SalaryRepository salaryRepository;
     private final AdjustRepository adjustRepository;
+    private final AdjSubjectRepository adjSubjectRepository;
 
     public MainAdjPaybandCriteriaResponse findAllPaybandCriteria(Long adjInfoId) {
         List<PaybandCriteria> paybandCriterias = paybandCriteriaRepository.findByAdjInfo_Id(adjInfoId);
@@ -45,11 +45,12 @@ public class PaybandCriteriaService {
         if (adjInfos.isEmpty()) {
             throw new CustomException(CANNOT_NULL_INPUT);
         }
-        Long beforeAdjInfoId = adjustRepository.findLatestAdjustInfo(adjInfoId).get(0).getId();
+        Long beforeAdjInfoId = adjInfos.get(0).getId();
 
-        List<Salary> salaries = salaryRepository.findByAdjInfo_Id(beforeAdjInfoId);
+        List<AdjSubject> adjSubjects = adjSubjectRepository.findByAdjInfo_Id(beforeAdjInfoId);
 
-        Map<Long, Double> representativeVal = salaries.stream() //gradeId:대표값
+        Map<Long, Double> representativeVal = adjSubjects.stream()
+            .filter(adjSubject -> adjSubject.getStdSalary() != null)//gradeId:대표값
             .collect(Collectors.groupingBy(
                 s -> s.getGrade().getId(), // 1차 그룹화 (gradeId 기준)
                 Collectors.collectingAndThen(
@@ -60,6 +61,7 @@ public class PaybandCriteriaService {
 
         return new MainAdjPaybandCriteriaResponse(paybandCriterias
             .stream()
+            .filter(pc -> !pc.getDeleted())
             .map(pc -> {
                 Integer count = countEmpl.getOrDefault(pc.getGrade().getId(), 0); // null이면 0 반환
                 Double representative = representativeVal.getOrDefault(pc.getGrade().getId(),
@@ -69,14 +71,14 @@ public class PaybandCriteriaService {
             .toList());
     }
 
-    private Double calculateMedian(List<Salary> salaries) {
-        List<Salary> salaryPerGrade = salaries.stream()
-            .sorted(Comparator.comparing(Salary::getStdSalary))
-            .toList();
-
-        if (salaryPerGrade.isEmpty()) {
+    private Double calculateMedian(List<AdjSubject> adjSubjects) {
+        if (adjSubjects.isEmpty()) {
             return 0.0;
         }
+
+        List<AdjSubject> salaryPerGrade = adjSubjects.stream()
+            .sorted(Comparator.comparing(AdjSubject::getStdSalary))
+            .toList();
 
         int size = salaryPerGrade.size();
         int middle = size / 2;

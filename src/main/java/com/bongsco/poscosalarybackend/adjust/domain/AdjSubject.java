@@ -1,9 +1,13 @@
 package com.bongsco.poscosalarybackend.adjust.domain;
 
+import java.time.LocalDate;
+
 import org.hibernate.annotations.SQLDelete;
 
 import com.bongsco.poscosalarybackend.global.domain.BaseEntity;
 import com.bongsco.poscosalarybackend.user.domain.Employee;
+import com.bongsco.poscosalarybackend.user.domain.Grade;
+import com.bongsco.poscosalarybackend.user.domain.Rank;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -39,6 +43,14 @@ public class AdjSubject extends BaseEntity {
     @JoinColumn(name = "adj_info_id", nullable = false)
     private AdjInfo adjInfo;
 
+    @ManyToOne
+    @JoinColumn(name = "grade_id", nullable = false)
+    private Grade grade;
+
+    @ManyToOne
+    @JoinColumn(name = "rank_id", nullable = false)
+    private Rank rank;
+
     @Column(nullable = false)
     private Boolean subjectUse;
 
@@ -47,5 +59,17 @@ public class AdjSubject extends BaseEntity {
 
     @Column
     private Boolean paybandUse;
+
+    @Column
+    private Double stdSalary;
+
+    @Column
+    private Double performAddPayment;
+
+    @Column
+    private LocalDate startDate;
+
+    @Column
+    private LocalDate endDate;
 }
 
