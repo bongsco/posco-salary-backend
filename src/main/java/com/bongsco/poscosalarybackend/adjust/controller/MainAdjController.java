@@ -73,4 +73,12 @@ public class MainAdjController {
         return ResponseEntity.status(HttpStatus.OK)
             .body(JsonResult.success("Successfully changed"));
     }
+
+    @Operation(summary = "기준 연봉 계산", description = "사전 작업에서 입력한 내용을 기준으로 일괄적으로 기준 연봉 계산, payband 넘어가기전에 넣어줘야함")
+    @PatchMapping("/{adj_info_id}/calculate-salary")
+    public ResponseEntity<JsonResult<String>> calculateSalary(@PathVariable("adj_info_id") Long adjInfoId) {
+        adjSubjectService.calculateSalary(adjInfoId);
+        return ResponseEntity.status(HttpStatus.OK)
+            .body(JsonResult.success("success"));
+    }
 }

@@ -3,11 +3,13 @@ package com.bongsco.poscosalarybackend.adjust.service;
 import static com.bongsco.poscosalarybackend.global.exception.ErrorCode.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bongsco.poscosalarybackend.adjust.domain.AdjInfo;
 import com.bongsco.poscosalarybackend.adjust.domain.AdjSubject;
 import com.bongsco.poscosalarybackend.adjust.domain.RankIncrementRate;
 import com.bongsco.poscosalarybackend.adjust.dto.AdjSubjectSalaryDto;
@@ -18,6 +20,7 @@ import com.bongsco.poscosalarybackend.adjust.dto.response.EmployeeResponse;
 import com.bongsco.poscosalarybackend.adjust.dto.response.MainAdjPaybandBothSubjectsResponse;
 import com.bongsco.poscosalarybackend.adjust.dto.response.PreprocessAdjSubjectsResponse;
 import com.bongsco.poscosalarybackend.adjust.repository.AdjSubjectRepository;
+import com.bongsco.poscosalarybackend.adjust.repository.AdjustRepository;
 import com.bongsco.poscosalarybackend.adjust.repository.PaybandCriteriaRepository;
 import com.bongsco.poscosalarybackend.adjust.repository.RankIncrementRateRepository;
 import com.bongsco.poscosalarybackend.global.exception.CustomException;
@@ -33,6 +36,7 @@ public class AdjSubjectService {
     private final RankIncrementRateRepository rankIncrementRateRepository;
     private final PaybandCriteriaRepository paybandCriteriaRepository;
     private final EmployeeRepository employeeRepository;
+    private final AdjustRepository adjustRepository;
 
     public List<EmployeeResponse> findAll(Long adjInfoId) {
         // 연봉조정차수를 이용해 정기연봉조정대상자 테이블 가져오기
@@ -248,5 +252,48 @@ public class AdjSubjectService {
                 return MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse.from(dto);
             })
             .toList();
+    }
+
+    public void calculateSalary(Long adjInfoId) {
+        List<AdjSubject> adjSubjects = adjSubjectRepository.findByAdjInfo_Id(adjInfoId)
+            .stream()
+            .filter(adjSubject -> !adjSubject.getDeleted())
+            .filter(AdjSubject::getSubjectUse)
+            .toList();
+
+        AdjInfo adjInfo = adjustRepository.findById(adjInfoId).get();
+        Double evalAnnualSalaryIncrement =
+            Optional.ofNullable(adjInfo.getEvalAnnualSalaryIncrement()).orElse(0.0) / 100;
+        //5%일때 5로 들어간다는 전제하에 이렇게 해놓음
+
+        adjSubjects.stream().forEach(adjSubject -> {
+            //기준연봉= 전년도 기준연봉+(직무기본연봉*평차등연봉인상률)
+
+            //전년도 기준연봉 불러옴
+            AdjSubject beforeAdjSubject = adjSubjectRepository.findBeforeAdjSubject(adjInfoId,
+                adjSubject.getEmployee().getId());
+            if (beforeAdjSubject == null || beforeAdjSubject.getStdSalary() == null)
+                return; //신입 제외
+
+            //직무 기본 연봉 불러옴
+            Double gradeBaseSalary = adjSubject.getGrade().getGradeBaseSalary();
+
+            //연봉 인상률 불러옴
+            RankIncrementRate rankIncrementRate = rankIncrementRateRepository.findByRankIdAndAdjInfoIdAndGradeId(
+                adjSubject.getRank().getId(), adjInfoId, adjSubject.getGrade().getId()).orElse(null);
+            Double evalDiffIncrement =
+                rankIncrementRate == null ? 0.0 : (rankIncrementRate.getEvalDiffIncrement() / 100);
+
+            //고성과 있으면
+            //평차등연봉인상률 = (직급, 평가별 평차연) * (1 + 고성과평차연)
+            if (adjSubject.getInHighPerformGroup()) {
+                evalDiffIncrement = evalDiffIncrement * (1 + evalAnnualSalaryIncrement);
+            }
+
+            Double newStdSalary = beforeAdjSubject.getStdSalary() + gradeBaseSalary * evalDiffIncrement;
+
+            AdjSubject saveAdjSubject = adjSubject.toBuilder().stdSalary(newStdSalary).build();
+            adjSubjectRepository.save(saveAdjSubject);
+        });
     }
 }

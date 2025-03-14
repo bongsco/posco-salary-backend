@@ -15,6 +15,13 @@ import com.bongsco.poscosalarybackend.adjust.dto.AdjSubjectSalaryDto;
 public interface AdjSubjectRepository extends JpaRepository<AdjSubject, Long> {
     List<AdjSubject> findByAdjInfo_Id(Long id);
 
+    @Query("SELECT asj FROM AdjSubject asj "
+        + "WHERE asj.adjInfo.id < :adjInfoId "
+        + "AND asj.employee.id = :employeeId "
+        + "AND  asj.deleted != true "
+        + "ORDER BY asj.adjInfo.id DESC LIMIT 1")
+    AdjSubject findBeforeAdjSubject(Long adjInfoId, Long employeeId);
+
     Optional<AdjSubject> findById(Long id);
 
     @Query("SELECT asj FROM AdjSubject asj JOIN asj.employee e WHERE asj.adjInfo.id = :adjInfoId "
