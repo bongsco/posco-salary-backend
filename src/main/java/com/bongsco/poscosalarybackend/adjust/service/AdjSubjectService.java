@@ -411,8 +411,8 @@ public class AdjSubjectService {
             AdjSubject beforeAdjSubject = adjSubjectRepository.findBeforeAdjSubject(adjInfoId,
                 employee.getId());
 
-            Double beforeFinalStdSalary = beforeAdjSubject.getFinalStdSalary();
-            Double finalStdSalary = adjSubject.getFinalStdSalary();
+            Double beforeFinalStdSalary = Optional.ofNullable(beforeAdjSubject.getFinalStdSalary()).orElse(0.0);
+            Double finalStdSalary = Optional.ofNullable(adjSubject.getFinalStdSalary()).orElse(0.0);
 
             Double representativeVal = RepresentativeSalaryService.getRepresentativeVal(representativeSalaries,
                 adjSubject.getGrade().getId());
@@ -423,13 +423,17 @@ public class AdjSubjectService {
                 .getPaymentName(), employee.getDepartment().getDepName(), employee.getPositionName(),
                 adjSubject.getGrade().getGradeName(), employee.getPositionArea(),
                 adjInfo.getEvalAnnualSalaryIncrement(), adjInfo.getEvalPerformProvideRate(),
-                paybandCriteria.getUpperLimitPrice(), paybandCriteria.getLowerLimitPrice(), adjSubject.getStdSalary(),
+                paybandCriteria != null ? paybandCriteria.getUpperLimitPrice() : null,
+                paybandCriteria != null ? paybandCriteria.getLowerLimitPrice() : null, adjSubject.getStdSalary(),
                 beforeAdjSubject.getAdjInfo().getYear(), beforeAdjSubject.getAdjInfo().getOrderNumber(), finalStdSalary,
                 beforeAdjSubject.getPerformAddPayment(),
-                beforeAdjSubject.getFinalStdSalary() + beforeAdjSubject.getPerformAddPayment(), representativeVal,
+                Optional.ofNullable(beforeAdjSubject.getFinalStdSalary()).orElse(0.0) + Optional.ofNullable(
+                    beforeAdjSubject.getPerformAddPayment()).orElse(0.0), representativeVal,
                 adjInfo.getYear(), adjInfo.getOrderNumber(), finalStdSalaryIncrementRate,
                 adjSubject.getFinalStdSalary(),
-                adjSubject.getPerformAddPayment(), adjSubject.getFinalStdSalary() + adjSubject.getPerformAddPayment());
+                adjSubject.getPerformAddPayment(),
+                Optional.ofNullable(adjSubject.getFinalStdSalary()).orElse(0.0) + Optional.ofNullable(
+                    adjSubject.getPerformAddPayment()).orElse(0.0));
         }).toList());
     }
 
