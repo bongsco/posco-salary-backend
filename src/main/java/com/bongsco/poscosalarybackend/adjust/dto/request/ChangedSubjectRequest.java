@@ -14,6 +14,9 @@ import lombok.NoArgsConstructor;
 public class ChangedSubjectRequest {
     @NotNull(message = "아이디는 null 일 수 없습니다.")
     private Long adjSubjectId;
+
+    private Double limitPrice;
+
     @NotNull(message = "payband 적용 여부는 null 일 수 없습니다.")
     private Boolean paybandUse;
 }

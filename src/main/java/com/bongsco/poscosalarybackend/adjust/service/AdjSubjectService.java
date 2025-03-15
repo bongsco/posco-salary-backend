@@ -198,12 +198,18 @@ public class AdjSubjectService {
             .toList();
     }
 
-    public void modifyAdjustSubject(Long adjSubjectId, Boolean paybandUse) {
+    public void modifyAdjustSubject(Long adjSubjectId, Boolean paybandUse, Double limitPrice) {
         AdjSubject adjSubject = adjSubjectRepository.findById(adjSubjectId)
             .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
-        AdjSubject saveAdjSubject = adjSubject.toBuilder()
-            .paybandUse(paybandUse)
-            .build();
+        AdjSubject saveAdjSubject;
+        if (paybandUse) {
+            saveAdjSubject = adjSubject.toBuilder().finalStdSalary(limitPrice).paybandUse(paybandUse).build();
+        } else {
+            saveAdjSubject = adjSubject.toBuilder()
+                .finalStdSalary(adjSubject.getStdSalary())
+                .paybandUse(paybandUse)
+                .build();
+        }
         adjSubjectRepository.save(saveAdjSubject);
     }
 

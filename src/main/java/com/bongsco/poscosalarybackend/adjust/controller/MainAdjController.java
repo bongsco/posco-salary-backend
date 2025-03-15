@@ -68,11 +68,12 @@ public class MainAdjController {
             .getChangedSubject()
             .stream()
             .forEach(subject -> {
-                adjSubjectService.modifyAdjustSubject(subject.getAdjSubjectId(), subject.getPaybandUse());
+                adjSubjectService.modifyAdjustSubject(subject.getAdjSubjectId(), subject.getPaybandUse(),
+                    subject.getLimitPrice());
             });
 
         return ResponseEntity.status(HttpStatus.OK)
-            .body(JsonResult.success("Successfully changed"));
+            .body(JsonResult.success("success"));
     }
 
     @Operation(summary = "기준 연봉 계산", description = "사전 작업에서 입력한 내용을 기준으로 일괄적으로 기준 연봉 계산, payband 넘어가기전에 넣어줘야함")

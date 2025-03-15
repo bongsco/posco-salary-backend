@@ -71,5 +71,8 @@ public class AdjSubject extends BaseEntity {
 
     @Column
     private LocalDate endDate;
+
+    @Column
+    private Double finalStdSalary;
 }
 
