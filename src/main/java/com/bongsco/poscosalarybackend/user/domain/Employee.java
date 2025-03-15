@@ -24,7 +24,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "employee")
 @Getter
-@Builder
+@Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SQLDelete(sql = "UPDATE employee SET deleted = true WHERE id = ?")

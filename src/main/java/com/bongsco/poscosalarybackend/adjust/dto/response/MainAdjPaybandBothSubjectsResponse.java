@@ -31,6 +31,7 @@ public class MainAdjPaybandBothSubjectsResponse {
         private String positionName;
         private String rankName;
         private Double stdSalary;
+        private Double finalStdSalary;
         private Double limitPrice;
         private Boolean paybandUse;
 
@@ -42,6 +43,7 @@ public class MainAdjPaybandBothSubjectsResponse {
                 adjSubjectSalaryDto.getEmpNum(), adjSubjectSalaryDto.getName(), adjSubjectSalaryDto.getDepName(),
                 adjSubjectSalaryDto.getGradeName(), adjSubjectSalaryDto.getPositionName(),
                 adjSubjectSalaryDto.getRankName(), adjSubjectSalaryDto.getStdSalary(),
+                adjSubjectSalaryDto.getFinalStdSalary(),
                 adjSubjectSalaryDto.getLimitPrice(),
                 adjSubjectSalaryDto.getPaybandUse());
         }

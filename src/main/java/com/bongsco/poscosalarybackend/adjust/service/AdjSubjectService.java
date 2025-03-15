@@ -2,6 +2,7 @@ package com.bongsco.poscosalarybackend.adjust.service;
 
 import static com.bongsco.poscosalarybackend.global.exception.ErrorCode.*;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -14,6 +15,7 @@ import com.bongsco.poscosalarybackend.adjust.domain.AdjInfo;
 import com.bongsco.poscosalarybackend.adjust.domain.AdjSubject;
 import com.bongsco.poscosalarybackend.adjust.domain.PaybandCriteria;
 import com.bongsco.poscosalarybackend.adjust.domain.RankIncrementRate;
+import com.bongsco.poscosalarybackend.adjust.domain.RepresentativeSalary;
 import com.bongsco.poscosalarybackend.adjust.dto.AdjSubjectSalaryDto;
 import com.bongsco.poscosalarybackend.adjust.dto.request.ChangedHighPerformGroupEmployeeRequest;
 import com.bongsco.poscosalarybackend.adjust.dto.request.ChangedSubjectUseEmployeeRequest;
@@ -24,10 +26,13 @@ import com.bongsco.poscosalarybackend.adjust.dto.response.MainAdjPaybandBothSubj
 import com.bongsco.poscosalarybackend.adjust.dto.response.PreprocessAdjSubjectsResponse;
 import com.bongsco.poscosalarybackend.adjust.repository.AdjSubjectRepository;
 import com.bongsco.poscosalarybackend.adjust.repository.AdjustRepository;
+import com.bongsco.poscosalarybackend.adjust.repository.GradeRepository;
 import com.bongsco.poscosalarybackend.adjust.repository.PaybandCriteriaRepository;
 import com.bongsco.poscosalarybackend.adjust.repository.RankIncrementRateRepository;
+import com.bongsco.poscosalarybackend.adjust.repository.RepresentativeSalaryRepository;
 import com.bongsco.poscosalarybackend.global.exception.CustomException;
 import com.bongsco.poscosalarybackend.user.domain.Employee;
+import com.bongsco.poscosalarybackend.user.domain.Grade;
 import com.bongsco.poscosalarybackend.user.repository.EmployeeRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -40,6 +45,32 @@ public class AdjSubjectService {
     private final PaybandCriteriaRepository paybandCriteriaRepository;
     private final EmployeeRepository employeeRepository;
     private final AdjustRepository adjustRepository;
+    private final RepresentativeSalaryRepository representativeSalaryRepository;
+    private final GradeRepository gradeRepository;
+    private final AdjustService adjustService;
+
+    public static Double calculateMedian(List<AdjSubject> adjSubjects) {
+        if (adjSubjects.isEmpty()) {
+            return 0.0;
+        }
+
+        List<AdjSubject> salaryPerGrade = adjSubjects.stream()
+            .sorted(Comparator.comparing(AdjSubject::getFinalStdSalary))
+            .toList();
+
+        int size = salaryPerGrade.size();
+        int middle = size / 2;
+
+        if (size % 2 == 0) {
+            // 짝수 개수일 때: 중앙 두 값의 평균 반환
+            return Math.round((salaryPerGrade.get(middle - 1)
+                .getFinalStdSalary()
+                + salaryPerGrade.get(middle).getFinalStdSalary()) / 2.0 / 1000.0) * 1000.0;
+        } else {
+            // 홀수 개수일 때: 가운데 값 반환
+            return Math.round(salaryPerGrade.get(middle).getFinalStdSalary() / 1000.0) * 1000.0;
+        }
+    }
 
     public List<EmployeeResponse> findAll(Long adjInfoId) {
         // 연봉조정차수를 이용해 정기연봉조정대상자 테이블 가져오기
@@ -200,6 +231,7 @@ public class AdjSubjectService {
 
     public void modifyAdjustSubject(Long adjSubjectId, Boolean paybandUse, Double limitPrice) {
         AdjSubject adjSubject = adjSubjectRepository.findById(adjSubjectId)
+            .filter(adjSubject1 -> !adjSubject1.getDeleted())
             .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
         AdjSubject saveAdjSubject;
         if (paybandUse) {
@@ -281,7 +313,7 @@ public class AdjSubjectService {
             //전년도 기준연봉 불러옴
             AdjSubject beforeAdjSubject = adjSubjectRepository.findBeforeAdjSubject(adjInfoId,
                 adjSubject.getEmployee().getId());
-            if (beforeAdjSubject == null || beforeAdjSubject.getStdSalary() == null)
+            if (beforeAdjSubject == null)
                 return; //신입 제외
 
             //직무 기본 연봉 불러옴
@@ -299,9 +331,14 @@ public class AdjSubjectService {
                 evalDiffIncrement = evalDiffIncrement * (1 + evalAnnualSalaryIncrement);
             }
 
-            Double newStdSalary = beforeAdjSubject.getStdSalary() + gradeBaseSalary * evalDiffIncrement;
+            Double newStdSalary =
+                (beforeAdjSubject.getFinalStdSalary() == null ? 1000000 : beforeAdjSubject.getFinalStdSalary())
+                    + gradeBaseSalary * evalDiffIncrement;
 
-            AdjSubject saveAdjSubject = adjSubject.toBuilder().stdSalary(newStdSalary).build();
+            AdjSubject saveAdjSubject = adjSubject.toBuilder()
+                .stdSalary(newStdSalary)
+                .finalStdSalary(newStdSalary)
+                .build();
             adjSubjectRepository.save(saveAdjSubject);
         });
     }
@@ -325,7 +362,7 @@ public class AdjSubjectService {
 
             // 직무기본연봉 가져옴
             Double gradeBaseSalary = adjSubject.getGrade().getGradeBaseSalary();
-            Double rankBaseStandardSalary = (adjSubject.getStdSalary() + gradeBaseSalary) / 12 + 12;
+            Double rankBaseStandardSalary = (adjSubject.getFinalStdSalary() + gradeBaseSalary) / 12 + 12;
 
             //평가차등경영성과금지급률 가져옴
             RankIncrementRate rankIncrementRate = rankIncrementRateRepository.findByRankIdAndAdjInfoIdAndGradeId(
@@ -359,29 +396,12 @@ public class AdjSubjectService {
             .filter(pc -> !pc.getDeleted())
             .toList();
 
-        List<AdjInfo> adjInfos = adjustRepository.findLatestAdjustInfo(adjInfoId)
-            .stream()
-            .filter(adjInfo1 -> !adjInfo1.getDeleted())
-            .toList();
-        if (adjInfos.isEmpty()) {
-            throw new CustomException(CANNOT_NULL_INPUT);
-        }
-        Long beforeAdjInfoId = adjInfos.get(0).getId();
+        Long beforeAdjInfoId = adjustService.getBeforeAdjInfoId(adjInfoId);
 
-        List<AdjSubject> beforeAdjSubjects = adjSubjectRepository.findByAdjInfo_Id(beforeAdjInfoId);
+        List<RepresentativeSalary> representativeSalaries = representativeSalaryRepository.findByAdjInfo_Id(
+            beforeAdjInfoId);
 
-        Map<Long, Double> representativeVals = beforeAdjSubjects.stream()
-            .filter(adjSubject -> !adjSubject.getDeleted())
-            .filter(adjSubject -> adjSubject.getStdSalary() != null)//gradeId:대표값
-            .collect(Collectors.groupingBy(
-                s -> s.getGrade().getId(), // 1차 그룹화 (gradeId 기준)
-                Collectors.collectingAndThen(
-                    Collectors.toList(),
-                    list -> PaybandCriteriaService.calculateMedian(list) // 상위 5% 제외 후 중간값
-                )
-            ));
-
-        return new AdjResultResponse(beforeAdjSubjects.stream().map(adjSubject -> {
+        return new AdjResultResponse(adjSubjects.stream().map(adjSubject -> {
             Employee employee = adjSubject.getEmployee();
             //상한값 하한값 가져오기,..
             PaybandCriteria paybandCriteria = paybandCriterias.stream()
@@ -391,30 +411,11 @@ public class AdjSubjectService {
             AdjSubject beforeAdjSubject = adjSubjectRepository.findBeforeAdjSubject(adjInfoId,
                 employee.getId());
 
-            Double beforeFinalStdSalary = beforeAdjSubject.getStdSalary();
-            if (beforeAdjSubject.getPaybandUse()) {
-                PaybandCriteria beforePaybandCriteria = paybandCriteriaRepository.findByAdjInfo_IdAndGrade_Id(
-                    beforeAdjSubject.getAdjInfo().getId(), beforeAdjSubject.getGrade().getId()).orElse(null);
-                if (beforePaybandCriteria == null) {
-                    beforePaybandCriteria = paybandCriteria;
-                } //임시조치,,
-                if (beforeFinalStdSalary > beforePaybandCriteria.getUpperLimitPrice()) {
-                    beforeFinalStdSalary = beforePaybandCriteria.getUpperLimitPrice();
-                } else if (beforeFinalStdSalary < beforePaybandCriteria.getLowerLimitPrice()) {
-                    beforeFinalStdSalary = beforePaybandCriteria.getLowerLimitPrice();
-                }
-            }
+            Double beforeFinalStdSalary = beforeAdjSubject.getFinalStdSalary();
+            Double finalStdSalary = adjSubject.getFinalStdSalary();
 
-            Double finalStdSalary = adjSubject.getStdSalary();
-            if (adjSubject.getPaybandUse()) {
-                if (finalStdSalary > paybandCriteria.getUpperLimitPrice()) {
-                    finalStdSalary = paybandCriteria.getUpperLimitPrice();
-                } else if (finalStdSalary < paybandCriteria.getLowerLimitPrice()) {
-                    finalStdSalary = paybandCriteria.getLowerLimitPrice();
-                }
-            }
-
-            Double representativeVal = representativeVals.get(adjSubject.getGrade().getId());
+            Double representativeVal = RepresentativeSalaryService.getRepresentativeVal(representativeSalaries,
+                adjSubject.getGrade().getId());
             Double finalStdSalaryIncrementRate = ((finalStdSalary - beforeFinalStdSalary) / beforeFinalStdSalary) * 100;
 
             return new AdjResultResponse.AdjResult(employee.getEmpNum(), employee.getName(), employee.getBirth(),
@@ -425,9 +426,65 @@ public class AdjSubjectService {
                 paybandCriteria.getUpperLimitPrice(), paybandCriteria.getLowerLimitPrice(), adjSubject.getStdSalary(),
                 beforeAdjSubject.getAdjInfo().getYear(), beforeAdjSubject.getAdjInfo().getOrderNumber(), finalStdSalary,
                 beforeAdjSubject.getPerformAddPayment(),
-                beforeAdjSubject.getStdSalary() + beforeAdjSubject.getPerformAddPayment(), representativeVal,
-                adjInfo.getYear(), adjInfo.getOrderNumber(), finalStdSalaryIncrementRate, adjSubject.getStdSalary(),
-                adjSubject.getPerformAddPayment(), adjSubject.getStdSalary() + adjSubject.getPerformAddPayment());
+                beforeAdjSubject.getFinalStdSalary() + beforeAdjSubject.getPerformAddPayment(), representativeVal,
+                adjInfo.getYear(), adjInfo.getOrderNumber(), finalStdSalaryIncrementRate,
+                adjSubject.getFinalStdSalary(),
+                adjSubject.getPerformAddPayment(), adjSubject.getFinalStdSalary() + adjSubject.getPerformAddPayment());
         }).toList());
+    }
+
+    public void calculateRepresentativeVal(Long adjInfoId) {
+        List<AdjSubject> adjSubjects = adjSubjectRepository.findByAdjInfo_Id(adjInfoId)
+            .stream()
+            .filter(adjSubject -> !adjSubject.getDeleted())
+            .filter(AdjSubject::getSubjectUse)
+            .toList();
+
+        AdjInfo adjInfo = adjustRepository.findById(adjInfoId).get();
+        List<Grade> grades = gradeRepository.findAll();
+        Map<Long, Double> representativeVal = adjSubjects.stream()
+            .filter(adjSubject -> !adjSubject.getDeleted())
+            .filter(adjSubject -> adjSubject.getFinalStdSalary() != null)//gradeId:대표값
+            .collect(Collectors.groupingBy(
+                s -> s.getGrade().getId(), // 1차 그룹화 (gradeId 기준)
+                Collectors.collectingAndThen(
+                    Collectors.toList(),
+                    list -> calculateMedian(list) // 상위 5% 제외 후 중간값
+                )
+            ));
+
+        representativeVal.entrySet().stream().forEach(val -> {
+            representativeSalaryRepository.save(RepresentativeSalary.builder()
+                .adjInfo(adjInfo)
+                .grade(grades.stream()
+                    .filter(grade -> grade.getId() == val.getKey())
+                    .findFirst()
+                    .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND)))
+                .representativeVal(val.getValue())
+                .build());
+        });
+    }
+
+    public void changeIncrementRate(Long adjInfoId) {
+        List<AdjSubject> adjSubjects = adjSubjectRepository.findByAdjInfo_Id(adjInfoId)
+            .stream()
+            .filter(adjSubject -> !adjSubject.getDeleted())
+            .filter(AdjSubject::getSubjectUse)
+            .toList();
+
+        adjSubjects.forEach(adjSubject -> {
+            Employee employee = adjSubject.getEmployee();
+            AdjSubject beforeAdjSubject = adjSubjectRepository.findBeforeAdjSubject(adjInfoId,
+                employee.getId());
+
+            Double beforeFinalStdSalary = beforeAdjSubject.getFinalStdSalary();
+            Double finalStdSalary = adjSubject.getFinalStdSalary();
+            if (beforeFinalStdSalary == null || finalStdSalary == null) {
+                return;
+            }
+            Double finalStdSalaryIncrementRate = ((finalStdSalary - beforeFinalStdSalary) / beforeFinalStdSalary) * 100;
+
+            employeeRepository.save(employee.toBuilder().stdSalaryIncrementRate(finalStdSalaryIncrementRate).build());
+        });
     }
 }

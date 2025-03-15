@@ -35,7 +35,7 @@ public interface AdjSubjectRepository extends JpaRepository<AdjSubject, Long> {
     Optional<AdjSubject> findByAdjInfoIdAndEmployeeId(Long adjInfoId, Long employeeId);
 
     @Query(
-        "SELECT new com.bongsco.poscosalarybackend.adjust.dto.AdjSubjectSalaryDto(asj.id, asj.employee.id, asj.stdSalary, asj.paybandUse, asj.grade.id, asj.rank.rankName, pc.upperLimitPrice, pc.grade.gradeName) "
+        "SELECT new com.bongsco.poscosalarybackend.adjust.dto.AdjSubjectSalaryDto(asj.id, asj.employee.id, asj.stdSalary, asj.finalStdSalary, asj.paybandUse, asj.grade.id, asj.rank.rankName, pc.upperLimitPrice, pc.grade.gradeName) "
             + "FROM AdjSubject asj "
             + "JOIN PaybandCriteria pc ON pc.grade.id = asj.grade.id "
             + "WHERE asj.adjInfo.id = :adjInfoId AND pc.adjInfo.id = :adjInfoId AND asj.subjectUse = true "
@@ -43,7 +43,7 @@ public interface AdjSubjectRepository extends JpaRepository<AdjSubject, Long> {
     List<AdjSubjectSalaryDto> findAllAdjSubjectAndStdSalaryAndUpper(@Param("adjInfoId") Long adjInfoId);
 
     @Query(
-        "SELECT new com.bongsco.poscosalarybackend.adjust.dto.AdjSubjectSalaryDto(asj.id, asj.employee.id, asj.stdSalary, asj.paybandUse, asj.grade.id, asj.rank.rankName, pc.lowerLimitPrice, pc.grade.gradeName) "
+        "SELECT new com.bongsco.poscosalarybackend.adjust.dto.AdjSubjectSalaryDto(asj.id, asj.employee.id, asj.stdSalary, asj.finalStdSalary, asj.paybandUse, asj.grade.id, asj.rank.rankName, pc.lowerLimitPrice, pc.grade.gradeName) "
             + "FROM AdjSubject asj "
             + "JOIN PaybandCriteria pc ON pc.grade.id = asj.grade.id "
             + "WHERE asj.adjInfo.id = :adjInfoId AND pc.adjInfo.id = :adjInfoId AND asj.subjectUse = true "
@@ -51,7 +51,7 @@ public interface AdjSubjectRepository extends JpaRepository<AdjSubject, Long> {
     List<AdjSubjectSalaryDto> findAllAdjSubjectAndStdSalaryAndLower(@Param("adjInfoId") Long adjInfoId);
 
     @Query(
-        "SELECT new com.bongsco.poscosalarybackend.adjust.dto.AdjSubjectSalaryDto(asj.id, asj.employee.id, asj.stdSalary, asj.paybandUse, asj.grade.id, asj.rank.rankName, pc.upperLimitPrice, pc.grade.gradeName) "
+        "SELECT new com.bongsco.poscosalarybackend.adjust.dto.AdjSubjectSalaryDto(asj.id, asj.employee.id, asj.stdSalary, asj.finalStdSalary, asj.paybandUse, asj.grade.id, asj.rank.rankName, pc.upperLimitPrice, pc.grade.gradeName) "
             + "FROM AdjSubject asj "
             + "JOIN PaybandCriteria pc ON pc.grade.id = asj.grade.id "
             + "WHERE asj.adjInfo.id = :adjInfoId AND pc.adjInfo.id = :adjInfoId AND asj.subjectUse = true "
@@ -60,7 +60,7 @@ public interface AdjSubjectRepository extends JpaRepository<AdjSubject, Long> {
     List<AdjSubjectSalaryDto> findAllAdjSubjectAndStdSalaryAndUpperWithSearchKey(Long adjInfoId, String searchKey);
 
     @Query(
-        "SELECT new com.bongsco.poscosalarybackend.adjust.dto.AdjSubjectSalaryDto(asj.id, asj.employee.id, asj.stdSalary, asj.paybandUse, asj.grade.id, asj.rank.rankName, pc.lowerLimitPrice, pc.grade.gradeName) "
+        "SELECT new com.bongsco.poscosalarybackend.adjust.dto.AdjSubjectSalaryDto(asj.id, asj.employee.id, asj.stdSalary, asj.finalStdSalary, asj.paybandUse, asj.grade.id, asj.rank.rankName, pc.lowerLimitPrice, pc.grade.gradeName) "
             + "FROM AdjSubject asj "
             + "JOIN PaybandCriteria pc ON pc.grade.id = asj.grade.id "
             + "WHERE asj.adjInfo.id = :adjInfoId AND pc.adjInfo.id = :adjInfoId AND asj.subjectUse = true "

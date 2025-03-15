@@ -79,4 +79,16 @@ public class AdjustService {
 
         adjustRepository.saveAll(adjInfoList);
     }
+
+    public Long getBeforeAdjInfoId(Long adjInfoId) {
+        List<AdjInfo> adjInfos = adjustRepository.findLatestAdjustInfo(adjInfoId)
+            .stream()
+            .filter(adjInfo1 -> !adjInfo1.getDeleted())
+            .toList();
+        if (adjInfos.isEmpty()) {
+            throw new CustomException(CANNOT_NULL_INPUT);
+        }
+        Long beforeAdjInfoId = adjInfos.get(0).getId();
+        return beforeAdjInfoId;
+    }
 }
