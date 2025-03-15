@@ -188,21 +188,7 @@ public class AdjSubjectService {
         List<AdjSubjectSalaryDto> adjSubjectSalaryDtos = adjSubjectRepository.findAllAdjSubjectAndStdSalaryAndUpper(
             adjInfoId);
 
-        return adjSubjectSalaryDtos.stream()
-            .filter(adjSubjectSalaryDto -> {
-                return adjSubjectSalaryDto.getStdSalary().compareTo(adjSubjectSalaryDto.getLimitPrice()) > 0;
-            })
-            .map(dto -> {
-                Employee employee = employeeRepository.findById(dto.getEmployeeId()).get();
-                dto = dto.toBuilder()
-                    .empNum(employee.getEmpNum())
-                    .name(employee.getName())
-                    .depName(employee.getDepartment().getDepName())
-                    .positionName(employee.getPositionName())
-                    .build();
-                return MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse.from(dto);
-            })
-            .toList();
+        return getMainAdjUpperPaybandSubjectsResponses(adjSubjectSalaryDtos);
     }
 
     public List<MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse> getLowerSubjects(
@@ -211,6 +197,11 @@ public class AdjSubjectService {
         List<AdjSubjectSalaryDto> adjSubjectSalaryDtos = adjSubjectRepository.findAllAdjSubjectAndStdSalaryAndLower(
             adjInfoId);
 
+        return getAdjLowerPaybandSubjectsResponses(adjSubjectSalaryDtos);
+    }
+
+    private List<MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse> getAdjLowerPaybandSubjectsResponses(
+        List<AdjSubjectSalaryDto> adjSubjectSalaryDtos) {
         return adjSubjectSalaryDtos.stream()
             .filter(adjSubjectSalaryDto -> {
                 return adjSubjectSalaryDto.getStdSalary().compareTo(adjSubjectSalaryDto.getLimitPrice()) < 0;
@@ -256,6 +247,11 @@ public class AdjSubjectService {
         List<AdjSubjectSalaryDto> adjSubjectSalaryDtos = adjSubjectRepository.findAllAdjSubjectAndStdSalaryAndUpperWithSearchKey(
             adjInfoId, searchKey);
 
+        return getMainAdjUpperPaybandSubjectsResponses(adjSubjectSalaryDtos);
+    }
+
+    private List<MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse> getMainAdjUpperPaybandSubjectsResponses(
+        List<AdjSubjectSalaryDto> adjSubjectSalaryDtos) {
         return adjSubjectSalaryDtos.stream()
             .filter(adjSubjectSalaryDto -> {
                 return adjSubjectSalaryDto.getStdSalary().compareTo(adjSubjectSalaryDto.getLimitPrice()) > 0;
@@ -278,21 +274,7 @@ public class AdjSubjectService {
     ) {
         List<AdjSubjectSalaryDto> adjSubjectSalaryDtos = adjSubjectRepository.findAllAdjSubjectAndStdSalaryAndLowerWithSearchKey(
             adjInfoId, searchKey);
-        return adjSubjectSalaryDtos.stream()
-            .filter(adjSubjectSalaryDto -> {
-                return adjSubjectSalaryDto.getStdSalary().compareTo(adjSubjectSalaryDto.getLimitPrice()) < 0;
-            })
-            .map(dto -> {
-                Employee employee = employeeRepository.findById(dto.getEmployeeId()).get();
-                dto = dto.toBuilder()
-                    .empNum(employee.getEmpNum())
-                    .name(employee.getName())
-                    .depName(employee.getDepartment().getDepName())
-                    .positionName(employee.getPositionName())
-                    .build();
-                return MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse.from(dto);
-            })
-            .toList();
+        return getAdjLowerPaybandSubjectsResponses(adjSubjectSalaryDtos);
     }
 
     public void calculateSalary(Long adjInfoId) {
