@@ -100,6 +100,10 @@ public class MainAdjController {
     public ResponseEntity<JsonResult<AdjResultResponse>> showResult(@PathVariable("adj_info_id") Long adjInfoId,
         @RequestParam(value = "searchKey", required = false) String searchKey
     ) {
+        if (searchKey != null) {
+            return ResponseEntity.status(HttpStatus.OK)
+                .body(JsonResult.success(adjSubjectService.getFinalResultWithSearchKey(adjInfoId, searchKey)));
+        }
         return ResponseEntity.status(HttpStatus.OK)
             .body(JsonResult.success(adjSubjectService.getFinalResult(adjInfoId)));
     }

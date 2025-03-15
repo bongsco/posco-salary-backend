@@ -390,6 +390,20 @@ public class AdjSubjectService {
             .filter(AdjSubject::getSubjectUse)
             .toList();
 
+        return getAdjResultResponse(adjInfoId, adjSubjects);
+    }
+
+    public AdjResultResponse getFinalResultWithSearchKey(Long adjInfoId, String searchKey) {
+        List<AdjSubject> adjSubjects = adjSubjectRepository.findByAdjInfo_IdAndSearchKey(adjInfoId, searchKey)
+            .stream()
+            .filter(adjSubject -> !adjSubject.getDeleted())
+            .filter(AdjSubject::getSubjectUse)
+            .toList();
+
+        return getAdjResultResponse(adjInfoId, adjSubjects);
+    }
+
+    private AdjResultResponse getAdjResultResponse(Long adjInfoId, List<AdjSubject> adjSubjects) {
         AdjInfo adjInfo = adjustRepository.findById(adjInfoId).get();
         List<PaybandCriteria> paybandCriterias = paybandCriteriaRepository.findByAdjInfo_Id(adjInfoId)
             .stream()
