@@ -1,9 +1,13 @@
 package com.bongsco.poscosalarybackend.adjust.domain;
 
+import java.time.LocalDate;
+
 import org.hibernate.annotations.SQLDelete;
 
 import com.bongsco.poscosalarybackend.global.domain.BaseEntity;
 import com.bongsco.poscosalarybackend.user.domain.Employee;
+import com.bongsco.poscosalarybackend.user.domain.Grade;
+import com.bongsco.poscosalarybackend.user.domain.Rank;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,13 +17,18 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "adj_subject")
 @Getter
-@Setter
+@Builder(toBuilder = true)
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SQLDelete(sql = "UPDATE adj_subject SET deleted = true WHERE id = ?")
 public class AdjSubject extends BaseEntity {
     @Id
@@ -34,6 +43,14 @@ public class AdjSubject extends BaseEntity {
     @JoinColumn(name = "adj_info_id", nullable = false)
     private AdjInfo adjInfo;
 
+    @ManyToOne
+    @JoinColumn(name = "grade_id", nullable = false)
+    private Grade grade;
+
+    @ManyToOne
+    @JoinColumn(name = "rank_id", nullable = false)
+    private Rank rank;
+
     @Column(nullable = false)
     private Boolean subjectUse;
 
@@ -42,5 +59,20 @@ public class AdjSubject extends BaseEntity {
 
     @Column
     private Boolean paybandUse;
+
+    @Column
+    private Double stdSalary;
+
+    @Column
+    private Double performAddPayment;
+
+    @Column
+    private LocalDate startDate;
+
+    @Column
+    private LocalDate endDate;
+
+    @Column
+    private Double finalStdSalary;
 }
 

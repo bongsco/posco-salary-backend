@@ -1,6 +1,5 @@
 package com.bongsco.poscosalarybackend.user.domain;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import org.hibernate.annotations.SQLDelete;
@@ -16,13 +15,18 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "employee")
 @Getter
-@Setter
+@Builder(toBuilder = true)
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SQLDelete(sql = "UPDATE employee SET deleted = true WHERE id = ?")
 public class Employee extends BaseEntity {
     @Id
@@ -67,7 +71,7 @@ public class Employee extends BaseEntity {
     @Column(length = 10)
     private String positionArea;
 
-    @Column(precision = 5, scale = 2)
-    private BigDecimal stdSalaryIncrementRate;
+    @Column
+    private Double stdSalaryIncrementRate;
 }
 

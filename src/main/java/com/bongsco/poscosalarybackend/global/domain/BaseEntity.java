@@ -29,6 +29,6 @@ public abstract class BaseEntity {
     private LocalDateTime updatedAt;
 
     @Column  // 삭제 시각 (Soft Delete)
-    private boolean deleted = false;
+    private Boolean deleted = false;
 }
 
