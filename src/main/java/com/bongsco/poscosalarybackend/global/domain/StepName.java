@@ -1,9 +1,9 @@
 package com.bongsco.poscosalarybackend.global.domain;
 
 public enum StepName {
-    CRITERIA("기준설정"),
-    PREPARATION("사전작업"),
-    MAIN("본조정");
+    기준설정("기준설정"),
+    사전작업("사전작업"),
+    본연봉조정("본조정");
 
     private final String description;
 
