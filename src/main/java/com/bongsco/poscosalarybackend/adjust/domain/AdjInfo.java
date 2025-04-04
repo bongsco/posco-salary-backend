@@ -43,9 +43,6 @@ public class AdjInfo extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private AdjType adjType;
 
-    @Column(length = 4)
-    private String workStep;
-
     @Column
     private Boolean interfaceUse;
 

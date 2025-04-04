@@ -9,8 +9,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
@@ -28,7 +26,6 @@ import lombok.NoArgsConstructor;
 @SQLDelete(sql = "UPDATE step SET deleted = true WHERE id = ?")
 public class Step extends BaseEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private String id;
 
     @Column(nullable = false)
@@ -37,4 +34,7 @@ public class Step extends BaseEntity {
 
     @Column(length = 20, nullable = false)
     private String detailStepName;
+
+    @Column(nullable = false)
+    private Integer orderNumber;
 }
