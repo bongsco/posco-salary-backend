@@ -37,4 +37,7 @@ public class Step extends BaseEntity {
 
     @Column(nullable = false)
     private Integer orderNumber;
+
+    @Column(length = 100, nullable = false)
+    private String url;
 }
