@@ -35,6 +35,6 @@ public class Step extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private StepName stepName;
 
-    @Column(nullable = false)
+    @Column(length = 20, nullable = false)
     private String detailStepName;
 }
