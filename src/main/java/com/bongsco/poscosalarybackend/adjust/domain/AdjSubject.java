@@ -1,7 +1,5 @@
 package com.bongsco.poscosalarybackend.adjust.domain;
 
-import java.time.LocalDate;
-
 import org.hibernate.annotations.SQLDelete;
 
 import com.bongsco.poscosalarybackend.global.domain.BaseEntity;
@@ -65,12 +63,6 @@ public class AdjSubject extends BaseEntity {
 
     @Column
     private Double performAddPayment;
-
-    @Column
-    private LocalDate startDate;
-
-    @Column
-    private LocalDate endDate;
 
     @Column
     private Double finalStdSalary;

@@ -3,9 +3,12 @@ package com.bongsco.poscosalarybackend.adjust.domain;
 import org.hibernate.annotations.SQLDelete;
 
 import com.bongsco.poscosalarybackend.global.domain.BaseEntity;
+import com.bongsco.poscosalarybackend.global.domain.StepName;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -26,8 +29,12 @@ import lombok.NoArgsConstructor;
 public class Step extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
     @Column(nullable = false)
-    private String stepName;
+    @Enumerated(EnumType.STRING)
+    private StepName stepName;
+
+    @Column(nullable = false)
+    private String detailStepName;
 }

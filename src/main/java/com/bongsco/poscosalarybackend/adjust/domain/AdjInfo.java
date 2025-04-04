@@ -81,5 +81,11 @@ public class AdjInfo extends BaseEntity {
 
     @Column
     private LocalDate promotionEndDate;
+
+    @Column
+    private LocalDate startDate;
+
+    @Column
+    private LocalDate endDate;
 }
 
