@@ -25,7 +25,6 @@ public class AdjResultResponse {
         private String name;
         private LocalDate birth;
         private LocalDate hireDate;
-        private String stationName;
         private String paymentName;
         private String depName;
         private String positionName;

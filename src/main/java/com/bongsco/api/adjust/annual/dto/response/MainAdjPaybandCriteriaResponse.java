@@ -2,7 +2,7 @@ package com.bongsco.api.adjust.annual.dto.response;
 
 import java.util.List;
 
-import com.bongsco.api.adjust.annual.domain.PaybandCriteria;
+import com.bongsco.api.adjust.annual.entity.PaybandCriteria;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -33,7 +33,7 @@ public class MainAdjPaybandCriteriaResponse {
             Double representativeVal) {
             return new PaybandCriteriaResponse(paybandCriteria.getGrade().getGradeName(), numberOfEmpl,
                 representativeVal,
-                paybandCriteria.getUpperLimitPrice(), paybandCriteria.getLowerLimitPrice(),
+                paybandCriteria.getUpperBound(), paybandCriteria.getLowerBound(),
                 paybandCriteria.getGrade().getGradeBaseSalary());
         }
     }

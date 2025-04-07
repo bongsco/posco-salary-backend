@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/baseup")
 public class BaseupController {
-
     @Operation(summary = "test",description = "test")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "요청 성공, 'test' 문자열 반환"),

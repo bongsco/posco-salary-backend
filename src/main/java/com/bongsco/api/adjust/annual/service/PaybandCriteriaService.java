@@ -6,15 +6,13 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import com.bongsco.api.adjust.annual.repository.AdjustRepository;
-import com.bongsco.api.adjust.annual.repository.PaybandCriteriaRepository;
-import com.bongsco.api.adjust.annual.domain.PaybandCriteria;
-import com.bongsco.api.adjust.annual.domain.RepresentativeSalary;
 import com.bongsco.api.adjust.annual.dto.response.MainAdjPaybandCriteriaResponse;
-import com.bongsco.api.adjust.annual.repository.AdjSubjectRepository;
-import com.bongsco.api.adjust.annual.repository.RepresentativeSalaryRepository;
-import com.bongsco.api.user.domain.Employee;
-import com.bongsco.api.user.repository.EmployeeRepository;
+import com.bongsco.api.adjust.annual.entity.PaybandCriteria;
+import com.bongsco.api.adjust.common.entity.RepresentativeSalary;
+import com.bongsco.api.adjust.common.repository.PaybandCriteriaRepository;
+import com.bongsco.api.adjust.common.repository.RepresentativeSalaryRepository;
+import com.bongsco.api.employee.entity.Employee;
+import com.bongsco.api.employee.repository.EmployeeRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,13 +21,11 @@ import lombok.RequiredArgsConstructor;
 public class PaybandCriteriaService {
     private final PaybandCriteriaRepository paybandCriteriaRepository;
     private final EmployeeRepository employeeRepository;
-    private final AdjustRepository adjustRepository;
-    private final AdjSubjectRepository adjSubjectRepository;
     private final RepresentativeSalaryRepository representativeSalaryRepository;
     private final AdjustService adjustService;
 
     public MainAdjPaybandCriteriaResponse findAllPaybandCriteria(Long adjInfoId) {
-        List<PaybandCriteria> paybandCriterias = paybandCriteriaRepository.findByAdjInfo_Id(adjInfoId);
+        List<PaybandCriteria> paybandCriterias = paybandCriteriaRepository.findByAdjustId(adjInfoId);
         List<Employee> employees = employeeRepository.findAll();
         employees = employees.stream()
             .filter(employee -> !employee.getDeleted())
@@ -44,7 +40,7 @@ public class PaybandCriteriaService {
 
         Long beforeAdjInfoId = adjustService.getBeforeAdjInfoId(adjInfoId);
 
-        List<RepresentativeSalary> representativeSalaries = representativeSalaryRepository.findByAdjInfo_Id(
+        List<RepresentativeSalary> representativeSalaries = representativeSalaryRepository.findByAdjustId(
             beforeAdjInfoId);
 
         return new MainAdjPaybandCriteriaResponse(paybandCriterias

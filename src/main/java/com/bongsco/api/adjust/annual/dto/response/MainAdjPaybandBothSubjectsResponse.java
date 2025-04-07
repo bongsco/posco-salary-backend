@@ -2,7 +2,7 @@ package com.bongsco.api.adjust.annual.dto.response;
 
 import java.util.List;
 
-import com.bongsco.api.adjust.annual.dto.AdjSubjectSalaryDto;
+import com.bongsco.api.adjust.common.dto.AdjSubjectSalaryDto;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

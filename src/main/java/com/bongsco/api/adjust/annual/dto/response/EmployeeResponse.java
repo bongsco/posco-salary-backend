@@ -2,7 +2,7 @@ package com.bongsco.api.adjust.annual.dto.response;
 
 import java.time.LocalDate;
 
-import com.bongsco.api.adjust.annual.domain.AdjSubject;
+import com.bongsco.api.adjust.common.entity.AdjustSubject;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -22,11 +22,10 @@ public class EmployeeResponse {
     private String rankName;
     private Boolean subjectUse;
 
-    public static EmployeeResponse from(AdjSubject adjSubject) {
-
-        return new EmployeeResponse(adjSubject.getEmployee().getId(), adjSubject.getEmployee().getEmpNum(),
-            adjSubject.getEmployee().getName(), adjSubject.getEmployee().getHireDate(),
-            adjSubject.getRank().getRankCode(),
-            adjSubject.getSubjectUse());
+    public static EmployeeResponse from(AdjustSubject adjustSubject) {
+        return new EmployeeResponse(adjustSubject.getEmployee().getId(), adjustSubject.getEmployee().getEmpNum(),
+            adjustSubject.getEmployee().getName(), adjustSubject.getEmployee().getHireDate(),
+            adjustSubject.getRank().getRankCode(),
+            adjustSubject.getIsSubject());
     }
 }
