@@ -1,6 +1,7 @@
 package com.bongsco.poscosalarybackend.adjust.domain;
 
 import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import com.bongsco.poscosalarybackend.global.domain.BaseEntity;
 
@@ -23,7 +24,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@SQLDelete(sql = "UPDATE payment_adj_info SET deleted = 1 WHERE payment_id = ? AND adj_info_id = ?")
+@SQLDelete(sql = "UPDATE payment_adj_info SET deleted = true WHERE id = ?")
+@SQLRestriction("deleted = false")
 public class PaymentAdjInfo extends BaseEntity {
 
     @Id
