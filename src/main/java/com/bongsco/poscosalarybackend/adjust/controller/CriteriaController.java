@@ -15,10 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.bongsco.poscosalarybackend.adjust.domain.PaybandCriteria;
 import com.bongsco.poscosalarybackend.adjust.domain.RankIncrementRate;
-import com.bongsco.poscosalarybackend.adjust.dto.request.PaybandCriteriaDeleteRequest;
 import com.bongsco.poscosalarybackend.adjust.dto.request.PaybandCriteriaRequest;
 import com.bongsco.poscosalarybackend.adjust.dto.request.RankIncrementRateRequest;
 import com.bongsco.poscosalarybackend.adjust.dto.request.SubjectCriteriaRequest;
+import com.bongsco.poscosalarybackend.adjust.dto.response.PaybandCriteriaConfigListResponse;
 import com.bongsco.poscosalarybackend.adjust.dto.response.SubjectCriteriaResponse;
 import com.bongsco.poscosalarybackend.adjust.service.CriteriaService;
 import com.bongsco.poscosalarybackend.global.dto.JsonResult;
@@ -27,6 +27,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
 @Tag(name = "기준 설정 관련 API", description = "대상자 기준, 기준연봉, 평가차등 등등..")
 @RestController
 @RequiredArgsConstructor
@@ -71,13 +72,12 @@ public class CriteriaController {
             .body(JsonResult.success(request));
     }
 
-    @PostMapping("/{adj_info_id}/payband")
-    public ResponseEntity<JsonResult<List<PaybandCriteria>>> savePaybandCriteria(
-        @PathVariable(name = "adj_info_id") Long adjInfoId,
-        @Valid @RequestBody PaybandCriteriaRequest request) {
-        List<PaybandCriteria> savedData = criteriaService.savePaybandCriteria(adjInfoId, request);
+    @GetMapping("/{adj_info_id}/payband")
+    public ResponseEntity<JsonResult<PaybandCriteriaConfigListResponse>> getPaybandCriteria(
+        @PathVariable(name = "adj_info_id") Long adjInfoId) {
+
         return ResponseEntity.status(HttpStatus.CREATED)
-            .body(JsonResult.success(savedData));
+            .body(JsonResult.success(criteriaService.getPaybandCriteria(adjInfoId)));
     }
 
     @PatchMapping("/{adj_info_id}/payband")
@@ -86,12 +86,5 @@ public class CriteriaController {
         @Valid @RequestBody PaybandCriteriaRequest request) {
         List<PaybandCriteria> updatedData = criteriaService.updatePaybandCriteria(adjInfoId, request);
         return ResponseEntity.ok(JsonResult.success(updatedData));
-    }
-
-    @DeleteMapping("/{adj_info_id}/payband")
-    public ResponseEntity<Void> deletePaybandCriteria(
-        @Valid @RequestBody PaybandCriteriaDeleteRequest request) {
-        criteriaService.deletePaybandCriteria(request);
-        return ResponseEntity.noContent().build();
     }
 }
