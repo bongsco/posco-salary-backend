@@ -78,17 +78,6 @@ public class AdjustSubjectService {
         List<AdjustSubject> subjects = adjustSubjectRepository.findByAdjustId(adjInfoId);
 
         return subjects.stream()
-            .filter(adjustSubject -> !adjustSubject.getDeleted())
-            .map(EmployeeResponse::from)
-            .toList();
-    }
-
-    public List<EmployeeResponse> findBySearchKey(Long adjInfoId, String searchKey) {
-        // 연봉조정차수&검색정보를 이용해 정기연봉조정대상자 테이블 가져오기
-        List<AdjustSubject> subjects = adjustSubjectRepository.findByAdjustIdAndEmployeeName(adjInfoId, searchKey);
-
-        return subjects.stream()
-            .filter(adjustSubject -> !adjustSubject.getDeleted())
             .map(EmployeeResponse::from)
             .toList();
     }
