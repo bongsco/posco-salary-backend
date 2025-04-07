@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,6 +34,15 @@ import lombok.RequiredArgsConstructor;
 public class CriteriaController {
 
     private final CriteriaService criteriaService;
+
+    @Operation(summary = "대상자 기준 설정 GET API", description = "대상자 기준 설정 기존 값 전달")
+    @GetMapping("/{adj_info_id}/subject")
+    public ResponseEntity<JsonResult<SubjectCriteriaResponse>> getSubjectCriteria(
+        @PathVariable(name = "adj_info_id") Long adjInfoId
+    ) {
+        SubjectCriteriaResponse response = criteriaService.getSubjectCriteria(adjInfoId);
+        return ResponseEntity.ok(JsonResult.success(response));
+    }
 
     @Operation(summary = "대상자 기준 설정 PATCH API", description = "대상자 기준 설정 수정된 값 전달")
     @PatchMapping("/{adj_info_id}/subject")

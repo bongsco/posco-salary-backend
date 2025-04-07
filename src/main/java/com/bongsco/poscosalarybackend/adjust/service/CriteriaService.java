@@ -49,6 +49,41 @@ public class CriteriaService {
     private final RankIncrementRateRepository rankIncrementRateRepository;
     private final PaybandCriteriaRepository paybandCriteriaRepository;
 
+    public SubjectCriteriaResponse getSubjectCriteria(Long adjInfoId) {
+        AdjInfo info = adjustRepository.findById(adjInfoId)
+            .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
+
+        Set<Long> selectedGradeIds = gradeAdjInfoRepository.findByAdjInfoId(adjInfoId).stream()
+            .map(link -> link.getGrade().getId())
+            .collect(Collectors.toSet());
+
+        Set<Long> selectedPaymentIds = paymentAdjInfoRepository.findByAdjInfoId(adjInfoId).stream()
+            .map(link -> link.getPaymentCriteria().getId())
+            .collect(Collectors.toSet());
+
+        List<SubjectCriteriaResponse.SelectableItemDto> gradeDtos = gradeRepository.findAll().stream()
+            .map(grade -> new SubjectCriteriaResponse.SelectableItemDto(
+                grade.getId(),
+                grade.getGradeName(),
+                selectedGradeIds.contains(grade.getId())
+            )).toList();
+
+        List<SubjectCriteriaResponse.SelectableItemDto> paymentDtos = paymentCriteriaRepository.findAll().stream()
+            .map(payment -> new SubjectCriteriaResponse.SelectableItemDto(
+                payment.getId(),
+                payment.getPaymentName(),
+                selectedPaymentIds.contains(payment.getId())
+            )).toList();
+
+        return new SubjectCriteriaResponse(
+            info.getBaseDate(),
+            info.getExceptionStartDate(),
+            info.getExceptionEndDate(),
+            gradeDtos,
+            paymentDtos
+        );
+    }
+
     @Transactional
     public SubjectCriteriaResponse updateSubjectCriteria(Long adjInfoId, SubjectCriteriaRequest request) {
         AdjInfo adjInfo = adjustRepository.findById(adjInfoId)
