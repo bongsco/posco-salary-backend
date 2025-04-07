@@ -34,14 +34,8 @@ public class PreprocessController {
     @Operation(summary = "대상자 편성 페이지 GET API", description = "대상자 편성 페이지에서 조정 대상자와 비대상자 정보 반환")
     @GetMapping("/{adj_info_id}/employees")
     public ResponseEntity<JsonResult<List<EmployeeResponse>>> getEmployees(
-        @PathVariable("adj_info_id") Long adjInfoId,
-        @RequestParam(value = "searchKey", required = false) String searchKey
+        @PathVariable("adj_info_id") Long adjInfoId
     ) {
-        if (searchKey != null) {
-            return ResponseEntity.status(HttpStatus.OK)
-                .body(JsonResult.success(adjSubjectService.findBySearchKey(adjInfoId, searchKey)));
-        }
-
         return ResponseEntity.status(HttpStatus.OK).body(JsonResult.success(adjSubjectService.findAll(adjInfoId)));
     }
 
