@@ -34,21 +34,21 @@ public class CriteriaController {
     private final CriteriaService criteriaService;
 
     @Operation(summary = "대상자 기준 설정 GET API", description = "대상자 기준 설정 기존 값 전달")
-    @GetMapping("/{adj_info_id}/subject")
+    @GetMapping("/subject")
     public ResponseEntity<SubjectCriteriaResponse> getSubjectCriteria(
-        @PathVariable(name = "adj_info_id") Long adjInfoId
+        @PathVariable(name = "adjustId") Long adjustId
     ) {
-        SubjectCriteriaResponse response = criteriaService.getSubjectCriteria(adjInfoId);
+        SubjectCriteriaResponse response = criteriaService.getSubjectCriteria(adjustId);
         return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "대상자 기준 설정 PATCH API", description = "대상자 기준 설정 수정된 값 전달")
-    @PatchMapping("/{adj_info_id}/subject")
+    @PatchMapping("/subject")
     public ResponseEntity<SubjectCriteriaResponse> saveSubjectCriteria(
-        @PathVariable(name = "adj_info_id") Long adjInfoId,
+        @PathVariable(name = "adjustId") Long adjustId,
         @Valid @RequestBody SubjectCriteriaRequest subjectCriteriaRequest
     ) {
-        SubjectCriteriaResponse res = criteriaService.updateSubjectCriteria(adjInfoId, subjectCriteriaRequest);
+        SubjectCriteriaResponse res = criteriaService.updateSubjectCriteria(adjustId, subjectCriteriaRequest);
         return ResponseEntity.ok(res);
     }
 

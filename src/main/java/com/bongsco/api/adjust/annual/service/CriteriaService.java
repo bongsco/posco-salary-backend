@@ -24,16 +24,20 @@ import com.bongsco.api.adjust.annual.repository.SalaryIncrementRateByRankReposit
 import com.bongsco.api.adjust.common.entity.Adjust;
 import com.bongsco.api.adjust.common.entity.AdjustEmploymentType;
 import com.bongsco.api.adjust.common.entity.AdjustGrade;
+import com.bongsco.api.adjust.common.entity.AdjustSubject;
 import com.bongsco.api.adjust.common.repository.AdjustEmploymentTypeRepository;
 import com.bongsco.api.adjust.common.repository.AdjustGradeRepository;
 import com.bongsco.api.adjust.common.repository.AdjustRepository;
+import com.bongsco.api.adjust.common.repository.AdjustSubjectRepository;
 import com.bongsco.api.adjust.common.repository.GradeRepository;
 import com.bongsco.api.adjust.common.repository.RankRepository;
 import com.bongsco.api.common.exception.CustomException;
 import com.bongsco.api.common.exception.ErrorCode;
+import com.bongsco.api.employee.entity.Employee;
 import com.bongsco.api.employee.entity.EmploymentType;
 import com.bongsco.api.employee.entity.Grade;
 import com.bongsco.api.employee.entity.Rank;
+import com.bongsco.api.employee.repository.EmployeeRepository;
 import com.bongsco.api.employee.repository.EmploymentTypeRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -42,8 +46,10 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CriteriaService {
     private final AdjustRepository adjustRepository;
+    private final AdjustSubjectRepository adjustSubjectRepository;
     private final AdjustGradeRepository adjustGradeRepository;
     private final AdjustEmploymentTypeRepository adjustEmploymentTypeRepository;
+    private final EmployeeRepository employeeRepository;
     private final EmploymentTypeRepository employmentTypeRepository;
     private final GradeRepository gradeRepository;
     private final RankRepository rankRepository;
@@ -110,9 +116,7 @@ public class CriteriaService {
             if (checked && !exists) {
                 Grade grade = gradeRepository.findById(id)
                     .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
-                adjustGradeRepository.save(
-                    AdjustGrade.builder().adjust(adjust).grade(grade).build()
-                );
+                adjustGradeRepository.save(AdjustGrade.builder().adjust(adjust).grade(grade).build());
             } else if (!checked && exists) {
                 adjustGradeRepository.delete(existingGrades.get(id));
             }
@@ -132,14 +136,14 @@ public class CriteriaService {
                 EmploymentType pc = employmentTypeRepository.findById(id)
                     .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
                 adjustEmploymentTypeRepository.save(
-                    AdjustEmploymentType.builder().adjust(adjust).employmentType(pc).build()
-                );
+                    AdjustEmploymentType.builder().adjust(adjust).employmentType(pc).build());
             } else if (!checked && exists) {
                 adjustEmploymentTypeRepository.delete(existingPayments.get(id));
             }
         }
 
-        // ✅ 수정된 정보 기반으로 다시 전체 목록 + 체크여부 포함 응답 생성
+        // ✅ AdjustSubject 갱신 처리
+        // 1. 기준에 부합하는 gradeId, paymentId 추출
         Set<Long> selectedGradeIds = adjustGradeRepository.findByAdjustId(adjInfoId).stream()
             .map(link -> link.getGrade().getId())
             .collect(Collectors.toSet());
@@ -148,6 +152,33 @@ public class CriteriaService {
             .map(link -> link.getEmploymentType().getId())
             .collect(Collectors.toSet());
 
+        // 2. 기존 AdjustSubject 삭제
+        adjustSubjectRepository.deleteByAdjustId(adjInfoId);
+
+        // 3. Employee 조회 및 AdjustSubject 저장
+        List<Employee> matchingEmployees = employeeRepository.findByGradeIdInAndEmploymentTypeIdIn(
+            selectedGradeIds, selectedPaymentIds
+        );
+
+        Adjust finalAdjust = adjust;
+        List<AdjustSubject> newSubjects = matchingEmployees.stream()
+            .map(emp -> AdjustSubject.builder()
+                .adjust(finalAdjust)
+                .employee(emp)
+                .grade(emp.getGrade())
+                .rank(emp.getRank()) // emp.getRank()는 Rank가 Employee에 포함되어 있다고 가정
+                .isSubject(true)
+                .isInHpo(false)
+                .isPaybandApplied(false)
+                .stdSalary(null)
+                .hpoBonus(null)
+                .finalStdSalary(null)
+                .build()
+            ).toList();
+
+        adjustSubjectRepository.saveAll(newSubjects);
+
+        // ✅ 응답 생성
         List<SubjectCriteriaResponse.SelectableItemDto> gradeDtos = gradeRepository.findAll().stream()
             .map(grade -> new SubjectCriteriaResponse.SelectableItemDto(
                 grade.getId(),
