@@ -14,6 +14,7 @@ import com.bongsco.poscosalarybackend.adjust.domain.PaymentAdjInfo;
 import com.bongsco.poscosalarybackend.adjust.domain.PaymentCriteria;
 import com.bongsco.poscosalarybackend.adjust.domain.RankIncrementRate;
 import com.bongsco.poscosalarybackend.adjust.dto.request.PaybandCriteriaDeleteRequest;
+import com.bongsco.poscosalarybackend.adjust.dto.request.PaybandCriteriaModifyRequest;
 import com.bongsco.poscosalarybackend.adjust.dto.request.PaybandCriteriaRequest;
 import com.bongsco.poscosalarybackend.adjust.dto.request.RankIncrementRateRequest;
 import com.bongsco.poscosalarybackend.adjust.dto.request.SubjectCriteriaRequest;
@@ -198,36 +199,20 @@ public class CriteriaService {
     }
 
     @Transactional
-    public List<PaybandCriteria> updatePaybandCriteria(Long adjInfoId, PaybandCriteriaRequest request) {
-        AdjInfo adjInfo = adjustRepository.findById(adjInfoId)
-            .orElseThrow(() -> new IllegalArgumentException("AdjInfo not found with ID: " + adjInfoId));
+    public List<PaybandCriteria> updatePaybandCriteria(PaybandCriteriaModifyRequest request) {
 
-        List<PaybandCriteria> updatedPaybandCriteriaList = request.getGradeData().entrySet().stream()
-            .map(entry -> {
-                Long gradeId = entry.getKey();
-                Grade grade = gradeRepository.findById(gradeId)
-                    .orElseThrow(() -> new IllegalArgumentException("Grade not found with ID: " + gradeId));
-
-                PaybandCriteriaRequest.PaybandCriteriaDetail detail = entry.getValue();
-
-                Optional<PaybandCriteria> existingRecord =
-                    paybandCriteriaRepository.findByAdjInfo_IdAndGrade_Id(adjInfoId, gradeId);
-
-                if (existingRecord.isPresent()) {
-                    PaybandCriteria existingCriteria = existingRecord.get();
-                    existingCriteria = existingCriteria.toBuilder()
-                        .upperLimitPrice(detail.getUpperLimitPrice())
-                        .lowerLimitPrice(detail.getLowerLimitPrice())
-                        .build();
-                    return existingCriteria;
-                } else {
-                    return PaybandCriteria.builder()
-                        .adjInfo(adjInfo)
-                        .grade(grade)
-                        .upperLimitPrice(detail.getUpperLimitPrice())
-                        .lowerLimitPrice(detail.getLowerLimitPrice())
-                        .build();
-                }
+        List<PaybandCriteria> updatedPaybandCriteriaList = request.getPaybandCriteriaModifyDetailList()
+            .stream()
+            .map(paybandCriteriaModifyDetail -> {
+                PaybandCriteria paybandCriteria = paybandCriteriaRepository.findById(
+                        paybandCriteriaModifyDetail.getId())
+                    .orElseThrow(
+                        () -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
+                return paybandCriteria
+                    .toBuilder()
+                    .upperLimitPrice(paybandCriteriaModifyDetail.getUpperBound())
+                    .lowerLimitPrice(paybandCriteriaModifyDetail.getLowerBound())
+                    .build();
             })
             .collect(Collectors.toList());
 
