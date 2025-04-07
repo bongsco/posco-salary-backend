@@ -8,8 +8,8 @@ import org.springframework.stereotype.Service;
 
 import com.bongsco.api.adjust.annual.dto.response.MainAdjPaybandCriteriaResponse;
 import com.bongsco.api.adjust.annual.entity.PaybandCriteria;
+import com.bongsco.api.adjust.annual.repository.PaybandCriteriaRepository;
 import com.bongsco.api.adjust.common.entity.RepresentativeSalary;
-import com.bongsco.api.adjust.common.repository.PaybandCriteriaRepository;
 import com.bongsco.api.adjust.common.repository.RepresentativeSalaryRepository;
 import com.bongsco.api.employee.entity.Employee;
 import com.bongsco.api.employee.repository.EmployeeRepository;

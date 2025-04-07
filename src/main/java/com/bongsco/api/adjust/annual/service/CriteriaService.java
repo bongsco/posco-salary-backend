@@ -19,6 +19,7 @@ import com.bongsco.api.adjust.annual.dto.response.PaybandCriteriaConfigListRespo
 import com.bongsco.api.adjust.annual.dto.response.SubjectCriteriaResponse;
 import com.bongsco.api.adjust.annual.entity.PaybandCriteria;
 import com.bongsco.api.adjust.annual.entity.SalaryIncrementRateByRank;
+import com.bongsco.api.adjust.annual.repository.PaybandCriteriaRepository;
 import com.bongsco.api.adjust.annual.repository.SalaryIncrementRateByRankRepository;
 import com.bongsco.api.adjust.common.entity.Adjust;
 import com.bongsco.api.adjust.common.entity.AdjustEmploymentType;
@@ -27,7 +28,6 @@ import com.bongsco.api.adjust.common.repository.AdjustEmploymentTypeRepository;
 import com.bongsco.api.adjust.common.repository.AdjustGradeRepository;
 import com.bongsco.api.adjust.common.repository.AdjustRepository;
 import com.bongsco.api.adjust.common.repository.GradeRepository;
-import com.bongsco.api.adjust.common.repository.PaybandCriteriaRepository;
 import com.bongsco.api.adjust.common.repository.RankRepository;
 import com.bongsco.api.common.exception.CustomException;
 import com.bongsco.api.common.exception.ErrorCode;

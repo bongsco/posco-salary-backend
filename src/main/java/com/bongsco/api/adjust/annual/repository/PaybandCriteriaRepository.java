@@ -1,4 +1,4 @@
-package com.bongsco.api.adjust.common.repository;
+package com.bongsco.api.adjust.annual.repository;
 
 import java.util.List;
 
