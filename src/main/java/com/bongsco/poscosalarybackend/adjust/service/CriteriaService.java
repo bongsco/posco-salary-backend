@@ -2,6 +2,7 @@ package com.bongsco.poscosalarybackend.adjust.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -13,10 +14,10 @@ import com.bongsco.poscosalarybackend.adjust.domain.PaybandCriteria;
 import com.bongsco.poscosalarybackend.adjust.domain.PaymentAdjInfo;
 import com.bongsco.poscosalarybackend.adjust.domain.PaymentCriteria;
 import com.bongsco.poscosalarybackend.adjust.domain.RankIncrementRate;
-import com.bongsco.poscosalarybackend.adjust.dto.request.PaybandCriteriaDeleteRequest;
 import com.bongsco.poscosalarybackend.adjust.dto.request.PaybandCriteriaRequest;
 import com.bongsco.poscosalarybackend.adjust.dto.request.RankIncrementRateRequest;
 import com.bongsco.poscosalarybackend.adjust.dto.request.SubjectCriteriaRequest;
+import com.bongsco.poscosalarybackend.adjust.dto.response.PaybandCriteriaConfigListResponse;
 import com.bongsco.poscosalarybackend.adjust.repository.AdjustRepository;
 import com.bongsco.poscosalarybackend.adjust.repository.GradeAdjInfoRepository;
 import com.bongsco.poscosalarybackend.adjust.repository.GradeRepository;
@@ -173,28 +174,36 @@ public class CriteriaService {
     }
 
     @Transactional
-    public List<PaybandCriteria> savePaybandCriteria(Long adjInfoId, PaybandCriteriaRequest request) {
-        AdjInfo adjInfo = adjustRepository.findById(adjInfoId)
-            .orElseThrow(() -> new IllegalArgumentException("AdjInfo not found with ID: " + adjInfoId));
+    public PaybandCriteriaConfigListResponse getPaybandCriteria(Long adjInfoId) {
 
-        List<PaybandCriteria> paybandCriteriaList = request.getGradeData().entrySet().stream()
-            .map(entry -> {
-                Long gradeId = entry.getKey();
-                Grade grade = gradeRepository.findById(gradeId)
-                    .orElseThrow(() -> new IllegalArgumentException("Grade not found with ID: " + gradeId));
+        List<PaybandCriteria> existingPaybandCriteriaList = paybandCriteriaRepository.findByAdjInfo_Id(adjInfoId);
+        Set<Long> existingGradeIdSet = existingPaybandCriteriaList.stream()
+            .map(pc -> pc.getGrade().getId())
+            .collect(Collectors.toSet());
 
-                PaybandCriteriaRequest.PaybandCriteriaDetail detail = entry.getValue();
-
-                return PaybandCriteria.builder()
-                    .adjInfo(adjInfo)
-                    .grade(grade)
-                    .upperLimitPrice(detail.getUpperLimitPrice())
-                    .lowerLimitPrice(detail.getLowerLimitPrice())
-                    .build();
-            })
+        List<Grade> grades = gradeRepository.findAll();
+        List<Grade> leftGrades = grades.stream()
+            .filter(grade -> !existingGradeIdSet.contains(grade.getId()))
             .collect(Collectors.toList());
 
-        return paybandCriteriaRepository.saveAll(paybandCriteriaList);
+        AdjInfo adjInfo = adjustRepository.findById(adjInfoId)
+            .orElseThrow(() -> new IllegalArgumentException("Invalid adjInfoId: " + adjInfoId));
+
+        List<PaybandCriteria> newPaybandCriteriaList = leftGrades.stream()
+            .map(grade ->
+                PaybandCriteria.builder()
+                    .grade(grade)
+                    .adjInfo(adjInfo)
+                    .upperLimitPrice(130.0)
+                    .lowerLimitPrice(70.0)
+                    .build()
+            ).collect(Collectors.toList());
+
+        paybandCriteriaRepository.saveAll(newPaybandCriteriaList);
+
+        existingPaybandCriteriaList.addAll(newPaybandCriteriaList);
+
+        return PaybandCriteriaConfigListResponse.from(existingPaybandCriteriaList);
     }
 
     @Transactional
@@ -232,10 +241,5 @@ public class CriteriaService {
             .collect(Collectors.toList());
 
         return paybandCriteriaRepository.saveAll(updatedPaybandCriteriaList);
-    }
-
-    @Transactional
-    public void deletePaybandCriteria(PaybandCriteriaDeleteRequest request) {
-        paybandCriteriaRepository.deleteByIdIn(request.getPaybandIds());
     }
 }
