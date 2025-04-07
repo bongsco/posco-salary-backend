@@ -1,0 +1,51 @@
+package com.bongsco.api.adjust.promoted.domain;
+
+import org.hibernate.annotations.SQLDelete;
+
+import com.bongsco.api.adjust.annual.domain.AdjInfo;
+import com.bongsco.api.global.domain.BaseEntity;
+import com.bongsco.api.user.domain.Grade;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Entity
+@Table(name = "promoted_additional_money")
+@Getter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@SQLDelete(sql = "UPDATE promoted_additional_money SET deleted = true WHERE id = ?")
+public class PromotedAdditionalMoney extends BaseEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "grade_id", nullable = false)
+    private Grade grade;
+
+    @ManyToOne
+    @JoinColumn(name = "adj_info_id", nullable = false)
+    private AdjInfo adjInfo;
+
+    @Enumerated(EnumType.STRING)
+    private AdjustStatus adjustStatus;
+
+    @Column
+    private Double monthlyAdditionalMoney;
+}
+
