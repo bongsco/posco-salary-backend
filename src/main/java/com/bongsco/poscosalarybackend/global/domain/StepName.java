@@ -1,13 +1,13 @@
 package com.bongsco.poscosalarybackend.global.domain;
 
-public enum AdjType {
-    BASEUP("Baseup"),
-    승진자연봉조정("승진자연봉조정"),
-    정기연봉조정("정기연봉조정");
+public enum StepName {
+    기준설정("기준설정"),
+    사전작업("사전작업"),
+    본연봉조정("본조정");
 
     private final String description;
 
-    AdjType(String description) {
+    StepName(String description) {
         this.description = description;
     }
 
@@ -15,4 +15,3 @@ public enum AdjType {
         return description;
     }
 }
-

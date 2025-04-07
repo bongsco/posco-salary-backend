@@ -4,6 +4,7 @@ import org.hibernate.annotations.SQLDelete;
 
 import com.bongsco.poscosalarybackend.global.domain.BaseEntity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -18,13 +19,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "detail_work_step")
+@Table(name = "adj_info_step")
 @Getter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@SQLDelete(sql = "UPDATE detail_work_step SET deleted = true WHERE id = ?")
-public class DetailWorkStep extends BaseEntity {
+@SQLDelete(sql = "UPDATE adj_info_step SET deleted = true WHERE id = ?")
+public class AdjInfoStep extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -34,6 +35,12 @@ public class DetailWorkStep extends BaseEntity {
     private AdjInfo adjInfo;
 
     @ManyToOne
-    @JoinColumn(name = "step", nullable = false)
+    @JoinColumn(name = "step_id", nullable = false)
     private Step step;
+
+    @Column(length = 20)
+    private String authorName;
+
+    @Column
+    private Boolean isDone;
 }
