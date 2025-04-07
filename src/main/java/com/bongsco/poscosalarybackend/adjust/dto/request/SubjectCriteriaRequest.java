@@ -1,7 +1,7 @@
 package com.bongsco.poscosalarybackend.adjust.dto.request;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.util.Map;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -19,14 +19,14 @@ public class SubjectCriteriaRequest {
     private LocalDate baseDate;
 
     @NotNull(message = "exceptionStartDate는 null 일 수 없습니다.")
-    private LocalDate exceptionStartDate;
+    private LocalDate expStartDate;
 
     @NotNull(message = "exceptionEndDate는 null 일 수 없습니다.")
-    private LocalDate exceptionEndDate;
+    private LocalDate expEndDate;
 
-    @NotNull(message = "gradeIds는 null 일 수 없습니다.")
-    private List<Long> gradeIds;
+    @NotNull(message = "grades는 null 일 수 없습니다.")
+    private Map<Long, Boolean> gradeSelections;      // ✅ 체크된 등급 ID만 보내기
 
-    @NotNull(message = "paymentCriteriaIds는 null 일 수 없습니다.")
-    private List<Long> paymentCriteriaIds;
+    @NotNull(message = "payments는 null 일 수 없습니다.")
+    private Map<Long, Boolean> paymentSelections;    // ✅ 체크된 직급 ID만 보내기
 }

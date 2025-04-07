@@ -5,6 +5,7 @@ import static com.bongsco.poscosalarybackend.global.exception.ErrorCode.*;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -207,7 +208,8 @@ public class AdjSubjectService {
                 return adjSubjectSalaryDto.getStdSalary().compareTo(adjSubjectSalaryDto.getLimitPrice()) < 0;
             })
             .map(dto -> {
-                Employee employee = employeeRepository.findById(dto.getEmployeeId()).get();
+                Employee employee = employeeRepository.findById(dto.getEmployeeId())
+                    .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
                 dto = dto.toBuilder()
                     .empNum(employee.getEmpNum())
                     .name(employee.getName())
@@ -257,7 +259,8 @@ public class AdjSubjectService {
                 return adjSubjectSalaryDto.getStdSalary().compareTo(adjSubjectSalaryDto.getLimitPrice()) > 0;
             })
             .map(dto -> {
-                Employee employee = employeeRepository.findById(dto.getEmployeeId()).get();
+                Employee employee = employeeRepository.findById(dto.getEmployeeId())
+                    .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
                 dto = dto.toBuilder()
                     .empNum(employee.getEmpNum())
                     .name(employee.getName())
@@ -284,7 +287,8 @@ public class AdjSubjectService {
             .filter(AdjSubject::getSubjectUse)
             .toList();
 
-        AdjInfo adjInfo = adjustRepository.findById(adjInfoId).get();
+        AdjInfo adjInfo = adjustRepository.findById(adjInfoId)
+            .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
         Double evalAnnualSalaryIncrement =
             Optional.ofNullable(adjInfo.getEvalAnnualSalaryIncrement()).orElse(0.0) / 100;
         //5%일때 5로 들어간다는 전제하에 이렇게 해놓음
@@ -333,7 +337,8 @@ public class AdjSubjectService {
             .filter(AdjSubject::getSubjectUse)
             .toList();
 
-        AdjInfo adjInfo = adjustRepository.findById(adjInfoId).get();
+        AdjInfo adjInfo = adjustRepository.findById(adjInfoId)
+            .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
         Double evalPerformProvideRate =
             Optional.ofNullable(adjInfo.getEvalPerformProvideRate()).orElse(100.0) / 100;
         //400% 이런식으로 들어옴
@@ -349,13 +354,12 @@ public class AdjSubjectService {
             //평가차등경영성과금지급률 가져옴
             RankIncrementRate rankIncrementRate = rankIncrementRateRepository.findByRankIdAndAdjInfoIdAndGradeId(
                 adjSubject.getRank().getId(), adjInfoId, adjSubject.getGrade().getId()).orElse(null);
-            Double evalDiffBonus =
-                rankIncrementRate == null ? 0.0 : rankIncrementRate.getEvalDiffBonus() / 100;
+            Double evalDiffBonus = rankIncrementRate == null ? 0.0 : (rankIncrementRate.getEvalDiffBonus() / 100);
 
             //고성과 조직일 경우
             //평가차등경영성과금 지급률 = 평가차등경영성과금 지급률+고성과 경영성과금지급률
             if (adjSubject.getInHighPerformGroup()) {
-                evalDiffBonus = evalDiffBonus + evalPerformProvideRate;
+                evalDiffBonus += evalPerformProvideRate;
             }
 
             Double newPerformAddPayment = (double)Math.round(rankBaseStandardSalary * evalDiffBonus);
@@ -386,7 +390,8 @@ public class AdjSubjectService {
     }
 
     private AdjResultResponse getAdjResultResponse(Long adjInfoId, List<AdjSubject> adjSubjects) {
-        AdjInfo adjInfo = adjustRepository.findById(adjInfoId).get();
+        AdjInfo adjInfo = adjustRepository.findById(adjInfoId)
+            .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
         List<PaybandCriteria> paybandCriterias = paybandCriteriaRepository.findByAdjInfo_Id(adjInfoId)
             .stream()
             .filter(pc -> !pc.getDeleted())
@@ -401,7 +406,9 @@ public class AdjSubjectService {
             Employee employee = adjSubject.getEmployee();
             //상한값 하한값 가져오기,..
             PaybandCriteria paybandCriteria = paybandCriterias.stream()
-                .filter(pc -> pc.getGrade().getId() == adjSubject.getGrade().getId()).findFirst().orElse(null);
+                .filter(pc -> Objects.equals(pc.getGrade().getId(), adjSubject.getGrade().getId()))
+                .findFirst()
+                .orElse(null);
 
             //전년도 기준연봉 불러옴
             AdjSubject beforeAdjSubject = adjSubjectRepository.findBeforeAdjSubject(adjInfoId,
@@ -440,24 +447,25 @@ public class AdjSubjectService {
             .filter(AdjSubject::getSubjectUse)
             .toList();
 
-        AdjInfo adjInfo = adjustRepository.findById(adjInfoId).get();
+        AdjInfo adjInfo = adjustRepository.findById(adjInfoId)
+            .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
         List<Grade> grades = gradeRepository.findAll();
         Map<Long, Double> representativeVal = adjSubjects.stream()
             .filter(adjSubject -> !adjSubject.getDeleted())
-            .filter(adjSubject -> adjSubject.getFinalStdSalary() != null)//gradeId:대표값
+            .filter(adjSubject -> adjSubject.getFinalStdSalary() != null) //gradeId:대표값
             .collect(Collectors.groupingBy(
                 s -> s.getGrade().getId(), // 1차 그룹화 (gradeId 기준)
                 Collectors.collectingAndThen(
                     Collectors.toList(),
-                    list -> calculateMedian(list) // 상위 5% 제외 후 중간값
+                    AdjSubjectService::calculateMedian // 상위 5% 제외 후 중간값
                 )
             ));
 
-        representativeVal.entrySet().stream().forEach(val -> {
+        representativeVal.entrySet().forEach(val -> {
             representativeSalaryRepository.save(RepresentativeSalary.builder()
                 .adjInfo(adjInfo)
                 .grade(grades.stream()
-                    .filter(grade -> grade.getId() == val.getKey())
+                    .filter(grade -> Objects.equals(grade.getId(), val.getKey()))
                     .findFirst()
                     .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND)))
                 .representativeVal(val.getValue())

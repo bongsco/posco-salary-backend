@@ -1,8 +1,12 @@
 package com.bongsco.poscosalarybackend.adjust.service;
 
+import static com.bongsco.poscosalarybackend.global.exception.ErrorCode.*;
+
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -18,6 +22,7 @@ import com.bongsco.poscosalarybackend.adjust.dto.request.PaybandCriteriaRequest;
 import com.bongsco.poscosalarybackend.adjust.dto.request.RankIncrementRateRequest;
 import com.bongsco.poscosalarybackend.adjust.dto.request.SubjectCriteriaRequest;
 import com.bongsco.poscosalarybackend.adjust.dto.response.PaybandCriteriaConfigListResponse;
+import com.bongsco.poscosalarybackend.adjust.dto.response.SubjectCriteriaResponse;
 import com.bongsco.poscosalarybackend.adjust.repository.AdjustRepository;
 import com.bongsco.poscosalarybackend.adjust.repository.GradeAdjInfoRepository;
 import com.bongsco.poscosalarybackend.adjust.repository.GradeRepository;
@@ -27,11 +32,11 @@ import com.bongsco.poscosalarybackend.adjust.repository.PaymentCriteriaRepositor
 import com.bongsco.poscosalarybackend.adjust.repository.RankIncrementRateRepository;
 import com.bongsco.poscosalarybackend.adjust.repository.RankRepository;
 import com.bongsco.poscosalarybackend.global.exception.CustomException;
-import com.bongsco.poscosalarybackend.global.exception.ErrorCode;
 import com.bongsco.poscosalarybackend.user.domain.Grade;
 import com.bongsco.poscosalarybackend.user.domain.Rank;
 
 import lombok.RequiredArgsConstructor;
+
 @Service
 @RequiredArgsConstructor
 public class CriteriaService {
@@ -45,50 +50,131 @@ public class CriteriaService {
     private final RankIncrementRateRepository rankIncrementRateRepository;
     private final PaybandCriteriaRepository paybandCriteriaRepository;
 
+    public SubjectCriteriaResponse getSubjectCriteria(Long adjInfoId) {
+        AdjInfo info = adjustRepository.findById(adjInfoId)
+            .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
+
+        Set<Long> selectedGradeIds = gradeAdjInfoRepository.findByAdjInfoId(adjInfoId).stream()
+            .map(link -> link.getGrade().getId())
+            .collect(Collectors.toSet());
+
+        Set<Long> selectedPaymentIds = paymentAdjInfoRepository.findByAdjInfoId(adjInfoId).stream()
+            .map(link -> link.getPaymentCriteria().getId())
+            .collect(Collectors.toSet());
+
+        List<SubjectCriteriaResponse.SelectableItemDto> gradeDtos = gradeRepository.findAll().stream()
+            .map(grade -> new SubjectCriteriaResponse.SelectableItemDto(
+                grade.getId(),
+                grade.getGradeName(),
+                selectedGradeIds.contains(grade.getId())
+            )).toList();
+
+        List<SubjectCriteriaResponse.SelectableItemDto> paymentDtos = paymentCriteriaRepository.findAll().stream()
+            .map(payment -> new SubjectCriteriaResponse.SelectableItemDto(
+                payment.getId(),
+                payment.getPaymentName(),
+                selectedPaymentIds.contains(payment.getId())
+            )).toList();
+
+        return new SubjectCriteriaResponse(
+            info.getBaseDate(),
+            info.getExceptionStartDate(),
+            info.getExceptionEndDate(),
+            gradeDtos,
+            paymentDtos
+        );
+    }
+
     @Transactional
-    public SubjectCriteriaRequest addSubjectInfo(Long adjInfoId, SubjectCriteriaRequest request) {
-        AdjInfo existingAdjInfo = adjustRepository.findById(adjInfoId)
-            .orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
+    public SubjectCriteriaResponse updateSubjectCriteria(Long adjInfoId, SubjectCriteriaRequest request) {
+        AdjInfo adjInfo = adjustRepository.findById(adjInfoId)
+            .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
 
-        // 기존 데이터 업데이트 (toBuilder 사용)
-        AdjInfo updatedAdjInfo = existingAdjInfo.toBuilder()
-            .baseDate(request.getBaseDate() != null ? request.getBaseDate() : existingAdjInfo.getBaseDate())
-            .exceptionStartDate(request.getExceptionStartDate() != null ? request.getExceptionStartDate() :
-                existingAdjInfo.getExceptionStartDate())
-            .exceptionEndDate(request.getExceptionEndDate() != null ? request.getExceptionEndDate() :
-                existingAdjInfo.getExceptionEndDate())
+        // 날짜 업데이트
+        adjInfo = adjInfo.toBuilder()
+            .baseDate(request.getBaseDate())
+            .exceptionStartDate(request.getExpStartDate())
+            .exceptionEndDate(request.getExpEndDate())
             .build();
+        adjustRepository.save(adjInfo);
 
-        adjustRepository.save(updatedAdjInfo);
+        // 등급 처리
+        Map<Long, GradeAdjInfo> existingGrades = gradeAdjInfoRepository.findByAdjInfoId(adjInfoId).stream()
+            .collect(Collectors.toMap(g -> g.getGrade().getId(), Function.identity()));
 
-        // 기존 GradeAdjInfo 및 PaymentAdjInfo 삭제 후 갱신
-        if (request.getGradeIds() != null) {
-            gradeAdjInfoRepository.deleteAllByAdjInfo(existingAdjInfo);
-            List<Grade> grades = gradeRepository.findByIdIn(request.getGradeIds());
-            List<GradeAdjInfo> gradeAdjInfos = grades.stream()
-                .map(grade -> new GradeAdjInfo(null, grade, updatedAdjInfo))
-                .collect(Collectors.toList());
-            gradeAdjInfoRepository.saveAll(gradeAdjInfos);
+        for (Map.Entry<Long, Boolean> entry : request.getGradeSelections().entrySet()) {
+            Long id = entry.getKey();
+            boolean checked = entry.getValue();
+            boolean exists = existingGrades.containsKey(id);
+
+            if (checked && !exists) {
+                Grade grade = gradeRepository.findById(id)
+                    .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
+                gradeAdjInfoRepository.save(
+                    GradeAdjInfo.builder().adjInfo(adjInfo).grade(grade).build()
+                );
+            } else if (!checked && exists) {
+                gradeAdjInfoRepository.delete(existingGrades.get(id));
+            }
         }
 
-        if (request.getPaymentCriteriaIds() != null) {
-            paymentAdjInfoRepository.deleteAllByAdjInfo(existingAdjInfo);
-            List<PaymentCriteria> paymentCriteria = paymentCriteriaRepository.findByIdIn(
-                request.getPaymentCriteriaIds());
-            List<PaymentAdjInfo> paymentAdjInfos = paymentCriteria.stream()
-                .map(payment -> new PaymentAdjInfo(null, payment, updatedAdjInfo))
-                .collect(Collectors.toList());
-            paymentAdjInfoRepository.saveAll(paymentAdjInfos);
+        // 직급 처리
+        Map<Long, PaymentAdjInfo> existingPayments = paymentAdjInfoRepository.findByAdjInfoId(adjInfoId).stream()
+            .collect(Collectors.toMap(p -> p.getPaymentCriteria().getId(), Function.identity()));
+
+        for (Map.Entry<Long, Boolean> entry : request.getPaymentSelections().entrySet()) {
+            Long id = entry.getKey();
+            boolean checked = entry.getValue();
+            boolean exists = existingPayments.containsKey(id);
+
+            if (checked && !exists) {
+                PaymentCriteria pc = paymentCriteriaRepository.findById(id)
+                    .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
+                paymentAdjInfoRepository.save(
+                    PaymentAdjInfo.builder().adjInfo(adjInfo).paymentCriteria(pc).build()
+                );
+            } else if (!checked && exists) {
+                paymentAdjInfoRepository.delete(existingPayments.get(id));
+            }
         }
 
-        return request;
+        // ✅ 수정된 정보 기반으로 다시 전체 목록 + 체크여부 포함 응답 생성
+        Set<Long> selectedGradeIds = gradeAdjInfoRepository.findByAdjInfoId(adjInfoId).stream()
+            .map(link -> link.getGrade().getId())
+            .collect(Collectors.toSet());
+
+        Set<Long> selectedPaymentIds = paymentAdjInfoRepository.findByAdjInfoId(adjInfoId).stream()
+            .map(link -> link.getPaymentCriteria().getId())
+            .collect(Collectors.toSet());
+
+        List<SubjectCriteriaResponse.SelectableItemDto> gradeDtos = gradeRepository.findAll().stream()
+            .map(grade -> new SubjectCriteriaResponse.SelectableItemDto(
+                grade.getId(),
+                grade.getGradeName(),
+                selectedGradeIds.contains(grade.getId())
+            )).toList();
+
+        List<SubjectCriteriaResponse.SelectableItemDto> paymentDtos = paymentCriteriaRepository.findAll().stream()
+            .map(payment -> new SubjectCriteriaResponse.SelectableItemDto(
+                payment.getId(),
+                payment.getPaymentName(),
+                selectedPaymentIds.contains(payment.getId())
+            )).toList();
+
+        return new SubjectCriteriaResponse(
+            adjInfo.getBaseDate(),
+            adjInfo.getExceptionStartDate(),
+            adjInfo.getExceptionEndDate(),
+            gradeDtos,
+            paymentDtos
+        );
     }
 
     @Transactional
     public List<RankIncrementRate> saveRankIncrementRates(Long adjInfoId, RankIncrementRateRequest request) {
 
         AdjInfo existingAdjInfo = adjustRepository.findById(adjInfoId)
-            .orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
+            .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
 
         AdjInfo updatedAdjInfo = existingAdjInfo.toBuilder()
             .evalAnnualSalaryIncrement(request.getEvalDiffIncrementPromoted())
@@ -124,7 +210,7 @@ public class CriteriaService {
     @Transactional
     public List<RankIncrementRate> updateRankIncrementRates(Long adjInfoId, RankIncrementRateRequest request) {
         AdjInfo existingAdjInfo = adjustRepository.findById(adjInfoId)
-            .orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
+            .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
 
         AdjInfo updatedAdjInfo = existingAdjInfo.toBuilder()
             .evalAnnualSalaryIncrement(request.getEvalDiffIncrementPromoted())
@@ -209,7 +295,7 @@ public class CriteriaService {
     @Transactional
     public List<PaybandCriteria> updatePaybandCriteria(Long adjInfoId, PaybandCriteriaRequest request) {
         AdjInfo adjInfo = adjustRepository.findById(adjInfoId)
-            .orElseThrow(() -> new IllegalArgumentException("AdjInfo not found with ID: " + adjInfoId));
+            .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
 
         List<PaybandCriteria> updatedPaybandCriteriaList = request.getGradeData().entrySet().stream()
             .map(entry -> {
