@@ -2,6 +2,7 @@ package com.bongsco.api.adjust.annual.service;
 
 import static com.bongsco.api.common.exception.ErrorCode.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -122,6 +123,26 @@ public class CriteriaService {
             }
         }
 
+        // ✅ SalaryIncrementRateByRank 생성 (builder 형식)
+        List<AdjustGrade> adjustGrades = adjustGradeRepository.findByAdjustId(adjInfoId);
+        List<Rank> allRanks = rankRepository.findAll();
+
+        List<SalaryIncrementRateByRank> newSalaryRates = new ArrayList<>();
+
+        for (AdjustGrade ag : adjustGrades) {
+            for (Rank rank : allRanks) {
+                SalaryIncrementRateByRank rate = SalaryIncrementRateByRank.builder()
+                    .adjustGrade(ag)
+                    .rank(rank)
+                    .evalDiffIncrement(null)
+                    .evalDiffBonus(null)
+                    .build();
+                newSalaryRates.add(rate);
+            }
+        }
+
+        salaryIncrementRateByRankRepository.saveAll(newSalaryRates);
+
         // 직급 처리
         Map<Long, AdjustEmploymentType> existingPayments = adjustEmploymentTypeRepository.findByAdjustId(adjInfoId)
             .stream()
@@ -226,9 +247,9 @@ public class CriteriaService {
                         .orElseThrow(() -> new IllegalArgumentException("Grade not found with ID: " + gradeId));
 
                     return SalaryIncrementRateByRank.builder()
-                        .adjust(updatedAdjust)
+                        // .adjust(updatedAdjust)
                         .rank(rank)
-                        .grade(grade)
+                        // .grade(grade)
                         .evalDiffBonus(gradeEntry.getValue().getEvalDiffBonus())
                         .evalDiffIncrement(gradeEntry.getValue().getEvalDiffIncrement())
                         .build();
@@ -278,9 +299,9 @@ public class CriteriaService {
                     } else {
                         // 새로운 데이터 생성
                         return SalaryIncrementRateByRank.builder()
-                            .adjust(updatedAdjust)
+                            // .adjust(updatedAdjust)
                             .rank(rank)
-                            .grade(grade)
+                            // .grade(grade)
                             .evalDiffBonus(detail.getEvalDiffBonus())
                             .evalDiffIncrement(detail.getEvalDiffIncrement())
                             .build();

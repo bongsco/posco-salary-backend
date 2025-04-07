@@ -3,6 +3,7 @@ package com.bongsco.api.adjust.annual.entity;
 import org.hibernate.annotations.SQLDelete;
 
 import com.bongsco.api.adjust.common.entity.Adjust;
+import com.bongsco.api.adjust.common.entity.AdjustGrade;
 import com.bongsco.api.common.entity.BaseEntity;
 import com.bongsco.api.employee.entity.Grade;
 import com.bongsco.api.employee.entity.Rank;
@@ -38,6 +39,10 @@ public class SalaryIncrementRateByRank extends BaseEntity {
     @ManyToOne
     @JoinColumn(name = "adjust_id", nullable = false)
     private Adjust adjust;
+
+    @ManyToOne
+    @JoinColumn(name = "adjust_grade_id", nullable = false)
+    private AdjustGrade adjustGrade;
 
     @ManyToOne
     @JoinColumn(name = "grade_id", nullable = false)
