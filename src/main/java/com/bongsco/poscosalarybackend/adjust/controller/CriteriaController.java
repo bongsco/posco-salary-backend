@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.bongsco.poscosalarybackend.adjust.domain.PaybandCriteria;
 import com.bongsco.poscosalarybackend.adjust.domain.RankIncrementRate;
+import com.bongsco.poscosalarybackend.adjust.dto.request.PaybandCriteriaDeleteRequest;
+import com.bongsco.poscosalarybackend.adjust.dto.request.PaybandCriteriaModifyRequest;
 import com.bongsco.poscosalarybackend.adjust.dto.request.PaybandCriteriaRequest;
 import com.bongsco.poscosalarybackend.adjust.dto.request.RankIncrementRateRequest;
 import com.bongsco.poscosalarybackend.adjust.dto.request.SubjectCriteriaRequest;
@@ -81,10 +83,9 @@ public class CriteriaController {
     }
 
     @PatchMapping("/{adj_info_id}/payband")
-    public ResponseEntity<JsonResult<List<PaybandCriteria>>> updatePaybandCriteria(
-        @PathVariable(name = "adj_info_id") Long adjInfoId,
-        @Valid @RequestBody PaybandCriteriaRequest request) {
-        List<PaybandCriteria> updatedData = criteriaService.updatePaybandCriteria(adjInfoId, request);
-        return ResponseEntity.ok(JsonResult.success(updatedData));
+    public ResponseEntity<JsonResult<String>> updatePaybandCriteria(
+        @Valid @RequestBody PaybandCriteriaModifyRequest request) {
+        List<PaybandCriteria> updatedData = criteriaService.updatePaybandCriteria(request);
+        return ResponseEntity.ok(JsonResult.success("success"));
     }
 }
