@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.bongsco.api.adjust.annual.dto.response.EmployeeResponse;
 import com.bongsco.api.adjust.common.dto.AdjSubjectSalaryDto;
 import com.bongsco.api.adjust.common.entity.AdjustSubject;
 
@@ -173,4 +174,20 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
         """
     )
     List<AdjSubjectSalaryDto> findAllAdjSubjectAndStdSalaryAndLowerWithSearchKey(Long adjustId, String searchKey);
+
+    @Query("""
+            SELECT new com.bongsco.api.adjust.annual.dto.response.EmployeeResponse(
+                e.id,
+                e.empNum,
+                e.name,
+                e.hireDate,
+                r.code,
+                s.isSubject
+            )
+            FROM AdjustSubject s
+            JOIN s.employee e
+            JOIN e.rank r
+            WHERE s.adjust.id = :adjustId
+        """)
+    List<EmployeeResponse> findAllEmployeeResponsesByAdjustInfoId(@Param("adjustId") Long adjustId);
 }
