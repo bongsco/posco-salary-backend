@@ -13,6 +13,9 @@ import com.bongsco.api.adjust.common.entity.AdjustSubject;
 
 @Repository
 public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Long> {
+
+    List<AdjustSubject> findByAdjustIdAndIsSubjectTrue(Long adjustId);
+
     @Query("""
         SELECT asj
         FROM AdjustSubject asj
@@ -79,7 +82,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
             pc.upperBound
         )
         FROM AdjustSubject asj
-        JOIN PaybandCriteria pc ON pc.grade.id = asj.grade.id 
+        JOIN PaybandCriteria pc ON pc.grade.id = asj.grade.id
         WHERE asj.adjust.id = :adjustId
             AND pc.adjust.id = :adjustId
             AND asj.isSubject = true
