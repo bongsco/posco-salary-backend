@@ -16,6 +16,7 @@ import com.bongsco.api.adjust.annual.dto.request.PaybandCriteriaModifyRequest;
 import com.bongsco.api.adjust.annual.dto.request.RankIncrementRateRequest;
 import com.bongsco.api.adjust.annual.dto.request.SubjectCriteriaRequest;
 import com.bongsco.api.adjust.annual.dto.response.PaybandCriteriaConfigListResponse;
+import com.bongsco.api.adjust.annual.dto.response.SelectableItemDto;
 import com.bongsco.api.adjust.annual.dto.response.SubjectCriteriaResponse;
 import com.bongsco.api.adjust.annual.entity.PaybandCriteria;
 import com.bongsco.api.adjust.annual.entity.SalaryIncrementByRank;
@@ -71,10 +72,10 @@ public class CriteriaService {
 
         // 전체 grade 리스트를 한 번에 가져와 필요한 정보로 매핑
 
-        List<SubjectCriteriaResponse.SelectableItemDto> gradeDtos =
+        List<SelectableItemDto> gradeDtos =
             gradeRepository.findAllWithSelection(selectedGradeIds);
 
-        List<SubjectCriteriaResponse.SelectableItemDto> paymentDtos =
+        List<SelectableItemDto> paymentDtos =
             employmentTypeRepository.findAllWithSelection(selectedPaymentIds);
 
         return new SubjectCriteriaResponse(
@@ -87,8 +88,8 @@ public class CriteriaService {
     }
 
     @Transactional
-    public SubjectCriteriaResponse updateSubjectCriteria(Long adjInfoId, SubjectCriteriaRequest request) {
-        Adjust adjust = adjustRepository.findById(adjInfoId)
+    public SubjectCriteriaResponse updateSubjectCriteria(Long adjustId, SubjectCriteriaRequest request) {
+        Adjust adjust = adjustRepository.findById(adjustId)
             .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
 
         // 날짜 업데이트
@@ -100,7 +101,7 @@ public class CriteriaService {
         adjustRepository.save(adjust);
 
         // 등급 처리
-        Map<Long, AdjustGrade> existingGrades = adjustGradeRepository.findByAdjustId(adjInfoId).stream()
+        Map<Long, AdjustGrade> existingGrades = adjustGradeRepository.findByAdjustId(adjustId).stream()
             .collect(Collectors.toMap(g -> g.getGrade().getId(), Function.identity()));
 
         for (Map.Entry<Long, Boolean> entry : request.getGradeSelections().entrySet()) {
@@ -120,7 +121,7 @@ public class CriteriaService {
         }
 
         // SalaryIncrementRateByRank 생성
-        List<AdjustGrade> adjustGrades = adjustGradeRepository.findByAdjustId(adjInfoId);
+        List<AdjustGrade> adjustGrades = adjustGradeRepository.findByAdjustId(adjustId);
 
         List<SalaryIncrementByRank> oldRows = salaryIncrementByRankRepository.findByAdjustGradeIn(adjustGrades);
         salaryIncrementByRankRepository.deleteAll(oldRows); // ✅ Soft Delete
@@ -144,7 +145,7 @@ public class CriteriaService {
         salaryIncrementByRankRepository.saveAll(newSalaryRates);
 
         // 직급 처리
-        Map<Long, AdjustEmploymentType> existingPayments = adjustEmploymentTypeRepository.findByAdjustId(adjInfoId)
+        Map<Long, AdjustEmploymentType> existingPayments = adjustEmploymentTypeRepository.findByAdjustId(adjustId)
             .stream()
             .collect(Collectors.toMap(p -> p.getEmploymentType().getId(), Function.identity()));
 
@@ -166,19 +167,19 @@ public class CriteriaService {
 
         // ✅ AdjustSubject 갱신 처리
         // 1. 기준에 부합하는 gradeId, paymentId 추출
-        List<Long> selectedGradeIds = adjustGradeRepository.findByAdjustId(adjInfoId).stream()
+        Set<Long> selectedGradeIds = adjustGradeRepository.findByAdjustId(adjustId).stream()
             .map(link -> link.getGrade().getId())
-            .toList();
+            .collect(Collectors.toSet());
 
-        List<Long> selectedPaymentIds = adjustEmploymentTypeRepository.findByAdjustId(adjInfoId).stream()
+        Set<Long> selectedPaymentIds = adjustEmploymentTypeRepository.findByAdjustId(adjustId).stream()
             .map(link -> link.getEmploymentType().getId())
-            .toList();
+            .collect(Collectors.toSet());
 
         // 2. 기존 AdjustSubject 삭제
-        adjustSubjectRepository.deleteByAdjustId(adjInfoId);
+        adjustSubjectRepository.deleteByAdjustId(adjustId);
 
         // 3. Employee 조회 및 AdjustSubject 저장
-        List<Employee> matchingEmployees = employeeRepository.findByGradeIdInAndEmploymentTypeIdIn(
+        List<Employee> matchingEmployees = employeeRepository.findWithJoinByGradeIdsAndEmploymentTypeIds(
             selectedGradeIds, selectedPaymentIds
         );
 
@@ -188,7 +189,7 @@ public class CriteriaService {
                 .adjust(finalAdjust)
                 .employee(emp)
                 .grade(emp.getGrade())
-                .rank(emp.getRank()) // emp.getRank()는 Rank가 Employee에 포함되어 있다고 가정
+                .rank(emp.getRank())
                 .isSubject(true)
                 .isInHpo(false)
                 .isPaybandApplied(false)
@@ -200,19 +201,11 @@ public class CriteriaService {
 
         adjustSubjectRepository.saveAll(newSubjects);
 
-        List<SubjectCriteriaResponse.SelectableItemDto> gradeDtos = gradeRepository.findAll().stream()
-            .map(grade -> new SubjectCriteriaResponse.SelectableItemDto(
-                grade.getId(),
-                grade.getName(),
-                selectedGradeIds.contains(grade.getId())
-            )).toList();
+        List<SelectableItemDto> gradeDtos =
+            gradeRepository.findAllWithSelection(selectedGradeIds);
 
-        List<SubjectCriteriaResponse.SelectableItemDto> paymentDtos = employmentTypeRepository.findAll().stream()
-            .map(payment -> new SubjectCriteriaResponse.SelectableItemDto(
-                payment.getId(),
-                payment.getName(),
-                selectedPaymentIds.contains(payment.getId())
-            )).toList();
+        List<SelectableItemDto> paymentDtos =
+            employmentTypeRepository.findAllWithSelection(selectedPaymentIds);
 
         return new SubjectCriteriaResponse(
             adjust.getBaseDate(),
