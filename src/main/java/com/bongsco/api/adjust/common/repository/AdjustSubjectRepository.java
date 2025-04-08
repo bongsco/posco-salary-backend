@@ -173,4 +173,6 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
         """
     )
     List<AdjSubjectSalaryDto> findAllAdjSubjectAndStdSalaryAndLowerWithSearchKey(Long adjustId, String searchKey);
+
+    void deleteByAdjustId(Long adjustId);
 }

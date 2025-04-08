@@ -2,6 +2,7 @@ package com.bongsco.api.adjust.annual.service;
 
 import static com.bongsco.api.common.exception.ErrorCode.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -23,13 +24,18 @@ import com.bongsco.api.adjust.annual.repository.SalaryIncrementRateByRankReposit
 import com.bongsco.api.adjust.common.entity.Adjust;
 import com.bongsco.api.adjust.common.entity.AdjustEmploymentType;
 import com.bongsco.api.adjust.common.entity.AdjustGrade;
+import com.bongsco.api.adjust.common.entity.AdjustSubject;
 import com.bongsco.api.adjust.common.repository.AdjustEmploymentTypeRepository;
 import com.bongsco.api.adjust.common.repository.AdjustGradeRepository;
 import com.bongsco.api.adjust.common.repository.AdjustRepository;
+import com.bongsco.api.adjust.common.repository.AdjustSubjectRepository;
 import com.bongsco.api.common.exception.CustomException;
 import com.bongsco.api.common.exception.ErrorCode;
+import com.bongsco.api.employee.entity.Employee;
 import com.bongsco.api.employee.entity.EmploymentType;
 import com.bongsco.api.employee.entity.Grade;
+import com.bongsco.api.employee.entity.Rank;
+import com.bongsco.api.employee.repository.EmployeeRepository;
 import com.bongsco.api.employee.repository.EmploymentTypeRepository;
 import com.bongsco.api.employee.repository.GradeRepository;
 import com.bongsco.api.employee.repository.RankRepository;
@@ -41,8 +47,10 @@ import lombok.RequiredArgsConstructor;
 public class CriteriaService {
     private final AdjustRepository adjustRepository;
     private final AdjustGradeRepository adjustGradeRepository;
+    private final AdjustSubjectRepository adjustSubjectRepository;
     private final AdjustEmploymentTypeRepository adjustEmploymentTypeRepository;
     private final EmploymentTypeRepository employmentTypeRepository;
+    private final EmployeeRepository employeeRepository;
     private final GradeRepository gradeRepository;
     private final RankRepository rankRepository;
     private final SalaryIncrementRateByRankRepository salaryIncrementRateByRankRepository;
@@ -116,6 +124,26 @@ public class CriteriaService {
             }
         }
 
+        // ✅ SalaryIncrementRateByRank 생성 (builder 형식)
+        List<AdjustGrade> adjustGrades = adjustGradeRepository.findByAdjustId(adjInfoId);
+        List<Rank> allRanks = rankRepository.findAll();
+
+        List<SalaryIncrementByRank> newSalaryRates = new ArrayList<>();
+
+        for (AdjustGrade ag : adjustGrades) {
+            for (Rank rank : allRanks) {
+                SalaryIncrementByRank rate = SalaryIncrementByRank.builder()
+                    .adjustGrade(ag)
+                    .rank(rank)
+                    .salaryIncrementRate(null)
+                    .bonusMultiplier(null)
+                    .build();
+                newSalaryRates.add(rate);
+            }
+        }
+
+        salaryIncrementRateByRankRepository.saveAll(newSalaryRates);
+
         // 직급 처리
         Map<Long, AdjustEmploymentType> existingPayments = adjustEmploymentTypeRepository.findByAdjustId(adjInfoId)
             .stream()
@@ -145,6 +173,32 @@ public class CriteriaService {
         Set<Long> selectedPaymentIds = adjustEmploymentTypeRepository.findByAdjustId(adjInfoId).stream()
             .map(link -> link.getEmploymentType().getId())
             .collect(Collectors.toSet());
+
+        // 2. 기존 AdjustSubject 삭제
+        adjustSubjectRepository.deleteByAdjustId(adjInfoId);
+
+        // 3. Employee 조회 및 AdjustSubject 저장
+        List<Employee> matchingEmployees = employeeRepository.findByGradeIdInAndEmploymentTypeIdIn(
+            selectedGradeIds, selectedPaymentIds
+        );
+
+        Adjust finalAdjust = adjust;
+        List<AdjustSubject> newSubjects = matchingEmployees.stream()
+            .map(emp -> AdjustSubject.builder()
+                .adjust(finalAdjust)
+                .employee(emp)
+                .grade(emp.getGrade())
+                .rank(emp.getRank()) // emp.getRank()는 Rank가 Employee에 포함되어 있다고 가정
+                .isSubject(true)
+                .isInHpo(false)
+                .isPaybandApplied(false)
+                .stdSalary(null)
+                .hpoBonus(null)
+                .finalStdSalary(null)
+                .build()
+            ).toList();
+
+        adjustSubjectRepository.saveAll(newSubjects);
 
         List<SubjectCriteriaResponse.SelectableItemDto> gradeDtos = gradeRepository.findAll().stream()
             .map(grade -> new SubjectCriteriaResponse.SelectableItemDto(
