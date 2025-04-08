@@ -60,13 +60,13 @@ public class CriteriaService {
         Adjust info = adjustRepository.findById(adjInfoId)
             .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
 
-        Set<Long> selectedGradeIds = adjustGradeRepository.findByAdjustId(adjInfoId).stream()
+        List<Long> selectedGradeIds = adjustGradeRepository.findByAdjustId(adjInfoId).stream()
             .map(link -> link.getGrade().getId())
-            .collect(Collectors.toSet());
+            .toList();
 
-        Set<Long> selectedPaymentIds = adjustEmploymentTypeRepository.findByAdjustId(adjInfoId).stream()
+        List<Long> selectedPaymentIds = adjustEmploymentTypeRepository.findByAdjustId(adjInfoId).stream()
             .map(link -> link.getEmploymentType().getId())
-            .collect(Collectors.toSet());
+            .toList();
 
         List<SubjectCriteriaResponse.SelectableItemDto> gradeDtos = gradeRepository.findAll().stream()
             .map(grade -> new SubjectCriteriaResponse.SelectableItemDto(
@@ -126,6 +126,7 @@ public class CriteriaService {
 
         // ✅ SalaryIncrementRateByRank 생성 (builder 형식)
         List<AdjustGrade> adjustGrades = adjustGradeRepository.findByAdjustId(adjInfoId);
+        salaryIncrementByRankRepository.deleteByAdjustGrades(adjustGrades);
         List<Rank> allRanks = rankRepository.findAll();
 
         List<SalaryIncrementByRank> newSalaryRates = new ArrayList<>();
@@ -167,13 +168,13 @@ public class CriteriaService {
 
         // ✅ AdjustSubject 갱신 처리
         // 1. 기준에 부합하는 gradeId, paymentId 추출
-        Set<Long> selectedGradeIds = adjustGradeRepository.findByAdjustId(adjInfoId).stream()
+        List<Long> selectedGradeIds = adjustGradeRepository.findByAdjustId(adjInfoId).stream()
             .map(link -> link.getGrade().getId())
-            .collect(Collectors.toSet());
+            .toList();
 
-        Set<Long> selectedPaymentIds = adjustEmploymentTypeRepository.findByAdjustId(adjInfoId).stream()
+        List<Long> selectedPaymentIds = adjustEmploymentTypeRepository.findByAdjustId(adjInfoId).stream()
             .map(link -> link.getEmploymentType().getId())
-            .collect(Collectors.toSet());
+            .toList();
 
         // 2. 기존 AdjustSubject 삭제
         adjustSubjectRepository.deleteByAdjustId(adjInfoId);
