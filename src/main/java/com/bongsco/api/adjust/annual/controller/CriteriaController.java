@@ -18,7 +18,7 @@ import com.bongsco.api.adjust.annual.dto.request.SubjectCriteriaRequest;
 import com.bongsco.api.adjust.annual.dto.response.PaybandCriteriaConfigListResponse;
 import com.bongsco.api.adjust.annual.dto.response.SubjectCriteriaResponse;
 import com.bongsco.api.adjust.annual.entity.PaybandCriteria;
-import com.bongsco.api.adjust.annual.entity.SalaryIncrementRateByRank;
+import com.bongsco.api.adjust.annual.entity.SalaryIncrementByRank;
 import com.bongsco.api.adjust.annual.service.CriteriaService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,21 +34,21 @@ public class CriteriaController {
     private final CriteriaService criteriaService;
 
     @Operation(summary = "대상자 기준 설정 GET API", description = "대상자 기준 설정 기존 값 전달")
-    @GetMapping("/subject")
+    @GetMapping("/{adj_info_id}/subject")
     public ResponseEntity<SubjectCriteriaResponse> getSubjectCriteria(
-        @PathVariable(name = "adjustId") Long adjustId
+        @PathVariable(name = "adj_info_id") Long adjInfoId
     ) {
-        SubjectCriteriaResponse response = criteriaService.getSubjectCriteria(adjustId);
+        SubjectCriteriaResponse response = criteriaService.getSubjectCriteria(adjInfoId);
         return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "대상자 기준 설정 PATCH API", description = "대상자 기준 설정 수정된 값 전달")
-    @PatchMapping("/subject")
+    @PatchMapping("/{adj_info_id}/subject")
     public ResponseEntity<SubjectCriteriaResponse> saveSubjectCriteria(
-        @PathVariable(name = "adjustId") Long adjustId,
+        @PathVariable(name = "adj_info_id") Long adjInfoId,
         @Valid @RequestBody SubjectCriteriaRequest subjectCriteriaRequest
     ) {
-        SubjectCriteriaResponse res = criteriaService.updateSubjectCriteria(adjustId, subjectCriteriaRequest);
+        SubjectCriteriaResponse res = criteriaService.updateSubjectCriteria(adjInfoId, subjectCriteriaRequest);
         return ResponseEntity.ok(res);
     }
 
@@ -57,7 +57,7 @@ public class CriteriaController {
     public ResponseEntity<RankIncrementRateRequest> updateRankIncrementRates(
         @PathVariable(name = "adj_info_id") Long adjInfoId,
         @Valid @RequestBody RankIncrementRateRequest request) {
-        List<SalaryIncrementRateByRank> savedData = criteriaService.updateRankIncrementRates(adjInfoId, request);
+        List<SalaryIncrementByRank> savedData = criteriaService.updateRankIncrementRates(adjInfoId, request);
         return ResponseEntity.ok(request);
     }
 
@@ -66,7 +66,7 @@ public class CriteriaController {
     public ResponseEntity<RankIncrementRateRequest> saveRankIncrementRates(
         @PathVariable(name = "adj_info_id") Long adjInfoId,
         @Valid @RequestBody RankIncrementRateRequest request) {
-        List<SalaryIncrementRateByRank> savedData = criteriaService.saveRankIncrementRates(adjInfoId, request);
+        List<SalaryIncrementByRank> savedData = criteriaService.saveRankIncrementRates(adjInfoId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(request);
     }
 

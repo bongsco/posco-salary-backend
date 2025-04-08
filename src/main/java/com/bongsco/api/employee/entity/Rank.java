@@ -29,9 +29,9 @@ public class Rank extends BaseEntity {
     private Long id;
 
     @Column(length = 10)
-    private String rankCode;
+    private String code;
 
     @Column(length = 50, nullable = false)
-    private String rankName;
+    private String name;
 }
 

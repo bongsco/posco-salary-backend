@@ -2,10 +2,8 @@ package com.bongsco.api.adjust.annual.entity;
 
 import org.hibernate.annotations.SQLDelete;
 
-import com.bongsco.api.adjust.common.entity.Adjust;
 import com.bongsco.api.adjust.common.entity.AdjustGrade;
 import com.bongsco.api.common.entity.BaseEntity;
-import com.bongsco.api.employee.entity.Grade;
 import com.bongsco.api.employee.entity.Rank;
 
 import jakarta.persistence.Column;
@@ -26,8 +24,8 @@ import lombok.NoArgsConstructor;
 @Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@SQLDelete(sql = "UPDATE salary_increment_rate_by_rank SET deleted = true WHERE id = ?")
-public class SalaryIncrementRateByRank extends BaseEntity {
+@SQLDelete(sql = "UPDATE salary_increment_by_rank SET deleted = true WHERE id = ?")
+public class SalaryIncrementByRank extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -37,20 +35,12 @@ public class SalaryIncrementRateByRank extends BaseEntity {
     private Rank rank;
 
     @ManyToOne
-    @JoinColumn(name = "adjust_id", nullable = false)
-    private Adjust adjust;
-
-    @ManyToOne
     @JoinColumn(name = "adjust_grade_id", nullable = false)
     private AdjustGrade adjustGrade;
 
-    @ManyToOne
-    @JoinColumn(name = "grade_id", nullable = false)
-    private Grade grade;
+    @Column
+    private Double salaryIncrementRate;
 
     @Column
-    private Double evalDiffIncrement;
-
-    @Column
-    private Double evalDiffBonus;
+    private Double bonusMultiplier;
 }

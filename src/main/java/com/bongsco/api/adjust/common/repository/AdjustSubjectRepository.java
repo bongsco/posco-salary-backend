@@ -73,9 +73,9 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
             asj.employee.empNum,
             asj.employee.name,
             asj.employee.department.name,
-            pc.grade.gradeName,
+            pc.grade.name,
             asj.employee.positionName,
-            asj.employee.rank.rankName,
+            asj.employee.rank.name,
             pc.upperBound
         )
         FROM AdjustSubject asj
@@ -99,9 +99,9 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
             asj.employee.empNum,
             asj.employee.name,
             asj.employee.department.name,
-            pc.grade.gradeName,
+            pc.grade.name,
             asj.employee.positionName,
-            asj.employee.rank.rankName,
+            asj.employee.rank.name,
             pc.lowerBound
         )
         FROM AdjustSubject asj
@@ -127,9 +127,9 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
             asj.employee.empNum,
             asj.employee.name,
             asj.employee.department.name,
-            pc.grade.gradeName,
+            pc.grade.name,
             asj.employee.positionName,
-            asj.employee.rank.rankName,
+            asj.employee.rank.name,
             pc.upperBound
         )
         FROM AdjustSubject asj
@@ -158,9 +158,9 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
             asj.employee.empNum,
             asj.employee.name,
             asj.employee.department.name,
-            pc.grade.gradeName,
+            pc.grade.name,
             asj.employee.positionName,
-            asj.employee.rank.rankName,
+            asj.employee.rank.name,
             pc.lowerBound
         )
         FROM AdjustSubject asj
@@ -173,6 +173,4 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
         """
     )
     List<AdjSubjectSalaryDto> findAllAdjSubjectAndStdSalaryAndLowerWithSearchKey(Long adjustId, String searchKey);
-
-    void deleteByAdjustId(Long adjustId);
 }

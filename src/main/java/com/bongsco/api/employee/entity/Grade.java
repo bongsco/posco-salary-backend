@@ -27,9 +27,9 @@ public class Grade extends BaseEntity {
     private Long id;
 
     @Column(length = 100, nullable = false)
-    private String gradeName;
+    private String name;
 
     @Column(nullable = false)
-    private Double gradeBaseSalary;
+    private Double baseSalary;
 }
 

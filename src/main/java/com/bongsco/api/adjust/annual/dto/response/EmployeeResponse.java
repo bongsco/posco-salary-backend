@@ -25,7 +25,7 @@ public class EmployeeResponse {
     public static EmployeeResponse from(AdjustSubject adjustSubject) {
         return new EmployeeResponse(adjustSubject.getEmployee().getId(), adjustSubject.getEmployee().getEmpNum(),
             adjustSubject.getEmployee().getName(), adjustSubject.getEmployee().getHireDate(),
-            adjustSubject.getRank().getRankCode(),
+            adjustSubject.getRank().getCode(),
             adjustSubject.getIsSubject());
     }
 }
