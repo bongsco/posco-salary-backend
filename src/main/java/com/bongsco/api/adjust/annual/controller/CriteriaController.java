@@ -17,7 +17,6 @@ import com.bongsco.api.adjust.annual.dto.request.RankIncrementRateRequest;
 import com.bongsco.api.adjust.annual.dto.request.SubjectCriteriaRequest;
 import com.bongsco.api.adjust.annual.dto.response.PaybandCriteriaConfigListResponse;
 import com.bongsco.api.adjust.annual.dto.response.SubjectCriteriaResponse;
-import com.bongsco.api.adjust.annual.entity.PaybandCriteria;
 import com.bongsco.api.adjust.annual.entity.SalaryIncrementByRank;
 import com.bongsco.api.adjust.annual.service.CriteriaService;
 
@@ -70,19 +69,18 @@ public class CriteriaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(request);
     }
 
-    // TODO("Correct return type and logic")
-    @GetMapping("/{adj_info_id}/payband")
+    @GetMapping("/{adjust_id}/payband")
     public ResponseEntity<PaybandCriteriaConfigListResponse> getPaybandCriteria(
-        @PathVariable(name = "adj_info_id") Long adjInfoId) {
+        @PathVariable(name = "adjust_id") Long adjustId) {
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(criteriaService.getPaybandCriteria(adjInfoId));
+        return ResponseEntity.ok(criteriaService.getPaybandCriteria(adjustId));
     }
 
-    // TODO("Correct return type and logic")
-    @PatchMapping("/{adj_info_id}/payband")
+    @PatchMapping("/{adjust_id}/payband")
     public ResponseEntity<String> updatePaybandCriteria(
-        @Valid @RequestBody PaybandCriteriaModifyRequest request) {
-        List<PaybandCriteria> updatedData = criteriaService.updatePaybandCriteria(request);
-        return ResponseEntity.ok("TODO: fix payband");
+        @Valid @RequestBody PaybandCriteriaModifyRequest request,
+        @PathVariable(name = "adjust_id") Long adjustId) {
+        criteriaService.updatePaybandCriteria(request);
+        return ResponseEntity.ok().build();
     }
 }

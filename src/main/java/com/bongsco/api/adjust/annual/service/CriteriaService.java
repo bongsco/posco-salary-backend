@@ -258,9 +258,9 @@ public class CriteriaService {
     }
 
     @Transactional
-    public PaybandCriteriaConfigListResponse getPaybandCriteria(Long adjInfoId) {
+    public PaybandCriteriaConfigListResponse getPaybandCriteria(Long adjustId) {
 
-        List<PaybandCriteria> existingPaybandCriteriaList = paybandCriteriaRepository.findByAdjustId(adjInfoId);
+        List<PaybandCriteria> existingPaybandCriteriaList = paybandCriteriaRepository.findByAdjustId(adjustId);
         Set<Long> existingGradeIdSet = existingPaybandCriteriaList.stream()
             .map(pc -> pc.getGrade().getId())
             .collect(Collectors.toSet());
@@ -270,8 +270,8 @@ public class CriteriaService {
             .filter(grade -> !existingGradeIdSet.contains(grade.getId()))
             .collect(Collectors.toList());
 
-        Adjust adjust = adjustRepository.findById(adjInfoId)
-            .orElseThrow(() -> new IllegalArgumentException("Invalid adjInfoId: " + adjInfoId));
+        Adjust adjust = adjustRepository.findById(adjustId)
+            .orElseThrow(() -> new IllegalArgumentException("Invalid adjInfoId: " + adjustId));
 
         List<PaybandCriteria> newPaybandCriteriaList = leftGrades.stream()
             .map(grade ->
@@ -291,7 +291,7 @@ public class CriteriaService {
     }
 
     @Transactional
-    public List<PaybandCriteria> updatePaybandCriteria(PaybandCriteriaModifyRequest request) {
+    public void updatePaybandCriteria(PaybandCriteriaModifyRequest request) {
         List<PaybandCriteria> updatedPaybandCriteriaList = request.getPaybandCriteriaModifyDetailList()
             .stream()
             .map(paybandCriteriaModifyDetail -> {
@@ -307,6 +307,6 @@ public class CriteriaService {
             })
             .collect(Collectors.toList());
 
-        return paybandCriteriaRepository.saveAll(updatedPaybandCriteriaList);
+        paybandCriteriaRepository.saveAll(updatedPaybandCriteriaList);
     }
 }
