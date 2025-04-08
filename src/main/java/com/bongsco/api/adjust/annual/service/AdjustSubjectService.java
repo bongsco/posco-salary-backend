@@ -434,7 +434,7 @@ public class AdjustSubjectService {
                 employee.getHireDate(), employee.getEmploymentType()
                 .getName(), employee.getDepartment().getName(), employee.getPositionName(),
                 adjustSubject.getGrade().getName(), employee.getPositionArea(),
-                adjust.getHpoSalaryIncrementRateByRank(), adjust.getHpoBonusMultiplier(),
+                adjust.getHpoSalaryIncrementByRank(), adjust.getHpoBonusMultiplier(),
                 paybandCriteria != null ? paybandCriteria.getUpperBound() : null,
                 paybandCriteria != null ? paybandCriteria.getLowerBound() : null, adjustSubject.getStdSalary(),
                 beforeAdjustSubject.getAdjust().getYear(), beforeAdjustSubject.getAdjust().getOrderNumber(),
