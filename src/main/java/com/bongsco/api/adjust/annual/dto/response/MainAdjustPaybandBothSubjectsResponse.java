@@ -34,17 +34,21 @@ public class MainAdjustPaybandBothSubjectsResponse {
         private Double limitPrice;
         private Boolean isPaybandApplied;
 
-        public static MainAdjustPaybandSubjectsResponse from(
-            AdjustSubjectSalaryDto adjustSubjectSalaryDto
-        ) {
+        public static MainAdjustPaybandSubjectsResponse from(AdjustSubjectSalaryDto dto) {
+            double limitPrice = dto.getBaseSalary() * (dto.getBoundPercent() / 100.0);
+
             return new MainAdjustPaybandSubjectsResponse(
-                adjustSubjectSalaryDto.getAdjustSubjectId(),
-                adjustSubjectSalaryDto.getEmpNum(), adjustSubjectSalaryDto.getName(),
-                adjustSubjectSalaryDto.getDepName(),
-                adjustSubjectSalaryDto.getGradeName(), adjustSubjectSalaryDto.getPositionName(),
-                adjustSubjectSalaryDto.getRankCode(), adjustSubjectSalaryDto.getStdSalary(),
-                adjustSubjectSalaryDto.getLimitPrice(),
-                adjustSubjectSalaryDto.getIsPaybandApplied());
+                dto.getAdjustSubjectId(),
+                dto.getEmpNum(),
+                dto.getName(),
+                dto.getDepName(),
+                dto.getGradeName(),
+                dto.getPositionName(),
+                dto.getRankCode(),
+                dto.getStdSalary(),
+                limitPrice,
+                dto.getIsPaybandApplied()
+            );
         }
     }
 }

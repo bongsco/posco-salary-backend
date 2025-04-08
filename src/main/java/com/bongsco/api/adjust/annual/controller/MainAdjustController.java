@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.bongsco.api.adjust.annual.dto.request.ChangedSubjectListRequest;
 import com.bongsco.api.adjust.annual.dto.response.MainAdjustPaybandBothSubjectsResponse;
 import com.bongsco.api.adjust.annual.service.AdjustSubjectService;
-import com.bongsco.api.adjust.annual.service.PaybandCriteriaService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,7 +25,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @RequestMapping("/adjust/{adjustId}/main")
 public class MainAdjustController {
-    private final PaybandCriteriaService paybandCriteriaService;
     private final AdjustSubjectService adjustSubjectService;
 
     @Operation(summary = "payband 대상자", description = "payband 대상자 반환")
@@ -42,7 +40,6 @@ public class MainAdjustController {
     @Operation(summary = "payband 여부 수정", description = "payband 여부 수정")
     @PatchMapping("/payband/subjects")
     public ResponseEntity<Void> modifyPaybandSubjects(
-        @PathVariable("adjustId") Long adjustId,
         @Valid @RequestBody ChangedSubjectListRequest changedSubjectListRequest
     ) {
         changedSubjectListRequest

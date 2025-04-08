@@ -23,5 +23,7 @@ public class AdjustSubjectSalaryDto {
     private String gradeName;
     private String positionName;
     private String rankCode;
-    private Double limitPrice;
+    private Double boundPercent;
+    private Double baseSalary;
 }
+
