@@ -21,7 +21,7 @@ import com.bongsco.api.adjust.annual.dto.response.MainAdjPaybandBothSubjectsResp
 import com.bongsco.api.adjust.annual.dto.response.PreprocessAdjSubjectsResponse;
 import com.bongsco.api.adjust.annual.entity.PaybandCriteria;
 import com.bongsco.api.adjust.annual.repository.PaybandCriteriaRepository;
-import com.bongsco.api.adjust.annual.repository.SalaryIncrementRateByRankRepository;
+import com.bongsco.api.adjust.annual.repository.SalaryIncrementByRankRepository;
 import com.bongsco.api.adjust.common.dto.AdjSubjectSalaryDto;
 import com.bongsco.api.adjust.common.entity.Adjust;
 import com.bongsco.api.adjust.common.entity.AdjustSubject;
@@ -41,7 +41,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 public class AdjustSubjectService {
     private final AdjustSubjectRepository adjustSubjectRepository;
-    private final SalaryIncrementRateByRankRepository salaryIncrementRateByRankRepository;
+    private final SalaryIncrementByRankRepository salaryIncrementByRankRepository;
     private final PaybandCriteriaRepository paybandCriteriaRepository;
     private final EmployeeRepository employeeRepository;
     private final AdjustRepository adjustRepository;

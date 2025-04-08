@@ -20,7 +20,7 @@ import com.bongsco.api.adjust.annual.dto.response.SubjectCriteriaResponse;
 import com.bongsco.api.adjust.annual.entity.PaybandCriteria;
 import com.bongsco.api.adjust.annual.entity.SalaryIncrementByRank;
 import com.bongsco.api.adjust.annual.repository.PaybandCriteriaRepository;
-import com.bongsco.api.adjust.annual.repository.SalaryIncrementRateByRankRepository;
+import com.bongsco.api.adjust.annual.repository.SalaryIncrementByRankRepository;
 import com.bongsco.api.adjust.common.entity.Adjust;
 import com.bongsco.api.adjust.common.entity.AdjustEmploymentType;
 import com.bongsco.api.adjust.common.entity.AdjustGrade;
@@ -53,7 +53,7 @@ public class CriteriaService {
     private final EmployeeRepository employeeRepository;
     private final GradeRepository gradeRepository;
     private final RankRepository rankRepository;
-    private final SalaryIncrementRateByRankRepository salaryIncrementRateByRankRepository;
+    private final SalaryIncrementByRankRepository salaryIncrementByRankRepository;
     private final PaybandCriteriaRepository paybandCriteriaRepository;
 
     public SubjectCriteriaResponse getSubjectCriteria(Long adjInfoId) {
