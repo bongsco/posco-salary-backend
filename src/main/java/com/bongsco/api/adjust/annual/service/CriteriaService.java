@@ -4,7 +4,6 @@ import static com.bongsco.api.common.exception.ErrorCode.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -18,7 +17,7 @@ import com.bongsco.api.adjust.annual.dto.request.SubjectCriteriaRequest;
 import com.bongsco.api.adjust.annual.dto.response.PaybandCriteriaConfigListResponse;
 import com.bongsco.api.adjust.annual.dto.response.SubjectCriteriaResponse;
 import com.bongsco.api.adjust.annual.entity.PaybandCriteria;
-import com.bongsco.api.adjust.annual.entity.SalaryIncrementRateByRank;
+import com.bongsco.api.adjust.annual.entity.SalaryIncrementByRank;
 import com.bongsco.api.adjust.annual.repository.PaybandCriteriaRepository;
 import com.bongsco.api.adjust.annual.repository.SalaryIncrementRateByRankRepository;
 import com.bongsco.api.adjust.common.entity.Adjust;
@@ -31,7 +30,6 @@ import com.bongsco.api.common.exception.CustomException;
 import com.bongsco.api.common.exception.ErrorCode;
 import com.bongsco.api.employee.entity.EmploymentType;
 import com.bongsco.api.employee.entity.Grade;
-import com.bongsco.api.employee.entity.Rank;
 import com.bongsco.api.employee.repository.EmploymentTypeRepository;
 import com.bongsco.api.employee.repository.GradeRepository;
 import com.bongsco.api.employee.repository.RankRepository;
@@ -65,7 +63,7 @@ public class CriteriaService {
         List<SubjectCriteriaResponse.SelectableItemDto> gradeDtos = gradeRepository.findAll().stream()
             .map(grade -> new SubjectCriteriaResponse.SelectableItemDto(
                 grade.getId(),
-                grade.getGradeName(),
+                grade.getName(),
                 selectedGradeIds.contains(grade.getId())
             )).toList();
 
@@ -151,7 +149,7 @@ public class CriteriaService {
         List<SubjectCriteriaResponse.SelectableItemDto> gradeDtos = gradeRepository.findAll().stream()
             .map(grade -> new SubjectCriteriaResponse.SelectableItemDto(
                 grade.getId(),
-                grade.getGradeName(),
+                grade.getName(),
                 selectedGradeIds.contains(grade.getId())
             )).toList();
 
@@ -172,93 +170,91 @@ public class CriteriaService {
     }
 
     @Transactional
-    public List<SalaryIncrementRateByRank> saveRankIncrementRates(Long adjInfoId, RankIncrementRateRequest request) {
+    public List<SalaryIncrementByRank> saveRankIncrementRates(Long adjInfoId, RankIncrementRateRequest request) {
+        // Adjust existingAdjust = adjustRepository.findById(adjInfoId)
+        //     .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
+        //
+        // Adjust updatedAdjust = existingAdjust.toBuilder()
+        //     .hpoSalaryIncrementRateByRank(request.getEvalDiffIncrementPromoted())
+        //     .hpoBonusMultiplier(request.getEvalDiffBonusPromoted())
+        //     .build();
+        //
+        // // 모든 rank_id -> grade_id -> 상세 정보 매핑
+        // List<SalaryIncrementByRank> salaryIncrementByRanks = request.getRankData().entrySet().stream()
+        //     .flatMap(rankEntry -> {
+        //         Long rankId = rankEntry.getKey();
+        //         Rank rank = rankRepository.findById(rankId)
+        //             .orElseThrow(() -> new IllegalArgumentException("Rank not found with ID: " + rankId));
+        //
+        //         return rankEntry.getValue().entrySet().stream().map(gradeEntry -> {
+        //             return SalaryIncrementByRank.builder()
+        //                 .adjustGrade(salaryIncrementRateByRankRepository.findByRankIdAndAdjustGradeId(rankId))
+        //                 .rank(rank)
+        //                 .evalDiffBonus(gradeEntry.getValue().getEvalDiffBonus())
+        //                 .evalDiffIncrement(gradeEntry.getValue().getEvalDiffIncrement())
+        //                 .build();
+        //         });
+        //     })
+        //     .collect(Collectors.toList());
+        //
+        // return salaryIncrementRateByRankRepository.saveAll(salaryIncrementByRanks);
 
-        Adjust existingAdjust = adjustRepository.findById(adjInfoId)
-            .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
-
-        Adjust updatedAdjust = existingAdjust.toBuilder()
-            .salaryIncrementRateByRank(request.getEvalDiffIncrementPromoted())
-            .hpoBonusMultiplier(request.getEvalDiffBonusPromoted())
-            .build();
-
-        // 모든 rank_id -> grade_id -> 상세 정보 매핑
-        List<SalaryIncrementRateByRank> salaryIncrementRateByRanks = request.getRankData().entrySet().stream()
-            .flatMap(rankEntry -> {
-                Long rankId = rankEntry.getKey();
-                Rank rank = rankRepository.findById(rankId)
-                    .orElseThrow(() -> new IllegalArgumentException("Rank not found with ID: " + rankId));
-
-                return rankEntry.getValue().entrySet().stream().map(gradeEntry -> {
-                    Long gradeId = gradeEntry.getKey();
-                    Grade grade = gradeRepository.findById(gradeId)
-                        .orElseThrow(() -> new IllegalArgumentException("Grade not found with ID: " + gradeId));
-
-                    return SalaryIncrementRateByRank.builder()
-                        .adjust(updatedAdjust)
-                        .rank(rank)
-                        .grade(grade)
-                        .evalDiffBonus(gradeEntry.getValue().getEvalDiffBonus())
-                        .evalDiffIncrement(gradeEntry.getValue().getEvalDiffIncrement())
-                        .build();
-                });
-            })
-            .collect(Collectors.toList());
-
-        return salaryIncrementRateByRankRepository.saveAll(salaryIncrementRateByRanks);
+        return null;
     }
 
     @Transactional
-    public List<SalaryIncrementRateByRank> updateRankIncrementRates(Long adjInfoId, RankIncrementRateRequest request) {
-        Adjust existingAdjust = adjustRepository.findById(adjInfoId)
-            .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
+    public List<SalaryIncrementByRank> updateRankIncrementRates(Long adjInfoId, RankIncrementRateRequest request) {
+        // Adjust existingAdjust = adjustRepository.findById(adjInfoId)
+        //     .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
+        //
+        // Adjust updatedAdjust = existingAdjust.toBuilder()
+        //     .hpoSalaryIncrementRateByRank(request.getEvalDiffIncrementPromoted())
+        //     .hpoBonusMultiplier(request.getEvalDiffBonusPromoted())
+        //     .build();
+        //
+        // List<SalaryIncrementByRank> updatedSalaryIncrementByRanks = request.getRankData().entrySet().stream()
+        //     .flatMap(rankEntry -> {
+        //         Long rankId = rankEntry.getKey();
+        //         Rank rank = rankRepository.findById(rankId)
+        //             .orElseThrow(() -> new IllegalArgumentException("Rank not found with ID: " + rankId));
+        //
+        //         return rankEntry.getValue().entrySet().stream().map(gradeEntry -> {
+        //             Long gradeId = gradeEntry.getKey();
+        //             Grade grade = gradeRepository.findById(gradeId)
+        //                 .orElseThrow(() -> new IllegalArgumentException("Grade not found with ID: " + gradeId));
+        //
+        //             RankIncrementRateRequest.RankIncrementRateDetail detail = gradeEntry.getValue();
+        //
+        //             // 기존 데이터 존재 여부 확인
+        //             Optional<SalaryIncrementByRank> existingRecord =
+        //                 salaryIncrementRateByRankRepository.findByRankIdAndAdjustIdAndGradeId(rankId, adjInfoId,
+        //                     gradeId);
+        //
+        //             if (existingRecord.isPresent()) {
+        //                 // 기존 데이터 업데이트
+        //                 SalaryIncrementByRank existingRate = existingRecord.get();
+        //                 existingRate = existingRate.toBuilder()
+        //                     .evalDiffBonus(detail.getEvalDiffBonus())
+        //                     .evalDiffIncrement(detail.getEvalDiffIncrement())
+        //                     .build();
+        //                 return existingRate;
+        //             } else {
+        //                 // 새로운 데이터 생성
+        //                 return SalaryIncrementByRank.builder()
+        //                     .adjust(updatedAdjust)
+        //                     .rank(rank)
+        //                     .grade(grade)
+        //                     .evalDiffBonus(detail.getEvalDiffBonus())
+        //                     .evalDiffIncrement(detail.getEvalDiffIncrement())
+        //                     .build();
+        //             }
+        //         });
+        //     })
+        //     .collect(Collectors.toList());
+        //
+        // return salaryIncrementRateByRankRepository.saveAll(updatedSalaryIncrementByRanks);
 
-        Adjust updatedAdjust = existingAdjust.toBuilder()
-            .salaryIncrementRateByRank(request.getEvalDiffIncrementPromoted())
-            .hpoBonusMultiplier(request.getEvalDiffBonusPromoted())
-            .build();
-
-        List<SalaryIncrementRateByRank> updatedSalaryIncrementRateByRanks = request.getRankData().entrySet().stream()
-            .flatMap(rankEntry -> {
-                Long rankId = rankEntry.getKey();
-                Rank rank = rankRepository.findById(rankId)
-                    .orElseThrow(() -> new IllegalArgumentException("Rank not found with ID: " + rankId));
-
-                return rankEntry.getValue().entrySet().stream().map(gradeEntry -> {
-                    Long gradeId = gradeEntry.getKey();
-                    Grade grade = gradeRepository.findById(gradeId)
-                        .orElseThrow(() -> new IllegalArgumentException("Grade not found with ID: " + gradeId));
-
-                    RankIncrementRateRequest.RankIncrementRateDetail detail = gradeEntry.getValue();
-
-                    // 기존 데이터 존재 여부 확인
-                    Optional<SalaryIncrementRateByRank> existingRecord =
-                        salaryIncrementRateByRankRepository.findByRankIdAndAdjustIdAndGradeId(rankId, adjInfoId,
-                            gradeId);
-
-                    if (existingRecord.isPresent()) {
-                        // 기존 데이터 업데이트
-                        SalaryIncrementRateByRank existingRate = existingRecord.get();
-                        existingRate = existingRate.toBuilder()
-                            .evalDiffBonus(detail.getEvalDiffBonus())
-                            .evalDiffIncrement(detail.getEvalDiffIncrement())
-                            .build();
-                        return existingRate;
-                    } else {
-                        // 새로운 데이터 생성
-                        return SalaryIncrementRateByRank.builder()
-                            .adjust(updatedAdjust)
-                            .rank(rank)
-                            .grade(grade)
-                            .evalDiffBonus(detail.getEvalDiffBonus())
-                            .evalDiffIncrement(detail.getEvalDiffIncrement())
-                            .build();
-                    }
-                });
-            })
-            .collect(Collectors.toList());
-
-        return salaryIncrementRateByRankRepository.saveAll(updatedSalaryIncrementRateByRanks);
+        return null;
     }
 
     @Transactional

@@ -45,7 +45,7 @@ public class Employee extends BaseEntity {
     private Rank rank;
 
     @ManyToOne
-    @JoinColumn(name = "payment_criteria_id", nullable = false)
+    @JoinColumn(name = "employment_type_id", nullable = false)
     private EmploymentType employmentType;
 
     @Column(length = 10, nullable = false)

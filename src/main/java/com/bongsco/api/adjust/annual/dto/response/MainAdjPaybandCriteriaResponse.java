@@ -31,10 +31,10 @@ public class MainAdjPaybandCriteriaResponse {
 
         public static PaybandCriteriaResponse from(PaybandCriteria paybandCriteria, int numberOfEmpl,
             Double representativeVal) {
-            return new PaybandCriteriaResponse(paybandCriteria.getGrade().getGradeName(), numberOfEmpl,
+            return new PaybandCriteriaResponse(paybandCriteria.getGrade().getName(), numberOfEmpl,
                 representativeVal,
                 paybandCriteria.getUpperBound(), paybandCriteria.getLowerBound(),
-                paybandCriteria.getGrade().getGradeBaseSalary());
+                paybandCriteria.getGrade().getBaseSalary());
         }
     }
 }

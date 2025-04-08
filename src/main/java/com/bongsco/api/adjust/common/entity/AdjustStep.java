@@ -36,9 +36,6 @@ public class AdjustStep extends BaseEntity {
     @JoinColumn(name = "step_id", nullable = false)
     private Step step;
 
-    @Column(length = 20)
-    private String authorName;
-
     @Column
     private Boolean isDone;
 }

@@ -18,7 +18,7 @@ import com.bongsco.api.adjust.annual.dto.request.SubjectCriteriaRequest;
 import com.bongsco.api.adjust.annual.dto.response.PaybandCriteriaConfigListResponse;
 import com.bongsco.api.adjust.annual.dto.response.SubjectCriteriaResponse;
 import com.bongsco.api.adjust.annual.entity.PaybandCriteria;
-import com.bongsco.api.adjust.annual.entity.SalaryIncrementRateByRank;
+import com.bongsco.api.adjust.annual.entity.SalaryIncrementByRank;
 import com.bongsco.api.adjust.annual.service.CriteriaService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -57,7 +57,7 @@ public class CriteriaController {
     public ResponseEntity<RankIncrementRateRequest> updateRankIncrementRates(
         @PathVariable(name = "adj_info_id") Long adjInfoId,
         @Valid @RequestBody RankIncrementRateRequest request) {
-        List<SalaryIncrementRateByRank> savedData = criteriaService.updateRankIncrementRates(adjInfoId, request);
+        List<SalaryIncrementByRank> savedData = criteriaService.updateRankIncrementRates(adjInfoId, request);
         return ResponseEntity.ok(request);
     }
 
@@ -66,7 +66,7 @@ public class CriteriaController {
     public ResponseEntity<RankIncrementRateRequest> saveRankIncrementRates(
         @PathVariable(name = "adj_info_id") Long adjInfoId,
         @Valid @RequestBody RankIncrementRateRequest request) {
-        List<SalaryIncrementRateByRank> savedData = criteriaService.saveRankIncrementRates(adjInfoId, request);
+        List<SalaryIncrementByRank> savedData = criteriaService.saveRankIncrementRates(adjInfoId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(request);
     }
 
