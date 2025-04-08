@@ -20,21 +20,20 @@ import com.bongsco.api.adjust.annual.dto.response.EmployeeResponse;
 import com.bongsco.api.adjust.annual.dto.response.MainAdjPaybandBothSubjectsResponse;
 import com.bongsco.api.adjust.annual.dto.response.PreprocessAdjSubjectsResponse;
 import com.bongsco.api.adjust.annual.entity.PaybandCriteria;
-import com.bongsco.api.adjust.annual.entity.SalaryIncrementRateByRank;
 import com.bongsco.api.adjust.annual.repository.PaybandCriteriaRepository;
-import com.bongsco.api.adjust.annual.repository.SalaryIncrementRateByRankRepository;
+import com.bongsco.api.adjust.annual.repository.SalaryIncrementByRankRepository;
 import com.bongsco.api.adjust.common.dto.AdjSubjectSalaryDto;
 import com.bongsco.api.adjust.common.entity.Adjust;
 import com.bongsco.api.adjust.common.entity.AdjustSubject;
 import com.bongsco.api.adjust.common.entity.RepresentativeSalary;
 import com.bongsco.api.adjust.common.repository.AdjustRepository;
 import com.bongsco.api.adjust.common.repository.AdjustSubjectRepository;
-import com.bongsco.api.adjust.common.repository.GradeRepository;
 import com.bongsco.api.adjust.common.repository.RepresentativeSalaryRepository;
 import com.bongsco.api.common.exception.CustomException;
 import com.bongsco.api.employee.entity.Employee;
 import com.bongsco.api.employee.entity.Grade;
 import com.bongsco.api.employee.repository.EmployeeRepository;
+import com.bongsco.api.employee.repository.GradeRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -42,7 +41,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 public class AdjustSubjectService {
     private final AdjustSubjectRepository adjustSubjectRepository;
-    private final SalaryIncrementRateByRankRepository salaryIncrementRateByRankRepository;
+    private final SalaryIncrementByRankRepository salaryIncrementByRankRepository;
     private final PaybandCriteriaRepository paybandCriteriaRepository;
     private final EmployeeRepository employeeRepository;
     private final AdjustRepository adjustRepository;
@@ -78,6 +77,17 @@ public class AdjustSubjectService {
         List<AdjustSubject> subjects = adjustSubjectRepository.findByAdjustId(adjInfoId);
 
         return subjects.stream()
+            .filter(adjustSubject -> !adjustSubject.getDeleted())
+            .map(EmployeeResponse::from)
+            .toList();
+    }
+
+    public List<EmployeeResponse> findBySearchKey(Long adjInfoId, String searchKey) {
+        // 연봉조정차수&검색정보를 이용해 정기연봉조정대상자 테이블 가져오기
+        List<AdjustSubject> subjects = adjustSubjectRepository.findByAdjustIdAndEmployeeName(adjInfoId, searchKey);
+
+        return subjects.stream()
+            .filter(adjustSubject -> !adjustSubject.getDeleted())
             .map(EmployeeResponse::from)
             .toList();
     }
@@ -113,30 +123,32 @@ public class AdjustSubjectService {
 
     private CompensationEmployeeResponse convertToResponse(AdjustSubject adjustSubject) {
         // CompensationEmployeeResponse 객체를 구성하는 함수
-        CompensationEmployeeResponse response = new CompensationEmployeeResponse(
-            adjustSubject.getId(),
-            adjustSubject.getEmployee().getEmpNum(),
-            adjustSubject.getEmployee().getName(),
-            adjustSubject.getEmployee().getDepartment().getName(),
-            adjustSubject.getGrade().getGradeName(),
-            adjustSubject.getRank().getRankCode(),
-            adjustSubject.getIsInHpo(),
-            adjustSubject.getAdjust().getSalaryIncrementRateByRank(),
-            adjustSubject.getAdjust().getHpoBonusMultiplier()
-        );
+        // CompensationEmployeeResponse response = new CompensationEmployeeResponse(
+        //     adjustSubject.getId(),
+        //     adjustSubject.getEmployee().getEmpNum(),
+        //     adjustSubject.getEmployee().getName(),
+        //     adjustSubject.getEmployee().getDepartment().getName(),
+        //     adjustSubject.getGrade().getName(),
+        //     adjustSubject.getRank().getCode(),
+        //     adjustSubject.getIsInHpo(),
+        //     adjustSubject.getAdjust().getHpoSalaryIncrementRateByRank(),
+        //     adjustSubject.getAdjust().getHpoBonusMultiplier()
+        // );
+        //
+        // SalaryIncrementByRank salaryIncrementByRank = salaryIncrementRateByRankRepository.findByRankIdAndAdjustIdAndGradeId(
+        //     adjustSubject.getRank().getId(),
+        //     adjustSubject.getAdjust().getId(),
+        //     adjustSubject.getGrade().getId()
+        // ).orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
+        //
+        // if (salaryIncrementByRank != null) {
+        //     response.setEvalDiffIncrement(salaryIncrementByRank.getSalaryIncrementRate());
+        //     response.setEvalDiffBonus(salaryIncrementByRank.getBonusMultiplier());
+        // }
+        //
+        // return response;
 
-        SalaryIncrementRateByRank salaryIncrementRateByRank = salaryIncrementRateByRankRepository.findByRankIdAndAdjustIdAndGradeId(
-            adjustSubject.getRank().getId(),
-            adjustSubject.getAdjust().getId(),
-            adjustSubject.getGrade().getId()
-        ).orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
-
-        if (salaryIncrementRateByRank != null) {
-            response.setEvalDiffIncrement(salaryIncrementRateByRank.getEvalDiffIncrement());
-            response.setEvalDiffBonus(salaryIncrementRateByRank.getEvalDiffBonus());
-        }
-
-        return response;
+        return null;
     }
 
     public PreprocessAdjSubjectsResponse findCompensationBySearchKey(Long adjInfoId, String searchKey) {
@@ -209,7 +221,7 @@ public class AdjustSubjectService {
                     .empNum(employee.getEmpNum())
                     .name(employee.getName())
                     .depName(employee.getDepartment().getName())
-                    .gradeName(employee.getGrade().getGradeName())
+                    .gradeName(employee.getGrade().getName())
                     .positionName(employee.getPositionName())
                     .build();
                 return MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse.from(dto);
@@ -279,91 +291,91 @@ public class AdjustSubjectService {
     }
 
     public void calculateSalary(Long adjInfoId) {
-        List<AdjustSubject> adjustSubjects = adjustSubjectRepository.findByAdjustId(adjInfoId)
-            .stream()
-            .filter(adjustSubject -> !adjustSubject.getDeleted())
-            .filter(AdjustSubject::getIsSubject)
-            .toList();
-
-        Adjust adjust = adjustRepository.findById(adjInfoId)
-            .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
-        Double evalAnnualSalaryIncrement =
-            Optional.ofNullable(adjust.getSalaryIncrementRateByRank()).orElse(0.0) / 100;
-        //5%일때 5로 들어간다는 전제하에 이렇게 해놓음
-
-        adjustSubjects.stream().forEach(adjustSubject -> {
-            //기준연봉= 전년도 기준연봉+(직무기본연봉*평차등연봉인상률)
-
-            //전년도 기준연봉 불러옴
-            AdjustSubject beforeAdjustSubject = adjustSubjectRepository.findBeforeAdjSubject(adjInfoId,
-                adjustSubject.getEmployee().getId());
-            if (beforeAdjustSubject == null)
-                return; //신입 제외
-
-            //직무 기본 연봉 불러옴
-            Double gradeBaseSalary = adjustSubject.getGrade().getGradeBaseSalary();
-
-            //연봉 인상률 불러옴
-            SalaryIncrementRateByRank salaryIncrementRateByRank = salaryIncrementRateByRankRepository.findByRankIdAndAdjustIdAndGradeId(
-                adjustSubject.getRank().getId(), adjInfoId, adjustSubject.getGrade().getId()).orElse(null);
-            Double evalDiffIncrement =
-                salaryIncrementRateByRank == null ? 0.0 : (salaryIncrementRateByRank.getEvalDiffIncrement() / 100);
-
-            //고성과 있으면
-            //평차등연봉인상률 = (직급, 평가별 평차연) * (1 + 고성과평차연)
-            if (adjustSubject.getIsInHpo()) {
-                evalDiffIncrement = evalDiffIncrement * (1 + evalAnnualSalaryIncrement);
-            }
-
-            Double newStdSalary =
-                (beforeAdjustSubject.getFinalStdSalary() == null ? 1000000 : beforeAdjustSubject.getFinalStdSalary())
-                    + gradeBaseSalary * evalDiffIncrement;
-
-            AdjustSubject saveAdjustSubject = adjustSubject.toBuilder()
-                .stdSalary(newStdSalary)
-                .finalStdSalary(newStdSalary)
-                .build();
-            adjustSubjectRepository.save(saveAdjustSubject);
-        });
+        // List<AdjustSubject> adjustSubjects = adjustSubjectRepository.findByAdjustId(adjInfoId)
+        //     .stream()
+        //     .filter(adjustSubject -> !adjustSubject.getDeleted())
+        //     .filter(AdjustSubject::getIsSubject)
+        //     .toList();
+        //
+        // Adjust adjust = adjustRepository.findById(adjInfoId)
+        //     .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
+        // Double evalAnnualSalaryIncrement =
+        //     Optional.ofNullable(adjust.getHpoSalaryIncrementRateByRank()).orElse(0.0) / 100;
+        // //5%일때 5로 들어간다는 전제하에 이렇게 해놓음
+        //
+        // adjustSubjects.stream().forEach(adjustSubject -> {
+        //     //기준연봉= 전년도 기준연봉+(직무기본연봉*평차등연봉인상률)
+        //
+        //     //전년도 기준연봉 불러옴
+        //     AdjustSubject beforeAdjustSubject = adjustSubjectRepository.findBeforeAdjSubject(adjInfoId,
+        //         adjustSubject.getEmployee().getId());
+        //     if (beforeAdjustSubject == null)
+        //         return; //신입 제외
+        //
+        //     //직무 기본 연봉 불러옴
+        //     Double gradeBaseSalary = adjustSubject.getGrade().getBaseSalary();
+        //
+        //     //연봉 인상률 불러옴
+        //     SalaryIncrementByRank salaryIncrementByRank = salaryIncrementRateByRankRepository.findByRankIdAndAdjustIdAndGradeId(
+        //         adjustSubject.getRank().getId(), adjInfoId, adjustSubject.getGrade().getId()).orElse(null);
+        //     Double evalDiffIncrement =
+        //         salaryIncrementByRank == null ? 0.0 : (salaryIncrementByRank.getSalaryIncrementRate() / 100);
+        //
+        //     //고성과 있으면
+        //     //평차등연봉인상률 = (직급, 평가별 평차연) * (1 + 고성과평차연)
+        //     if (adjustSubject.getIsInHpo()) {
+        //         evalDiffIncrement = evalDiffIncrement * (1 + evalAnnualSalaryIncrement);
+        //     }
+        //
+        //     Double newStdSalary =
+        //         (beforeAdjustSubject.getFinalStdSalary() == null ? 1000000 : beforeAdjustSubject.getFinalStdSalary())
+        //             + gradeBaseSalary * evalDiffIncrement;
+        //
+        //     AdjustSubject saveAdjustSubject = adjustSubject.toBuilder()
+        //         .stdSalary(newStdSalary)
+        //         .finalStdSalary(newStdSalary)
+        //         .build();
+        //     adjustSubjectRepository.save(saveAdjustSubject);
+        // });
     }
 
     public void calculateAddPayment(Long adjInfoId) {
-        List<AdjustSubject> adjustSubjects = adjustSubjectRepository.findByAdjustId(adjInfoId)
-            .stream()
-            .filter(adjustSubject -> !adjustSubject.getDeleted())
-            .filter(AdjustSubject::getIsSubject)
-            .toList();
-
-        Adjust adjust = adjustRepository.findById(adjInfoId)
-            .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
-        Double evalPerformProvideRate =
-            Optional.ofNullable(adjust.getHpoBonusMultiplier()).orElse(100.0) / 100;
-
-        adjustSubjects.stream().forEach(adjustSubject -> {
-            // 평가차등 경영 성과금 = 평차금기준임금(업적연봉기본지금) * 평가차등경영성과금지급률
-            // 평차금기준임금 = ((기준연봉월할액 + 직무기본연봉) / 2 ) + 12만원
-
-            // 직무기본연봉 가져옴
-            Double gradeBaseSalary = adjustSubject.getGrade().getGradeBaseSalary();
-            Double rankBaseStandardSalary = (adjustSubject.getFinalStdSalary() + gradeBaseSalary) / 12 + 12;
-
-            //평가차등경영성과금지급률 가져옴
-            SalaryIncrementRateByRank salaryIncrementRateByRank = salaryIncrementRateByRankRepository.findByRankIdAndAdjustIdAndGradeId(
-                adjustSubject.getRank().getId(), adjInfoId, adjustSubject.getGrade().getId()).orElse(null);
-            Double evalDiffBonus =
-                salaryIncrementRateByRank == null ? 0.0 : (salaryIncrementRateByRank.getEvalDiffBonus() / 100);
-
-            //고성과 조직일 경우
-            //평가차등경영성과금 지급률 = 평가차등경영성과금 지급률+고성과 경영성과금지급률
-            if (adjustSubject.getIsInHpo()) {
-                evalDiffBonus += evalPerformProvideRate;
-            }
-
-            Double newPerformAddPayment = (double)Math.round(rankBaseStandardSalary * evalDiffBonus);
-
-            AdjustSubject saveAdjustSubject = adjustSubject.toBuilder().hpoBonus(newPerformAddPayment).build();
-            adjustSubjectRepository.save(saveAdjustSubject);
-        });
+        // List<AdjustSubject> adjustSubjects = adjustSubjectRepository.findByAdjustId(adjInfoId)
+        //     .stream()
+        //     .filter(adjustSubject -> !adjustSubject.getDeleted())
+        //     .filter(AdjustSubject::getIsSubject)
+        //     .toList();
+        //
+        // Adjust adjust = adjustRepository.findById(adjInfoId)
+        //     .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
+        // Double evalPerformProvideRate =
+        //     Optional.ofNullable(adjust.getHpoBonusMultiplier()).orElse(100.0) / 100;
+        //
+        // adjustSubjects.stream().forEach(adjustSubject -> {
+        //     // 평가차등 경영 성과금 = 평차금기준임금(업적연봉기본지금) * 평가차등경영성과금지급률
+        //     // 평차금기준임금 = ((기준연봉월할액 + 직무기본연봉) / 2 ) + 12만원
+        //
+        //     // 직무기본연봉 가져옴
+        //     Double gradeBaseSalary = adjustSubject.getGrade().getBaseSalary();
+        //     Double rankBaseStandardSalary = (adjustSubject.getFinalStdSalary() + gradeBaseSalary) / 12 + 12;
+        //
+        //     //평가차등경영성과금지급률 가져옴
+        //     SalaryIncrementByRank salaryIncrementByRank = salaryIncrementRateByRankRepository.findByRankIdAndAdjustIdAndGradeId(
+        //         adjustSubject.getRank().getId(), adjInfoId, adjustSubject.getGrade().getId()).orElse(null);
+        //     Double evalDiffBonus =
+        //         salaryIncrementByRank == null ? 0.0 : (salaryIncrementByRank.getBonusMultiplier() / 100);
+        //
+        //     //고성과 조직일 경우
+        //     //평가차등경영성과금 지급률 = 평가차등경영성과금 지급률+고성과 경영성과금지급률
+        //     if (adjustSubject.getIsInHpo()) {
+        //         evalDiffBonus += evalPerformProvideRate;
+        //     }
+        //
+        //     Double newPerformAddPayment = (double)Math.round(rankBaseStandardSalary * evalDiffBonus);
+        //
+        //     AdjustSubject saveAdjustSubject = adjustSubject.toBuilder().hpoBonus(newPerformAddPayment).build();
+        //     adjustSubjectRepository.save(saveAdjustSubject);
+        // });
     }
 
     public AdjResultResponse getFinalResult(Long adjInfoId) {
@@ -421,8 +433,8 @@ public class AdjustSubjectService {
             return new AdjResultResponse.AdjResult(employee.getEmpNum(), employee.getName(), employee.getBirth(),
                 employee.getHireDate(), employee.getEmploymentType()
                 .getName(), employee.getDepartment().getName(), employee.getPositionName(),
-                adjustSubject.getGrade().getGradeName(), employee.getPositionArea(),
-                adjust.getSalaryIncrementRateByRank(), adjust.getHpoBonusMultiplier(),
+                adjustSubject.getGrade().getName(), employee.getPositionArea(),
+                adjust.getHpoSalaryIncrementByRank(), adjust.getHpoBonusMultiplier(),
                 paybandCriteria != null ? paybandCriteria.getUpperBound() : null,
                 paybandCriteria != null ? paybandCriteria.getLowerBound() : null, adjustSubject.getStdSalary(),
                 beforeAdjustSubject.getAdjust().getYear(), beforeAdjustSubject.getAdjust().getOrderNumber(),
