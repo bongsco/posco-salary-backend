@@ -142,7 +142,7 @@ public class CriteriaService {
             }
         }
 
-        salaryIncrementRateByRankRepository.saveAll(newSalaryRates);
+        salaryIncrementByRankRepository.saveAll(newSalaryRates);
 
         // 직급 처리
         Map<Long, AdjustEmploymentType> existingPayments = adjustEmploymentTypeRepository.findByAdjustId(adjInfoId)
@@ -165,7 +165,8 @@ public class CriteriaService {
             }
         }
 
-        // ✅ 수정된 정보 기반으로 다시 전체 목록 + 체크여부 포함 응답 생성
+        // ✅ AdjustSubject 갱신 처리
+        // 1. 기준에 부합하는 gradeId, paymentId 추출
         Set<Long> selectedGradeIds = adjustGradeRepository.findByAdjustId(adjInfoId).stream()
             .map(link -> link.getGrade().getId())
             .collect(Collectors.toSet());
