@@ -124,9 +124,12 @@ public class CriteriaService {
             }
         }
 
-        // ✅ SalaryIncrementRateByRank 생성 (builder 형식)
+        // SalaryIncrementRateByRank 생성
         List<AdjustGrade> adjustGrades = adjustGradeRepository.findByAdjustId(adjInfoId);
-        salaryIncrementByRankRepository.deleteByAdjustGrades(adjustGrades);
+
+        List<SalaryIncrementByRank> oldRows = salaryIncrementByRankRepository.findByAdjustGradeIn(adjustGrades);
+        salaryIncrementByRankRepository.deleteAll(oldRows); // ✅ Soft Delete
+
         List<Rank> allRanks = rankRepository.findAll();
 
         List<SalaryIncrementByRank> newSalaryRates = new ArrayList<>();
