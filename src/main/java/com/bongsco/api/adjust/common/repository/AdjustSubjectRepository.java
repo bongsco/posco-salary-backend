@@ -3,6 +3,7 @@ package com.bongsco.api.adjust.common.repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -32,6 +33,14 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
         """
     )
     List<AdjustSubject> findByAdjustIdAndSearchKey(Long adjustId, String searchKey);
+
+    @Query("""
+        SELECT asj
+        FROM AdjustSubject asj
+        WHERE asj.adjust.id = :adjustId
+        """
+    )
+    List<AdjustSubject> findFilteredSortedResultByAdjustId(Long adjustId, Sort sort);
 
     @Query("""
         SELECT asj
