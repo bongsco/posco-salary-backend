@@ -6,24 +6,31 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bongsco.api.adjust.annual.dto.MainResultDto;
 import com.bongsco.api.adjust.annual.dto.request.ChangedHighPerformGroupEmployeeRequest;
 import com.bongsco.api.adjust.annual.dto.request.ChangedSubjectUseEmployeeRequest;
 import com.bongsco.api.adjust.annual.dto.response.CompensationEmployeeResponse;
 import com.bongsco.api.adjust.annual.dto.response.EmployeeResponse;
 import com.bongsco.api.adjust.annual.dto.response.MainAdjPaybandBothSubjectsResponse;
-import com.bongsco.api.adjust.annual.dto.response.MainResultResponse;
+import com.bongsco.api.adjust.annual.dto.response.MainResultResponses;
 import com.bongsco.api.adjust.annual.dto.response.PreprocessAdjSubjectsResponse;
+import com.bongsco.api.adjust.annual.entity.SalaryIncrementByRank;
 import com.bongsco.api.adjust.annual.repository.PaybandCriteriaRepository;
 import com.bongsco.api.adjust.annual.repository.SalaryIncrementByRankRepository;
 import com.bongsco.api.adjust.common.dto.AdjSubjectSalaryDto;
 import com.bongsco.api.adjust.common.entity.Adjust;
+import com.bongsco.api.adjust.common.entity.AdjustGrade;
 import com.bongsco.api.adjust.common.entity.AdjustSubject;
 import com.bongsco.api.adjust.common.entity.RepresentativeSalary;
+import com.bongsco.api.adjust.common.repository.AdjustGradeRepository;
 import com.bongsco.api.adjust.common.repository.AdjustRepository;
 import com.bongsco.api.adjust.common.repository.AdjustSubjectRepository;
 import com.bongsco.api.adjust.common.repository.RepresentativeSalaryRepository;
@@ -33,6 +40,8 @@ import com.bongsco.api.employee.entity.Grade;
 import com.bongsco.api.employee.repository.EmployeeRepository;
 import com.bongsco.api.employee.repository.GradeRepository;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -46,6 +55,10 @@ public class AdjustSubjectService {
     private final RepresentativeSalaryRepository representativeSalaryRepository;
     private final GradeRepository gradeRepository;
     private final AdjustService adjustService;
+    private final AdjustGradeRepository adjustGradeRepository;
+
+    @PersistenceContext
+    private EntityManager em;
 
     public static Double calculateMedian(List<AdjustSubject> adjustSubjects) {
         if (adjustSubjects.isEmpty()) {
@@ -376,66 +389,136 @@ public class AdjustSubjectService {
         // });
     }
 
-    public List<MainResultResponse> getFinalResult(Long adjustId, Map<String, String> filters,
-        Map<String, String> sorts) {
+    public MainResultResponses getFinalResult(Long adjustId, String filterEmpNum, String filterName,
+        String filterGrade, String filterDepartment, String filterRank,
+        List<Map<String, String>> sorts, Integer pageNumber, Integer pageSize) {
 
-        // List<AdjustSubject> subjects = adjustSubjectRepository
-        //     .findFilteredSortedResultByAdjustId(adjustId);
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
 
-        return null;
+        Map<String, String> mapping = Map.of(
+            "empNum", "e.empNum",
+            "name", "e.name",
+            "departmentName", "d.name",
+            "gradeName", "g.name",
+            "rankCode", "r.code",
+            "stdSalary", "asj.finalStdSalary",
+            "totalSalary", "asj.finalStdSalary+asj.hpoBonus"
+        );
+
+        // Base JPQL
+        String baseQuery = """
+                FROM AdjustSubject asj
+                JOIN Employee e ON e.id = asj.employee.id 
+                JOIN Grade g ON g.id = asj.grade.id
+                JOIN Department d ON d.id = e.department.id
+                JOIN Rank r ON r.id = asj.rank.id
+                WHERE asj.adjust.id = :adjustId
+                    AND e.empNum LIKE COALESCE(:filterEmpNum, e.empNum)
+                    AND e.name LIKE COALESCE(:filterName, e.name)
+                    AND g.name = COALESCE(:filterGrade, g.name)
+                    AND d.name = COALESCE(:filterDepartment, d.name)
+                    AND r.code = COALESCE(:filterRank, r.code)
+            """;
+
+        // Content JPQL
+        String contentJpql = "SELECT new com.bongsco.api.adjust.annual.dto.MainResultDto(" +
+            "e.empNum, e.name, g.name, e.positionName, d.name, r.code, " +
+            "e.stdSalaryIncrementRate, asj.finalStdSalary, asj.stdSalary, " +
+            "asj.hpoBonus, asj.isInHpo, e.id, asj.id, g.id, r.id) " + baseQuery;
+
+        // Count JPQL
+        String countJpql = "SELECT COUNT(asj.id) " + baseQuery;
+
+        // 정렬
+        if (sorts != null && !sorts.isEmpty()) {
+            contentJpql += " ORDER BY " + sorts.stream()
+                .map(sortMap -> {
+                    Map.Entry<String, String> entry = sortMap.entrySet().iterator().next();
+                    String key = mapping.get(entry.getKey());
+                    String direction = "내림차순".equals(entry.getValue()) ? "DESC" : "ASC";
+                    return key + " " + direction;
+                })
+                .collect(Collectors.joining(", "));
+        }
+
+        // count query
+        Long total = em.createQuery(countJpql, Long.class)
+            .setParameter("adjustId", adjustId)
+            .setParameter("filterEmpNum", filterEmpNum == null ? null : "%" + filterEmpNum + "%")
+            .setParameter("filterName", filterName == null ? null : "%" + filterName + "%")
+            .setParameter("filterGrade", filterGrade)
+            .setParameter("filterDepartment", filterDepartment)
+            .setParameter("filterRank", filterRank)
+            .getSingleResult();
+
+        // content query
+        List<MainResultDto> mainResultDtos = em.createQuery(contentJpql, MainResultDto.class)
+            .setParameter("adjustId", adjustId)
+            .setParameter("filterEmpNum", filterEmpNum == null ? null : "%" + filterEmpNum + "%")
+            .setParameter("filterName", filterName == null ? null : "%" + filterName + "%")
+            .setParameter("filterGrade", filterGrade)
+            .setParameter("filterDepartment", filterDepartment)
+            .setParameter("filterRank", filterRank)
+            .setFirstResult((int)pageable.getOffset())
+            .setMaxResults(pageable.getPageSize())
+            .getResultList();
+
+        Adjust adjust = adjustRepository.findById(adjustId).orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
+        List<AdjustGrade> adjustGrades = adjustGradeRepository.findByAdjustId(adjustId);
+
+        List<MainResultResponses.MainResultResponse> responseList = mainResultDtos.stream().map(dto -> {
+            String paybandResult =
+                dto.getStdSalary() == null || dto.getFinalStdSalary() == null ? "미적용" :
+                    dto.getStdSalary() > dto.getFinalStdSalary() ? "적용(상한)" :
+                        dto.getStdSalary() < dto.getFinalStdSalary() ? "적용(하한)" :
+                            "미적용";
+
+            AdjustGrade adjustGrade = adjustGrades.stream()
+                .filter(a -> a.getGrade().getId() == dto.getGradeId())
+                .findFirst().orElse(null);
+
+            SalaryIncrementByRank salaryIncrementByRank = salaryIncrementByRankRepository
+                .findByRankIdAndAdjustGradeId(dto.getRankId(), adjustGrade.getId())
+                .orElse(null);
+
+            Double bonusMultiplier = salaryIncrementByRank != null ? salaryIncrementByRank.getBonusMultiplier() : 0.0;
+            Double salaryIncrementRate =
+                salaryIncrementByRank != null ? salaryIncrementByRank.getSalaryIncrementRate() : 0.0;
+
+            if (dto.getIsInHpo() != null && dto.getIsInHpo()) {
+                bonusMultiplier += Optional.ofNullable(adjust.getHpoBonusMultiplier()).orElse(0.0);
+                Double hpoSalaryIncrementRate = Optional.ofNullable(adjust.getHpoSalaryIncrementByRank()).orElse(0.0);
+                salaryIncrementRate = ((1 + salaryIncrementRate / 100) * (1 + hpoSalaryIncrementRate / 100) - 1) * 100;
+            }
+
+            AdjustSubject beforeAdjustSubject = adjustSubjectRepository.findBeforeAdjSubject(adjustId, dto.getEmpId());
+            Double beforeFinalStdSalary = Optional.ofNullable(beforeAdjustSubject.getFinalStdSalary()).orElse(0.0);
+            Double beforeTotalSalary =
+                Optional.ofNullable(beforeAdjustSubject.getFinalStdSalary()).orElse(0.0) +
+                    Optional.ofNullable(beforeAdjustSubject.getHpoBonus()).orElse(0.0);
+
+            return MainResultResponses.MainResultResponse.builder()
+                .empNum(dto.getEmpNum())
+                .name(dto.getName())
+                .gradeName(dto.getGradeName())
+                .positionName(dto.getPositionName())
+                .depName(dto.getDepName())
+                .rankCode(dto.getRankCode())
+                .salaryIncrementRate(salaryIncrementRate)
+                .bonusMultiplier(bonusMultiplier)
+                .stdSalaryIncrementRate(dto.getStdSalaryIncrementRate())
+                .payband(paybandResult)
+                .salaryBefore(beforeFinalStdSalary)
+                .stdSalary(dto.getFinalStdSalary())
+                .totalSalaryBefore(beforeTotalSalary)
+                .totalSalary(
+                    Optional.ofNullable(dto.getFinalStdSalary()).orElse(0.0) + Optional.ofNullable(dto.getHpoBonus())
+                        .orElse(0.0))
+                .build();
+        }).toList();
+
+        return new MainResultResponses(responseList, total.intValue());
     }
-
-    // private MainResultResponse getAdjResultResponse(Long adjustId, List<AdjustSubject> adjustSubjects) {
-    //     Adjust adjust = adjustRepository.findById(adjustId)
-    //         .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
-    //     List<PaybandCriteria> paybandCriterias = paybandCriteriaRepository.findByAdjustId(adjustId)
-    //         .stream()
-    //         .filter(pc -> !pc.getDeleted())
-    //         .toList();
-    //
-    //     Long beforeAdjInfoId = adjustService.getBeforeAdjInfoId(adjustId);
-    //
-    //     List<RepresentativeSalary> representativeSalaries = representativeSalaryRepository.findByAdjustId(
-    //         beforeAdjInfoId);
-    //
-    //     return new MainResultResponse(adjustSubjects.stream().map(adjustSubject -> {
-    //         Employee employee = adjustSubject.getEmployee();
-    //         //상한값 하한값 가져오기,..
-    //         PaybandCriteria paybandCriteria = paybandCriterias.stream()
-    //             .filter(pc -> Objects.equals(pc.getGrade().getId(), adjustSubject.getGrade().getId()))
-    //             .findFirst()
-    //             .orElse(null);
-    //
-    //         //전년도 기준연봉 불러옴
-    //         AdjustSubject beforeAdjustSubject = adjustSubjectRepository.findBeforeAdjSubject(adjustId,
-    //             employee.getId());
-    //
-    //         Double beforeFinalStdSalary = Optional.ofNullable(beforeAdjustSubject.getFinalStdSalary()).orElse(0.0);
-    //         Double finalStdSalary = Optional.ofNullable(adjustSubject.getFinalStdSalary()).orElse(0.0);
-    //
-    //         Double representativeVal = RepresentativeSalaryService.getRepresentativeVal(representativeSalaries,
-    //             adjustSubject.getGrade().getId());
-    //         Double finalStdSalaryIncrementRate = ((finalStdSalary - beforeFinalStdSalary) / beforeFinalStdSalary) * 100;
-    //
-    //         return new MainResultResponse(employee.getEmpNum(), employee.getName(), employee.getBirth(),
-    //             employee.getHireDate(), employee.getEmploymentType()
-    //             .getName(), employee.getDepartment().getName(), employee.getPositionName(),
-    //             adjustSubject.getGrade().getName(), employee.getPositionArea(),
-    //             adjust.getHpoSalaryIncrementRateByRank(), adjust.getHpoBonusMultiplier(),
-    //             paybandCriteria != null ? paybandCriteria.getUpperBound() : null,
-    //             paybandCriteria != null ? paybandCriteria.getLowerBound() : null, adjustSubject.getStdSalary(),
-    //             beforeAdjustSubject.getAdjust().getYear(), beforeAdjustSubject.getAdjust().getOrderNumber(),
-    //             finalStdSalary,
-    //             beforeAdjustSubject.getHpoBonus(),
-    //             Optional.ofNullable(beforeAdjustSubject.getFinalStdSalary()).orElse(0.0) + Optional.ofNullable(
-    //                 beforeAdjustSubject.getHpoBonus()).orElse(0.0), representativeVal,
-    //             adjust.getYear(), adjust.getOrderNumber(), finalStdSalaryIncrementRate,
-    //             adjustSubject.getFinalStdSalary(),
-    //             adjustSubject.getHpoBonus(),
-    //             Optional.ofNullable(adjustSubject.getFinalStdSalary()).orElse(0.0) + Optional.ofNullable(
-    //                 adjustSubject.getHpoBonus()).orElse(0.0));
-    //     }).toList());
-    // }
 
     public void calculateRepresentativeVal(Long adjInfoId) {
         List<AdjustSubject> adjustSubjects = adjustSubjectRepository.findByAdjustId(adjInfoId)

@@ -16,10 +16,14 @@ public class MainResultDto {
     private String gradeName;
     private String positionName;
     private String depName;
-    private String rankName;
-    private Double salaryIncrementRate;
+    private String rankCode;
+    private Double stdSalaryIncrementRate;
     private Double finalStdSalary;
+    private Double stdSalary;
     private Double hpoBonus;
+    private Boolean isInHpo;
     private Long empId;
     private Long adjustSubjectId;
+    private Long gradeId;
+    private Long rankId;
 }

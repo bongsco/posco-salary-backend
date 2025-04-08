@@ -1,8 +1,6 @@
 package com.bongsco.api.adjust.annual.controller;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import static com.bongsco.api.adjust.common.util.ParseSorts.*;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,9 +16,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.bongsco.api.adjust.annual.dto.request.ChangedSubjectListRequest;
 import com.bongsco.api.adjust.annual.dto.response.MainAdjPaybandBothSubjectsResponse;
 import com.bongsco.api.adjust.annual.dto.response.MainAdjPaybandCriteriaResponse;
-import com.bongsco.api.adjust.annual.dto.response.MainResultResponse;
+import com.bongsco.api.adjust.annual.dto.response.MainResultResponses;
 import com.bongsco.api.adjust.annual.service.AdjustSubjectService;
 import com.bongsco.api.adjust.annual.service.PaybandCriteriaService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -96,50 +95,21 @@ public class MainAdjustController {
 
     @Operation(summary = "정기 연봉 조정", description = "마지막 페이지, 계산값 모두 보여줌")
     @PatchMapping("/{adjust_id}/annual-adj")
-    public ResponseEntity<List<MainResultResponse>> showResult(@PathVariable("adjust_id") Long adjustId,
+    public ResponseEntity<MainResultResponses> showResult(@PathVariable("adjust_id") Long adjustId,
         @RequestParam(value = "filterEmpNum", required = false) String filterEmpNum,
         @RequestParam(value = "filterName", required = false) String filterName,
         @RequestParam(value = "filterGrade", required = false) String filterGrade,
         @RequestParam(value = "filterDepartment", required = false) String filterDepartment,
         @RequestParam(value = "filterRank", required = false) String filterRank,
-        @RequestParam(value = "sortName", required = false) String sortName,
-        @RequestParam(value = "sortEmpNum", required = false) String sortEmpNum,
-        @RequestParam(value = "sortDepartment", required = false) String sortDepartment,
-        @RequestParam(value = "sortGrade", required = false) String sortGrade,
-        @RequestParam(value = "sortRank", required = false) String sortRank,
-        @RequestParam(value = "sortStdSalary", required = false) String sortStdSalary,
-        @RequestParam(value = "sortTotalSalary", required = false) String sortTotalSalary
+        @RequestParam(value = "sorts", required = false) String sorts,
+        @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
+        @RequestParam(value = "pageSize", required = false) Integer pageSize
 
-    ) {
-        Map<String, String> filters = new HashMap<>();
-        if (filterEmpNum != null)
-            filters.put("filterEmpNum", filterEmpNum);
-        if (filterName != null)
-            filters.put("filterName", filterName);
-        if (filterGrade != null)
-            filters.put("filterGrade", filterGrade);
-        if (filterDepartment != null)
-            filters.put("filterDepartment", filterDepartment);
-        if (filterRank != null)
-            filters.put("filterRank", filterRank);
+    ) throws JsonProcessingException {
 
-        Map<String, String> sorts = new HashMap<>();
-        if (sortName != null)
-            sorts.put("name", sortName);
-        if (sortEmpNum != null)
-            sorts.put("empNum", sortEmpNum);
-        if (sortDepartment != null)
-            sorts.put("depName", sortDepartment);
-        if (sortGrade != null)
-            sorts.put("gradeName", sortGrade);
-        if (sortRank != null)
-            sorts.put("rankName", sortRank);
-        if (sortStdSalary != null)
-            sorts.put("stdSalary", sortStdSalary);
-        if (sortTotalSalary != null)
-            sorts.put("totalSalary", sortTotalSalary);
-
-        return ResponseEntity.status(HttpStatus.OK).body(adjSubjectService.getFinalResult(adjustId, filters, sorts));
+        return ResponseEntity.status(HttpStatus.OK)
+            .body(adjSubjectService.getFinalResult(adjustId, filterEmpNum, filterName, filterGrade, filterDepartment,
+                filterRank, extractSorts(sorts), pageNumber, pageSize));
     }
 
     @Operation(summary = "대표값 생성", description = "본 조정에서 보여주는 대표값을 미리 저장 해놓음")
