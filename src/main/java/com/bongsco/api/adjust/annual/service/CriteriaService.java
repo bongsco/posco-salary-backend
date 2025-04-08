@@ -56,36 +56,31 @@ public class CriteriaService {
     private final SalaryIncrementByRankRepository salaryIncrementByRankRepository;
     private final PaybandCriteriaRepository paybandCriteriaRepository;
 
-    public SubjectCriteriaResponse getSubjectCriteria(Long adjInfoId) {
-        Adjust info = adjustRepository.findById(adjInfoId)
+    public SubjectCriteriaResponse getSubjectCriteria(Long adjustId) {
+        Adjust adjust = adjustRepository.findById(adjustId)
             .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
 
-        List<Long> selectedGradeIds = adjustGradeRepository.findByAdjustId(adjInfoId).stream()
+        // 미리 Set으로 변환하여 contains 연산 최적화
+        Set<Long> selectedGradeIds = adjustGradeRepository.findByAdjustId(adjustId).stream()
             .map(link -> link.getGrade().getId())
-            .toList();
+            .collect(Collectors.toSet());
 
-        List<Long> selectedPaymentIds = adjustEmploymentTypeRepository.findByAdjustId(adjInfoId).stream()
+        Set<Long> selectedPaymentIds = adjustEmploymentTypeRepository.findByAdjustId(adjustId).stream()
             .map(link -> link.getEmploymentType().getId())
-            .toList();
+            .collect(Collectors.toSet());
 
-        List<SubjectCriteriaResponse.SelectableItemDto> gradeDtos = gradeRepository.findAll().stream()
-            .map(grade -> new SubjectCriteriaResponse.SelectableItemDto(
-                grade.getId(),
-                grade.getName(),
-                selectedGradeIds.contains(grade.getId())
-            )).toList();
+        // 전체 grade 리스트를 한 번에 가져와 필요한 정보로 매핑
 
-        List<SubjectCriteriaResponse.SelectableItemDto> paymentDtos = employmentTypeRepository.findAll().stream()
-            .map(payment -> new SubjectCriteriaResponse.SelectableItemDto(
-                payment.getId(),
-                payment.getName(),
-                selectedPaymentIds.contains(payment.getId())
-            )).toList();
+        List<SubjectCriteriaResponse.SelectableItemDto> gradeDtos =
+            gradeRepository.findAllWithSelection(selectedGradeIds);
+
+        List<SubjectCriteriaResponse.SelectableItemDto> paymentDtos =
+            employmentTypeRepository.findAllWithSelection(selectedPaymentIds);
 
         return new SubjectCriteriaResponse(
-            info.getBaseDate(),
-            info.getExceptionStartDate(),
-            info.getExceptionEndDate(),
+            adjust.getBaseDate(),
+            adjust.getExceptionStartDate(),
+            adjust.getExceptionEndDate(),
             gradeDtos,
             paymentDtos
         );
