@@ -17,12 +17,11 @@ import com.bongsco.api.adjust.annual.dto.request.ChangedSubjectUseEmployeeReques
 import com.bongsco.api.adjust.annual.dto.response.AdjResultResponse;
 import com.bongsco.api.adjust.annual.dto.response.CompensationEmployeeResponse;
 import com.bongsco.api.adjust.annual.dto.response.EmployeeResponse;
-import com.bongsco.api.adjust.annual.dto.response.MainAdjPaybandBothSubjectsResponse;
+import com.bongsco.api.adjust.annual.dto.response.MainAdjustPaybandBothSubjectsResponse;
 import com.bongsco.api.adjust.annual.dto.response.PreprocessAdjSubjectsResponse;
 import com.bongsco.api.adjust.annual.entity.PaybandCriteria;
 import com.bongsco.api.adjust.annual.repository.PaybandCriteriaRepository;
 import com.bongsco.api.adjust.annual.repository.SalaryIncrementByRankRepository;
-import com.bongsco.api.adjust.common.dto.AdjSubjectSalaryDto;
 import com.bongsco.api.adjust.common.entity.Adjust;
 import com.bongsco.api.adjust.common.entity.AdjustSubject;
 import com.bongsco.api.adjust.common.entity.RepresentativeSalary;
@@ -75,16 +74,6 @@ public class AdjustSubjectService {
     public List<EmployeeResponse> findAll(Long adjInfoId) {
         // 연봉조정차수를 이용해 정기연봉조정대상자 테이블 가져오기
         List<AdjustSubject> subjects = adjustSubjectRepository.findByAdjustId(adjInfoId);
-
-        return subjects.stream()
-            .filter(adjustSubject -> !adjustSubject.getDeleted())
-            .map(EmployeeResponse::from)
-            .toList();
-    }
-
-    public List<EmployeeResponse> findBySearchKey(Long adjInfoId, String searchKey) {
-        // 연봉조정차수&검색정보를 이용해 정기연봉조정대상자 테이블 가져오기
-        List<AdjustSubject> subjects = adjustSubjectRepository.findByAdjustIdAndEmployeeName(adjInfoId, searchKey);
 
         return subjects.stream()
             .filter(adjustSubject -> !adjustSubject.getDeleted())
@@ -179,115 +168,146 @@ public class AdjustSubjectService {
             });
     }
 
-    public List<EmployeeResponse> findOne(Long adjInfoId, String searchKey) {
-        // 연봉조정차수&검색정보를 이용해 정기연봉조정대상자 테이블 가져오기
-        List<AdjustSubject> subjects = adjustSubjectRepository.findByAdjustIdAndEmployeeName(adjInfoId, searchKey);
-
-        return subjects.stream().map(EmployeeResponse::from).toList();
+    public MainAdjustPaybandBothSubjectsResponse getBothUpperLowerSubjects(Long adjustId) {
+        return new MainAdjustPaybandBothSubjectsResponse(getUpperSubjects(adjustId), getLowerSubjects(adjustId));
     }
 
-    public MainAdjPaybandBothSubjectsResponse getBothUpperLowerSubjects(Long adjInfoId) { //상한, 하한 초과자 가져오기
-        return new MainAdjPaybandBothSubjectsResponse(getUpperSubjects(adjInfoId), getLowerSubjects(adjInfoId));
-    }
+    public List<MainAdjustPaybandBothSubjectsResponse.MainAdjustPaybandSubjectsResponse> getUpperSubjects(
+        Long adjustId) {
+        List<AdjustSubject> subjects = adjustSubjectRepository.findByAdjustId(adjustId);
 
-    public List<MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse> getUpperSubjects(
-        Long adjInfoId
-    ) {     //상한초과자 가져오기
-        List<AdjSubjectSalaryDto> adjSubjectSalaryDtos = adjustSubjectRepository.findAllAdjSubjectAndStdSalaryAndUpper(
-            adjInfoId);
+        return subjects.stream()
+            .filter(subject -> {
+                if (subject.getDeleted() || subject.getStdSalary() == null || subject.getGrade() == null)
+                    return false;
 
-        return getMainAdjUpperPaybandSubjectsResponses(adjSubjectSalaryDtos);
-    }
+                PaybandCriteria criteria = paybandCriteriaRepository.findByAdjustIdAndGradeId(adjustId,
+                        subject.getGrade().getId())
+                    .orElse(null);
 
-    public List<MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse> getLowerSubjects(
-        Long adjInfoId
-    ) {     //하한초과자 가져오기
-        List<AdjSubjectSalaryDto> adjSubjectSalaryDtos = adjustSubjectRepository.findAllAdjSubjectAndStdSalaryAndLower(
-            adjInfoId);
+                if (criteria == null || criteria.getUpperBound() == null)
+                    return false;
 
-        return getAdjLowerPaybandSubjectsResponses(adjSubjectSalaryDtos);
-    }
+                double baseSalary = subject.getGrade().getBaseSalary();
+                double limit = baseSalary * (criteria.getUpperBound() / 100.0);
 
-    private List<MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse> getAdjLowerPaybandSubjectsResponses(
-        List<AdjSubjectSalaryDto> adjSubjectSalaryDtos) {
-        return adjSubjectSalaryDtos.stream()
-            .filter(adjSubjectSalaryDto -> {
-                return adjSubjectSalaryDto.getStdSalary().compareTo(adjSubjectSalaryDto.getLimitPrice()) < 0;
+                return subject.getStdSalary() > limit;
             })
-            .map(dto -> {
-                Employee employee = employeeRepository.findById(dto.getEmployeeId())
-                    .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
-                dto = dto.toBuilder()
-                    .empNum(employee.getEmpNum())
-                    .name(employee.getName())
-                    .depName(employee.getDepartment().getName())
-                    .gradeName(employee.getGrade().getName())
-                    .positionName(employee.getPositionName())
+            .map(subject -> {
+                Employee emp = subject.getEmployee();
+                Grade grade = subject.getGrade();
+
+                PaybandCriteria criteria = paybandCriteriaRepository.findByAdjustIdAndGradeId(adjustId, grade.getId())
+                    .orElse(null);
+
+                double limitPrice = grade.getBaseSalary() * (criteria.getUpperBound() / 100.0);
+
+                return MainAdjustPaybandBothSubjectsResponse.MainAdjustPaybandSubjectsResponse.builder()
+                    .adjustSubjectId(subject.getId())
+                    .empNum(emp.getEmpNum())
+                    .name(emp.getName())
+                    .depName(emp.getDepartment().getName())
+                    .gradeName(grade.getName())
+                    .positionName(emp.getPositionName())
+                    .rankCode(emp.getRank().getCode())
+                    .stdSalary(subject.getStdSalary())
+                    .limitPrice(limitPrice)
+                    .isPaybandApplied(subject.getIsPaybandApplied())
                     .build();
-                return MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse.from(dto);
             })
             .toList();
     }
 
-    public void modifyAdjustSubject(Long adjSubjectId, Boolean paybandUse, Double limitPrice) {
-        AdjustSubject adjustSubject = adjustSubjectRepository.findById(adjSubjectId)
-            .filter(adjustSubject1 -> !adjustSubject1.getDeleted())
+    public List<MainAdjustPaybandBothSubjectsResponse.MainAdjustPaybandSubjectsResponse> getLowerSubjects(
+        Long adjustId) {
+        List<AdjustSubject> subjects = adjustSubjectRepository.findByAdjustId(adjustId);
+
+        return subjects.stream()
+            .filter(subject -> {
+                if (subject.getDeleted() || subject.getStdSalary() == null || subject.getGrade() == null)
+                    return false;
+
+                PaybandCriteria criteria = paybandCriteriaRepository.findByAdjustIdAndGradeId(adjustId,
+                        subject.getGrade().getId())
+                    .orElse(null);
+
+                if (criteria == null || criteria.getLowerBound() == null)
+                    return false;
+
+                double baseSalary = subject.getGrade().getBaseSalary();
+                double limit = baseSalary * (criteria.getLowerBound() / 100.0);
+
+                return subject.getStdSalary() < limit;
+            })
+            .map(subject -> {
+                Employee emp = subject.getEmployee();
+                Grade grade = subject.getGrade();
+
+                PaybandCriteria criteria = paybandCriteriaRepository.findByAdjustIdAndGradeId(adjustId, grade.getId())
+                    .orElse(null);
+
+                double limitPrice = grade.getBaseSalary() * (criteria.getLowerBound() / 100.0);
+
+                return MainAdjustPaybandBothSubjectsResponse.MainAdjustPaybandSubjectsResponse.builder()
+                    .adjustSubjectId(subject.getId())
+                    .empNum(emp.getEmpNum())
+                    .name(emp.getName())
+                    .depName(emp.getDepartment().getName())
+                    .gradeName(grade.getName())
+                    .positionName(emp.getPositionName())
+                    .rankCode(emp.getRank().getCode())
+                    .stdSalary(subject.getStdSalary())
+                    .limitPrice(limitPrice)
+                    .isPaybandApplied(subject.getIsPaybandApplied())
+                    .build();
+            })
+            .toList();
+    }
+
+    @Transactional
+    public void modifyAdjustSubject(Long adjustSubjectId, Boolean isPaybandApplied) {
+        AdjustSubject adjustSubject = adjustSubjectRepository.findById(adjustSubjectId)
+            .filter(subject -> !subject.getDeleted())
             .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
-        AdjustSubject saveAdjustSubject;
-        if (paybandUse) {
-            saveAdjustSubject = adjustSubject.toBuilder()
-                .finalStdSalary(limitPrice)
-                .isPaybandApplied(paybandUse)
-                .build();
+
+        Double finalStdSalary;
+
+        if (Boolean.TRUE.equals(isPaybandApplied)) {
+            // 상한 또는 하한 기준을 적용한 finalStdSalary 계산
+            Grade grade = adjustSubject.getGrade();
+            PaybandCriteria criteria = paybandCriteriaRepository.findByAdjustIdAndGradeId(
+                adjustSubject.getAdjust().getId(), grade.getId()
+            ).orElse(null);
+
+            if (criteria != null) {
+                double baseSalary = grade.getBaseSalary();
+                Double upperBound = criteria.getUpperBound();
+                Double lowerBound = criteria.getLowerBound();
+                double stdSalary = Optional.ofNullable(adjustSubject.getStdSalary()).orElse(0.0);
+
+                double upperLimit = baseSalary * (Optional.ofNullable(upperBound).orElse(0.0) / 100.0);
+                double lowerLimit = baseSalary * (Optional.ofNullable(lowerBound).orElse(0.0) / 100.0);
+
+                if (stdSalary > upperLimit) {
+                    finalStdSalary = upperLimit;
+                } else if (stdSalary < lowerLimit) {
+                    finalStdSalary = lowerLimit;
+                } else {
+                    finalStdSalary = stdSalary;
+                }
+            } else {
+                finalStdSalary = adjustSubject.getStdSalary();
+            }
         } else {
-            saveAdjustSubject = adjustSubject.toBuilder()
-                .finalStdSalary(adjustSubject.getStdSalary())
-                .isPaybandApplied(paybandUse)
-                .build();
+            finalStdSalary = adjustSubject.getStdSalary();
         }
-        adjustSubjectRepository.save(saveAdjustSubject);
-    }
 
-    public MainAdjPaybandBothSubjectsResponse getBothUpperLowerSubjectsWithSearchKey(Long adjInfoId, String searchKey) {
-        return new MainAdjPaybandBothSubjectsResponse(getUpperSubjectsWithSearchKey(adjInfoId, searchKey),
-            getLowerSubjectsWithSearchKey(adjInfoId, searchKey));
-    }
+        AdjustSubject updated = adjustSubject.toBuilder()
+            .finalStdSalary(finalStdSalary)
+            .isPaybandApplied(isPaybandApplied)
+            .build();
 
-    private List<MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse> getUpperSubjectsWithSearchKey(
-        Long adjInfoId, String searchKey
-    ) {
-        List<AdjSubjectSalaryDto> adjSubjectSalaryDtos = adjustSubjectRepository.findAllAdjSubjectAndStdSalaryAndUpperWithSearchKey(
-            adjInfoId, searchKey);
-
-        return getMainAdjUpperPaybandSubjectsResponses(adjSubjectSalaryDtos);
-    }
-
-    private List<MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse> getMainAdjUpperPaybandSubjectsResponses(
-        List<AdjSubjectSalaryDto> adjSubjectSalaryDtos) {
-        return adjSubjectSalaryDtos.stream()
-            .filter(adjSubjectSalaryDto -> {
-                return adjSubjectSalaryDto.getStdSalary().compareTo(adjSubjectSalaryDto.getLimitPrice()) > 0;
-            })
-            .map(dto -> {
-                Employee employee = employeeRepository.findById(dto.getEmployeeId())
-                    .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
-                dto = dto.toBuilder()
-                    .empNum(employee.getEmpNum())
-                    .name(employee.getName())
-                    .depName(employee.getDepartment().getName())
-                    .positionName(employee.getPositionName())
-                    .build();
-                return MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse.from(dto);
-            })
-            .toList();
-    }
-
-    private List<MainAdjPaybandBothSubjectsResponse.MainAdjPaybandSubjectsResponse> getLowerSubjectsWithSearchKey(
-        Long adjInfoId, String searchKey
-    ) {
-        List<AdjSubjectSalaryDto> adjSubjectSalaryDtos = adjustSubjectRepository.findAllAdjSubjectAndStdSalaryAndLowerWithSearchKey(
-            adjInfoId, searchKey);
-        return getAdjLowerPaybandSubjectsResponses(adjSubjectSalaryDtos);
+        adjustSubjectRepository.save(updated);
     }
 
     public void calculateSalary(Long adjInfoId) {
