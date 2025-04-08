@@ -19,10 +19,10 @@ public class SubjectCriteriaRequest {
     private LocalDate baseDate;
 
     @NotNull(message = "exceptionStartDate는 null 일 수 없습니다.")
-    private LocalDate expStartDate;
+    private LocalDate exceptionStartDate;
 
     @NotNull(message = "exceptionEndDate는 null 일 수 없습니다.")
-    private LocalDate expEndDate;
+    private LocalDate exceptionEndDate;
 
     @NotNull(message = "grades는 null 일 수 없습니다.")
     private Map<Long, Boolean> gradeSelections;      // ✅ 체크된 등급 ID만 보내기

@@ -95,8 +95,8 @@ public class CriteriaService {
         // 날짜 업데이트
         adjust = adjust.toBuilder()
             .baseDate(request.getBaseDate())
-            .exceptionStartDate(request.getExpStartDate())
-            .exceptionEndDate(request.getExpEndDate())
+            .exceptionStartDate(request.getExceptionStartDate())
+            .exceptionEndDate(request.getExceptionEndDate())
             .build();
         adjustRepository.save(adjust);
 
