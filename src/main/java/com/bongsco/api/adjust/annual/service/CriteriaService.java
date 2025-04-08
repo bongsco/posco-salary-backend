@@ -32,6 +32,7 @@ import com.bongsco.api.employee.entity.EmploymentType;
 import com.bongsco.api.employee.entity.Grade;
 import com.bongsco.api.employee.repository.EmploymentTypeRepository;
 import com.bongsco.api.employee.repository.GradeRepository;
+import com.bongsco.api.employee.repository.RankRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -43,6 +44,7 @@ public class CriteriaService {
     private final AdjustEmploymentTypeRepository adjustEmploymentTypeRepository;
     private final EmploymentTypeRepository employmentTypeRepository;
     private final GradeRepository gradeRepository;
+    private final RankRepository rankRepository;
     private final SalaryIncrementByRankRepository salaryIncrementByRankRepository;
     private final PaybandCriteriaRepository paybandCriteriaRepository;
 
@@ -168,8 +170,7 @@ public class CriteriaService {
     }
 
     @Transactional
-    public List<SalaryIncrementByRank> saveRankIncrementRates(Long adjInfoId,
-        RankIncrementRateRequest request) {
+    public List<SalaryIncrementByRank> saveRankIncrementRates(Long adjInfoId, RankIncrementRateRequest request) {
         // Adjust existingAdjust = adjustRepository.findById(adjInfoId)
         //     .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
         //

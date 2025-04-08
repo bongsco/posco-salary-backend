@@ -72,18 +72,18 @@ public class AdjustSubjectService {
         }
     }
 
-    public List<EmployeeResponse> findAll(Long adjInfoId) {
-        return adjustSubjectRepository.findAllEmployeeResponsesByAdjustInfoId(adjInfoId);
+    public List<EmployeeResponse> findAll(Long adjustId) {
+        return adjustSubjectRepository.findAllEmployeeResponsesByAdjustInfoId(adjustId);
     }
 
     @Transactional
     public void updateSubjectUseEmployee(
-        Long adjInfoId,
+        Long adjustId,
         ChangedSubjectUseEmployeeRequest changedSubjectUseEmployeeRequest
     ) {
         changedSubjectUseEmployeeRequest.getChangedSubjectUseEmployee()
             .forEach(changedSubjectUseEmployee -> {
-                AdjustSubject adjustSubject = adjustSubjectRepository.findByAdjustIdAndEmployeeId(adjInfoId,
+                AdjustSubject adjustSubject = adjustSubjectRepository.findByAdjustIdAndEmployeeId(adjustId,
                         changedSubjectUseEmployee.getEmployeeId())
                     .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
                 AdjustSubject saveAdjustSubject = adjustSubject
