@@ -39,6 +39,5 @@ out/
 # Ignore application.yml
 /**/src/main/resources/application-*.yml
 
-#macß
+#mac
 .DS_Store
-src/main/resources/application.yml
