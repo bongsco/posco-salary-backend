@@ -29,12 +29,12 @@ import com.bongsco.api.adjust.common.entity.AdjustSubject;
 import com.bongsco.api.adjust.common.entity.RepresentativeSalary;
 import com.bongsco.api.adjust.common.repository.AdjustRepository;
 import com.bongsco.api.adjust.common.repository.AdjustSubjectRepository;
-import com.bongsco.api.adjust.common.repository.GradeRepository;
 import com.bongsco.api.adjust.common.repository.RepresentativeSalaryRepository;
 import com.bongsco.api.common.exception.CustomException;
 import com.bongsco.api.employee.entity.Employee;
 import com.bongsco.api.employee.entity.Grade;
 import com.bongsco.api.employee.repository.EmployeeRepository;
+import com.bongsco.api.employee.repository.GradeRepository;
 
 import lombok.RequiredArgsConstructor;
 
