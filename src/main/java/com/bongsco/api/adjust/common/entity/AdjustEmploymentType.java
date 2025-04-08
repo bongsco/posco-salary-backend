@@ -1,0 +1,40 @@
+package com.bongsco.api.adjust.common.entity;
+
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
+import com.bongsco.api.common.entity.BaseEntity;
+import com.bongsco.api.employee.entity.EmploymentType;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Entity
+@Getter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@SQLDelete(sql = "UPDATE adjust_employment_type SET deleted = true WHERE id = ?")
+@SQLRestriction("deleted = false")
+public class AdjustEmploymentType extends BaseEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "employment_type_id", nullable = false)
+    private EmploymentType employmentType;
+
+    @ManyToOne
+    @JoinColumn(name = "adjust_id", nullable = false)
+    private Adjust adjust;
+}
