@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 public class MainResultResponses {
     private List<MainResultResponse> results;
     private Integer totalPages;
+    private Integer pageNumber;
 
     @Builder
     @AllArgsConstructor

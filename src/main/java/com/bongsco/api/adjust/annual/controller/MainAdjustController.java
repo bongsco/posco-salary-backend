@@ -94,7 +94,7 @@ public class MainAdjustController {
     }
 
     @Operation(summary = "정기 연봉 조정", description = "마지막 페이지, 계산값 모두 보여줌")
-    @PatchMapping("/{adjust_id}/annual-adj")
+    @GetMapping("/{adjust_id}/annual-adj")
     public ResponseEntity<MainResultResponses> showResult(@PathVariable("adjust_id") Long adjustId,
         @RequestParam(value = "filterEmpNum", required = false) String filterEmpNum,
         @RequestParam(value = "filterName", required = false) String filterName,
@@ -107,9 +107,9 @@ public class MainAdjustController {
 
     ) throws JsonProcessingException {
 
-        return ResponseEntity.status(HttpStatus.OK)
-            .body(adjSubjectService.getFinalResult(adjustId, filterEmpNum, filterName, filterGrade, filterDepartment,
-                filterRank, extractSorts(sorts), pageNumber, pageSize));
+        return ResponseEntity.ok(
+            adjSubjectService.getFinalResult(adjustId, filterEmpNum, filterName, filterGrade, filterDepartment,
+                filterRank, extractSorts(sorts), pageNumber - 1, pageSize));
     }
 
     @Operation(summary = "대표값 생성", description = "본 조정에서 보여주는 대표값을 미리 저장 해놓음")

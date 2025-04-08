@@ -393,8 +393,6 @@ public class AdjustSubjectService {
         String filterGrade, String filterDepartment, String filterRank,
         List<Map<String, String>> sorts, Integer pageNumber, Integer pageSize) {
 
-        Pageable pageable = PageRequest.of(pageNumber, pageSize);
-
         Map<String, String> mapping = Map.of(
             "empNum", "e.empNum",
             "name", "e.name",
@@ -451,6 +449,11 @@ public class AdjustSubjectService {
             .setParameter("filterRank", filterRank)
             .getSingleResult();
 
+        int totalPages = (int)Math.ceil((double)total / pageSize);
+        int safePageNumber = Math.max(Math.min(pageNumber, totalPages - 1), 0);
+        
+        Pageable pageable = PageRequest.of(safePageNumber, pageSize);
+
         // content query
         List<MainResultDto> mainResultDtos = em.createQuery(contentJpql, MainResultDto.class)
             .setParameter("adjustId", adjustId)
@@ -491,11 +494,15 @@ public class AdjustSubjectService {
                 salaryIncrementRate = ((1 + salaryIncrementRate / 100) * (1 + hpoSalaryIncrementRate / 100) - 1) * 100;
             }
 
+            Double beforeFinalStdSalary = 0.0;
+            Double beforeTotalSalary = 0.0;
             AdjustSubject beforeAdjustSubject = adjustSubjectRepository.findBeforeAdjSubject(adjustId, dto.getEmpId());
-            Double beforeFinalStdSalary = Optional.ofNullable(beforeAdjustSubject.getFinalStdSalary()).orElse(0.0);
-            Double beforeTotalSalary =
-                Optional.ofNullable(beforeAdjustSubject.getFinalStdSalary()).orElse(0.0) +
-                    Optional.ofNullable(beforeAdjustSubject.getHpoBonus()).orElse(0.0);
+            if (beforeAdjustSubject != null) {
+                beforeFinalStdSalary = Optional.ofNullable(beforeAdjustSubject.getFinalStdSalary()).orElse(0.0);
+                beforeTotalSalary =
+                    Optional.ofNullable(beforeAdjustSubject.getFinalStdSalary()).orElse(0.0) +
+                        Optional.ofNullable(beforeAdjustSubject.getHpoBonus()).orElse(0.0);
+            }
 
             return MainResultResponses.MainResultResponse.builder()
                 .empNum(dto.getEmpNum())
@@ -517,7 +524,7 @@ public class AdjustSubjectService {
                 .build();
         }).toList();
 
-        return new MainResultResponses(responseList, total.intValue());
+        return new MainResultResponses(responseList, totalPages, safePageNumber + 1);
     }
 
     public void calculateRepresentativeVal(Long adjInfoId) {
