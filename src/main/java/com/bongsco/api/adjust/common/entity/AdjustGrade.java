@@ -6,6 +6,7 @@ import org.hibernate.annotations.SQLRestriction;
 import com.bongsco.api.common.entity.BaseEntity;
 import com.bongsco.api.employee.entity.Grade;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -37,4 +38,8 @@ public class AdjustGrade extends BaseEntity {
     @ManyToOne
     @JoinColumn(name = "adjust_id", nullable = false)
     private Adjust adjust;
+
+    @Column
+    @Builder.Default
+    private Boolean isActive = false;
 }
