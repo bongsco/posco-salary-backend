@@ -1,6 +1,7 @@
 package com.bongsco.api.adjust.annual.entity;
 
 import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import com.bongsco.api.adjust.common.entity.AdjustGrade;
 import com.bongsco.api.common.entity.BaseEntity;
@@ -25,6 +26,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SQLDelete(sql = "UPDATE salary_increment_by_rank SET deleted = true WHERE id = ?")
+@SQLRestriction("deleted = false")
 public class SalaryIncrementByRank extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
