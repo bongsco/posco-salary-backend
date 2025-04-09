@@ -2,6 +2,7 @@ package com.bongsco.api.adjust.annual.service;
 
 import static com.bongsco.api.common.exception.ErrorCode.*;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +10,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -400,74 +405,41 @@ public class AdjustSubjectService {
             "totalSalary", "asj.finalStdSalary+asj.hpoBonus"
         );
 
-        // Base JPQL
-        String baseQuery = """
-                FROM AdjustSubject asj
-                JOIN Employee e ON e.id = asj.employee.id 
-                JOIN Grade g ON g.id = asj.grade.id
-                JOIN Department d ON d.id = e.department.id
-                JOIN Rank r ON r.id = asj.rank.id
-                JOIN AdjustGrade ag ON ag.adjust.id = asj.adjust.id AND ag.grade.id = g.id
-                JOIN SalaryIncrementByRank s ON s.adjustGrade.id = ag.id AND s.rank.id = r.id
-                WHERE asj.adjust.id = :adjustId
-                    AND e.empNum LIKE COALESCE(:filterEmpNum, e.empNum)
-                    AND e.name LIKE COALESCE(:filterName, e.name)
-                    AND g.name = COALESCE(:filterGrade, g.name)
-                    AND d.name = COALESCE(:filterDepartment, d.name)
-                    AND r.code = COALESCE(:filterRank, r.code)
-            """;
-
-        // Content JPQL
-        String contentJpql = """
-            SELECT new com.bongsco.api.adjust.annual.dto.MainResultDto(
-            e.empNum, e.name, g.name, e.positionName, d.name, r.code, 
-            e.stdSalaryIncrementRate, asj.finalStdSalary, asj.stdSalary, 
-            asj.hpoBonus, asj.isInHpo, e.id, asj.id, g.id, r.id, ag.id, s.bonusMultiplier, s.salaryIncrementRate) 
-            """ + baseQuery;
-
-        // Count JPQL
-        String countJpql = "SELECT COUNT(asj.id) " + baseQuery;
-
-        // 정렬
+        List<Sort.Order> sortOrders = new ArrayList<>(); //초기값은 id
         if (sorts != null && !sorts.isEmpty()) {
-            contentJpql += " ORDER BY " + sorts.stream()
-                .map(sortMap -> {
-                    Map.Entry<String, String> entry = sortMap.entrySet().iterator().next();
-                    String key = mapping.get(entry.getKey());
-                    String direction = "내림차순".equals(entry.getValue()) ? "DESC" : "ASC";
-                    return key + " " + direction;
-                })
-                .collect(Collectors.joining(", "));
+            for (Map<String, String> sort : sorts) {
+                for (Map.Entry<String, String> entry : sort.entrySet()) {
+                    String field = mapping.get(entry.getKey());
+                    String direction = entry.getValue();
+
+                    if ("내림차순".equals(direction)) {
+                        sortOrders.add(Sort.Order.desc(field));
+                    } else {
+                        sortOrders.add(Sort.Order.asc(field));
+                    }
+                }
+            }
         }
 
-        // count query
-        Long total = em.createQuery(countJpql, Long.class)
-            .setParameter("adjustId", adjustId)
-            .setParameter("filterEmpNum", filterEmpNum == null ? null : "%" + filterEmpNum + "%")
-            .setParameter("filterName", filterName == null ? null : "%" + filterName + "%")
-            .setParameter("filterGrade", filterGrade)
-            .setParameter("filterDepartment", filterDepartment)
-            .setParameter("filterRank", filterRank)
-            .getSingleResult();
+        /* 모두 다 같으면 id를 기준으로 정렬되도록 id 조건 마지막에 추가 */
+        sortOrders.add(Sort.Order.desc("asj.id"));
 
-        int totalPages = (int)Math.ceil((double)total / pageSize);
-        int safePageNumber = Math.max(Math.min(pageNumber, totalPages - 1), 0);
+        /* Pageable 객체 생성 */
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(sortOrders));
 
-        // content query
-        List<MainResultDto> mainResultDtos = em.createQuery(contentJpql, MainResultDto.class)
-            .setParameter("adjustId", adjustId)
-            .setParameter("filterEmpNum", filterEmpNum == null ? null : "%" + filterEmpNum + "%")
-            .setParameter("filterName", filterName == null ? null : "%" + filterName + "%")
-            .setParameter("filterGrade", filterGrade)
-            .setParameter("filterDepartment", filterDepartment)
-            .setParameter("filterRank", filterRank)
-            .setFirstResult(safePageNumber * pageSize)
-            .setMaxResults(pageSize)
-            .getResultList();
+        Page<MainResultDto> resultAndPageInfo = adjustSubjectRepository.findResultDtoWithPagination(
+            adjustId,
+            filterEmpNum == null ? null : "%" + filterEmpNum + "%",
+            filterName == null ? null : "%" + filterName + "%",
+            filterGrade,
+            filterDepartment,
+            filterRank,
+            pageable
+        );
 
         Adjust adjust = adjustRepository.findById(adjustId).orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
 
-        List<MainResultResponses.MainResultResponse> responseList = mainResultDtos.stream().map(dto -> {
+        List<MainResultResponses.MainResultResponse> responseList = resultAndPageInfo.getContent().stream().map(dto -> {
             String paybandResult =
                 dto.getStdSalary() == null || dto.getFinalStdSalary() == null ? "미적용" :
                     dto.getStdSalary() > dto.getFinalStdSalary() ? "적용(상한)" :
@@ -513,7 +485,8 @@ public class AdjustSubjectService {
                 .build();
         }).toList();
 
-        return new MainResultResponses(responseList, totalPages, safePageNumber + 1);
+        return new MainResultResponses(responseList, resultAndPageInfo.getTotalPages(),
+            resultAndPageInfo.getNumber() + 1);
     }
 
     public void calculateRepresentativeVal(Long adjInfoId) {
