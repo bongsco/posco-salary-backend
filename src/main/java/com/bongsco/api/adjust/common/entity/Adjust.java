@@ -53,7 +53,7 @@ public class Adjust extends BaseEntity {
     private Integer orderNumber;
 
     @Column
-    private Double hpoSalaryIncrementRateByRank;
+    private Double hpoSalaryIncrementByRank;
 
     @Column
     private Double hpoBonusMultiplier;
