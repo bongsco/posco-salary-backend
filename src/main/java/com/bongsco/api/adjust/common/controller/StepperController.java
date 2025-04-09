@@ -23,7 +23,7 @@ import lombok.RequiredArgsConstructor;
 public class StepperController {
     private final AdjustStepService adjustStepService;
 
-    @Operation(summary = "step 불러오기", description = "stepper에 넣을 정보 불러오기")
+    @Operation(summary = "step 불러오기", description = "stepper 정보 불러오기")
     @GetMapping("/{adjust_id}/get-data")
     public ResponseEntity<StepperResponse> getStepperData(@PathVariable("adjust_id") Long adjustId
     ) {
@@ -42,9 +42,9 @@ public class StepperController {
     @PatchMapping("/{adjust_id}/change_state")
     public ResponseEntity<Void> changeState(@PathVariable("adjust_id") Long adjustId,
         @RequestParam Long AdjustStepId,
-        @RequestParam(required = false, defaultValue = "true") Boolean state
+        @RequestParam(required = false, defaultValue = "true") Boolean isDone
     ) {
-        adjustStepService.changeIsDone(AdjustStepId, state);
+        adjustStepService.changeIsDone(AdjustStepId, isDone);
         return ResponseEntity.noContent().build();
     }
 }

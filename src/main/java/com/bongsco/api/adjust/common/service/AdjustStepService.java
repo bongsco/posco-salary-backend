@@ -46,9 +46,9 @@ public class AdjustStepService {
         adjustStepRepository.saveAll(adjustSteps);
     }
 
-    public void changeIsDone(Long adjustStepId, Boolean state) {
+    public void changeIsDone(Long adjustStepId, Boolean isDone) {
         AdjustStep adjustStep = adjustStepRepository.findById(adjustStepId)
             .orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
-        adjustStepRepository.save(adjustStep.toBuilder().isDone(state).build());
+        adjustStepRepository.save(adjustStep.toBuilder().isDone(isDone).build());
     }
 }
