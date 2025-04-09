@@ -6,6 +6,7 @@ import org.hibernate.annotations.SQLRestriction;
 import com.bongsco.api.common.entity.BaseEntity;
 import com.bongsco.api.employee.entity.Grade;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -17,10 +18,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Getter
-@Builder
+@Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SQLDelete(sql = "UPDATE adjust_grade SET deleted = true WHERE id = ?")
@@ -37,4 +39,9 @@ public class AdjustGrade extends BaseEntity {
     @ManyToOne
     @JoinColumn(name = "adjust_id", nullable = false)
     private Adjust adjust;
+
+    @Column
+    @Builder.Default
+    @Setter
+    private Boolean isActive = false;
 }

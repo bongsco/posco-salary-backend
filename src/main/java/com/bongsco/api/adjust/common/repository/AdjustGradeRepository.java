@@ -9,7 +9,12 @@ import org.springframework.data.repository.query.Param;
 
 import com.bongsco.api.adjust.common.entity.AdjustGrade;
 public interface AdjustGradeRepository extends JpaRepository<AdjustGrade, Long> {
-    List<AdjustGrade> findByAdjustId(Long adjustId);
+    @Query("""
+            SELECT ag FROM AdjustGrade ag
+            JOIN FETCH ag.grade
+            WHERE ag.adjust.id = :adjustId
+        """)
+    List<AdjustGrade> findByAdjustId(@Param("adjustId") Long adjustId);
 
     @Query("""
             SELECT a FROM AdjustGrade a
@@ -17,4 +22,6 @@ public interface AdjustGradeRepository extends JpaRepository<AdjustGrade, Long> 
               AND a.grade.id = :gradeId
         """)
     Optional<AdjustGrade> findByAdjustIdAndGradeId(@Param("adjustId") Long adjustId, @Param("gradeId") Long gradeId);
+
+    List<AdjustGrade> findByAdjustIdAndIsActive(Long adjustId, boolean isActive);
 }

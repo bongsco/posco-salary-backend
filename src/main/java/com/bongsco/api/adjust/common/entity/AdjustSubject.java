@@ -1,6 +1,7 @@
 package com.bongsco.api.adjust.common.entity;
 
 import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import com.bongsco.api.common.entity.BaseEntity;
 import com.bongsco.api.employee.entity.Employee;
@@ -26,6 +27,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SQLDelete(sql = "UPDATE adjust_subject SET deleted = true WHERE id = ?")
+@SQLRestriction("deleted = false")
 public class AdjustSubject extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

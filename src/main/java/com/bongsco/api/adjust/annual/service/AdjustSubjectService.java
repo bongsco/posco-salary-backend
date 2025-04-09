@@ -21,7 +21,7 @@ import com.bongsco.api.adjust.annual.dto.response.MainAdjPaybandBothSubjectsResp
 import com.bongsco.api.adjust.annual.dto.response.PreprocessAdjSubjectsResponse;
 import com.bongsco.api.adjust.annual.entity.PaybandCriteria;
 import com.bongsco.api.adjust.annual.repository.PaybandCriteriaRepository;
-import com.bongsco.api.adjust.annual.repository.SalaryIncrementRateByRankRepository;
+import com.bongsco.api.adjust.annual.repository.SalaryIncrementByRankRepository;
 import com.bongsco.api.adjust.common.dto.AdjSubjectSalaryDto;
 import com.bongsco.api.adjust.common.entity.Adjust;
 import com.bongsco.api.adjust.common.entity.AdjustSubject;
@@ -41,7 +41,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 public class AdjustSubjectService {
     private final AdjustSubjectRepository adjustSubjectRepository;
-    private final SalaryIncrementRateByRankRepository salaryIncrementRateByRankRepository;
+    private final SalaryIncrementByRankRepository salaryIncrementByRankRepository;
     private final PaybandCriteriaRepository paybandCriteriaRepository;
     private final EmployeeRepository employeeRepository;
     private final AdjustRepository adjustRepository;
@@ -72,34 +72,18 @@ public class AdjustSubjectService {
         }
     }
 
-    public List<EmployeeResponse> findAll(Long adjInfoId) {
-        // 연봉조정차수를 이용해 정기연봉조정대상자 테이블 가져오기
-        List<AdjustSubject> subjects = adjustSubjectRepository.findByAdjustId(adjInfoId);
-
-        return subjects.stream()
-            .filter(adjustSubject -> !adjustSubject.getDeleted())
-            .map(EmployeeResponse::from)
-            .toList();
-    }
-
-    public List<EmployeeResponse> findBySearchKey(Long adjInfoId, String searchKey) {
-        // 연봉조정차수&검색정보를 이용해 정기연봉조정대상자 테이블 가져오기
-        List<AdjustSubject> subjects = adjustSubjectRepository.findByAdjustIdAndEmployeeName(adjInfoId, searchKey);
-
-        return subjects.stream()
-            .filter(adjustSubject -> !adjustSubject.getDeleted())
-            .map(EmployeeResponse::from)
-            .toList();
+    public List<EmployeeResponse> findAll(Long adjustId) {
+        return adjustSubjectRepository.findAllEmployeeResponsesByAdjustInfoId(adjustId);
     }
 
     @Transactional
     public void updateSubjectUseEmployee(
-        Long adjInfoId,
+        Long adjustId,
         ChangedSubjectUseEmployeeRequest changedSubjectUseEmployeeRequest
     ) {
         changedSubjectUseEmployeeRequest.getChangedSubjectUseEmployee()
             .forEach(changedSubjectUseEmployee -> {
-                AdjustSubject adjustSubject = adjustSubjectRepository.findByAdjustIdAndEmployeeId(adjInfoId,
+                AdjustSubject adjustSubject = adjustSubjectRepository.findByAdjustIdAndEmployeeId(adjustId,
                         changedSubjectUseEmployee.getEmployeeId())
                     .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
                 AdjustSubject saveAdjustSubject = adjustSubject
@@ -434,7 +418,7 @@ public class AdjustSubjectService {
                 employee.getHireDate(), employee.getEmploymentType()
                 .getName(), employee.getDepartment().getName(), employee.getPositionName(),
                 adjustSubject.getGrade().getName(), employee.getPositionArea(),
-                adjust.getHpoSalaryIncrementRateByRank(), adjust.getHpoBonusMultiplier(),
+                adjust.getHpoSalaryIncrementByRank(), adjust.getHpoBonusMultiplier(),
                 paybandCriteria != null ? paybandCriteria.getUpperBound() : null,
                 paybandCriteria != null ? paybandCriteria.getLowerBound() : null, adjustSubject.getStdSalary(),
                 beforeAdjustSubject.getAdjust().getYear(), beforeAdjustSubject.getAdjust().getOrderNumber(),

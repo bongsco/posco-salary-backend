@@ -3,6 +3,7 @@ package com.bongsco.api.adjust.common.entity;
 import java.time.LocalDate;
 
 import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import com.bongsco.api.adjust.common.domain.AdjustType;
 import com.bongsco.api.common.entity.BaseEntity;
@@ -26,6 +27,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SQLDelete(sql = "UPDATE adjust SET deleted = true WHERE id = ?")
+@SQLRestriction("deleted = false")
 public class Adjust extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -51,7 +53,7 @@ public class Adjust extends BaseEntity {
     private Integer orderNumber;
 
     @Column
-    private Double hpoSalaryIncrementRateByRank;
+    private Double hpoSalaryIncrementByRank;
 
     @Column
     private Double hpoBonusMultiplier;
