@@ -26,6 +26,7 @@ import com.bongsco.api.adjust.annual.repository.PaybandCriteriaRepository;
 import com.bongsco.api.adjust.annual.repository.SalaryIncrementByRankRepository;
 import com.bongsco.api.adjust.common.entity.Adjust;
 import com.bongsco.api.adjust.common.entity.AdjustSubject;
+import com.bongsco.api.adjust.common.entity.PaybandAppliedType;
 import com.bongsco.api.adjust.common.entity.RepresentativeSalary;
 import com.bongsco.api.adjust.common.repository.AdjustRepository;
 import com.bongsco.api.adjust.common.repository.AdjustSubjectRepository;
@@ -200,23 +201,22 @@ public class AdjustSubjectService {
             Double stdSalary = Optional.ofNullable(adjustSubject.getStdSalary()).orElse(0.0);
             Double finalStdSalary = stdSalary; // 기본값은 그대로
 
-            if (Boolean.TRUE.equals(request.getIsPaybandApplied())) {
-                Long adjustId = adjustSubject.getAdjust().getId();
-                Long gradeId = adjustSubject.getGrade().getId();
+            Long adjustId = adjustSubject.getAdjust().getId();
+            Long gradeId = adjustSubject.getGrade().getId();
 
-                // limit 정보 조회 (상한/하한)
-                PaybandCriteriaRepository.PaybandLimitInfo limitInfo =
-                    paybandCriteriaRepository.findLimitInfo(adjustId, gradeId).orElse(null);
+            // limit 정보 조회 (상한/하한)
+            PaybandCriteriaRepository.PaybandLimitInfo limitInfo =
+                paybandCriteriaRepository.findLimitInfo(adjustId, gradeId).orElse(null);
 
-                if (limitInfo != null) {
-                    Double upperLimit = Optional.ofNullable(limitInfo.getUpperLimit()).orElse(Double.MAX_VALUE);
-                    Double lowerLimit = Optional.ofNullable(limitInfo.getLowerLimit()).orElse(Double.MIN_VALUE);
+            if (limitInfo != null) {
+                Double upperLimit = Optional.ofNullable(limitInfo.getUpperLimit()).orElse(Double.MAX_VALUE);
+                Double lowerLimit = Optional.ofNullable(limitInfo.getLowerLimit()).orElse(Double.MIN_VALUE);
 
-                    if (stdSalary > upperLimit) {
-                        finalStdSalary = upperLimit;
-                    } else if (stdSalary < lowerLimit) {
-                        finalStdSalary = lowerLimit;
-                    }
+                // Enum 타입에 따라 처리
+                if (request.getIsPaybandApplied() == PaybandAppliedType.UPPER & stdSalary > upperLimit) {
+                    finalStdSalary = upperLimit;
+                } else if (request.getIsPaybandApplied() == PaybandAppliedType.LOWER & stdSalary < lowerLimit) {
+                    finalStdSalary = lowerLimit;
                 }
             }
 

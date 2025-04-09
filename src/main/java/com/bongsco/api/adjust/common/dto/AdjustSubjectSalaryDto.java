@@ -1,5 +1,7 @@
 package com.bongsco.api.adjust.common.dto;
 
+import com.bongsco.api.adjust.common.entity.PaybandAppliedType;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,7 +17,7 @@ public class AdjustSubjectSalaryDto {
     private Long employeeId;
     private Double stdSalary;
     private Double finalStdSalary;
-    private Boolean isPaybandApplied;
+    private PaybandAppliedType isPaybandApplied;
     private Long gradeId;
     private String empNum;
     private String name;

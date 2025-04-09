@@ -3,6 +3,7 @@ package com.bongsco.api.adjust.annual.dto.response;
 import java.util.List;
 
 import com.bongsco.api.adjust.common.dto.AdjustSubjectSalaryDto;
+import com.bongsco.api.adjust.common.entity.PaybandAppliedType;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -32,7 +33,7 @@ public class PaybandSubjectResponse {
         private String rankCode;
         private Double stdSalary;
         private Double limitPrice;
-        private Boolean isPaybandApplied;
+        private PaybandAppliedType isPaybandApplied;
 
         public static MainAdjustPaybandSubjectsResponse from(AdjustSubjectSalaryDto dto) {
             double limitPrice = dto.getBaseSalary() * (dto.getBoundPercent() / 100.0);
