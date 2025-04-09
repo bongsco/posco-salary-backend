@@ -32,29 +32,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
         """
     )
     List<AdjustSubject> findByAdjustIdAndSearchKey(Long adjustId, String searchKey);
-
-    // @Query("""
-    //     SELECT new com.bongsco.api.adjust.annual.dto.MainResultDto(e.empNum, e.name, g.name, e.positionName, d.name, r.name, e.stdSalaryIncrementRate, asj.finalStdSalary, asj.stdSalary, asj.hpoBonus, e.id, asj.id)
-    //     FROM AdjustSubject asj
-    //     JOIN Employee e ON e.id = asj.employee.id
-    //     JOIN Grade g ON g.id = e.grade.id
-    //     JOIN Department d ON d.id = e.department.id
-    //     JOIN Rank r ON r.id = e.rank.id
-    //     WHERE asj.adjust.id = :adjustId
-    //         AND (:filterEmpNum IS NULL OR e.empNum LIKE %:filterEmpNum%)
-    //         AND (:filterName IS NULL OR e.name LIKE %:filterName%)
-    //         AND (:filterGrade IS NULL OR g.name = :filterGrade)
-    //         AND (:filterDepartment IS NULL OR d.name = :filterDepartment)
-    //         AND (:filterRank IS NULL OR r.name = :filterRank)
-    //     """
-    // )
-    // List<AdjustSubject> findFilteredSortedResultByAdjustId(Long adjustId,
-    //     @Param("filterEmpNum") String filterEmpNum,
-    //     @Param("filterName") String filterName,
-    //     @Param("filterGrade") String filterGrade,
-    //     @Param("filterDepartment") String filterDepartment,
-    //     @Param("filterRank") String filterRank);
-
+    
     @Query("""
         SELECT asj
         FROM AdjustSubject asj

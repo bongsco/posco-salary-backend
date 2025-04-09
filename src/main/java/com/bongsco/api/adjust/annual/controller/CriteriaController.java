@@ -70,6 +70,7 @@ public class CriteriaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(request);
     }
 
+    // TODO("Correct return type and logic")
     @GetMapping("/{adj_info_id}/payband")
     public ResponseEntity<PaybandCriteriaConfigListResponse> getPaybandCriteria(
         @PathVariable(name = "adj_info_id") Long adjInfoId) {
@@ -77,6 +78,7 @@ public class CriteriaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(criteriaService.getPaybandCriteria(adjInfoId));
     }
 
+    // TODO("Correct return type and logic")
     @PatchMapping("/{adj_info_id}/payband")
     public ResponseEntity<String> updatePaybandCriteria(
         @Valid @RequestBody PaybandCriteriaModifyRequest request) {

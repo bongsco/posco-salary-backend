@@ -4,6 +4,7 @@ import static com.bongsco.api.adjust.common.util.ParseSorts.*;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,9 +25,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
 @Tag(name = "MainAdjAPI", description = "Department 관련 API 모음")
+@Validated
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/adjust/{adjustId}/main")
@@ -102,8 +105,8 @@ public class MainAdjustController {
         @RequestParam(value = "filterDepartment", required = false) String filterDepartment,
         @RequestParam(value = "filterRank", required = false) String filterRank,
         @RequestParam(value = "sorts", required = false) String sorts,
-        @RequestParam(value = "pageNumber", required = false) Integer pageNumber,
-        @RequestParam(value = "pageSize", required = false) Integer pageSize
+        @RequestParam(value = "pageNumber", required = false, defaultValue = "1") @Min(1) Integer pageNumber,
+        @RequestParam(value = "pageSize", required = false, defaultValue = "5") Integer pageSize
 
     ) throws JsonProcessingException {
 

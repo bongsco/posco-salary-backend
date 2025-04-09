@@ -9,8 +9,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -419,10 +417,12 @@ public class AdjustSubjectService {
             """;
 
         // Content JPQL
-        String contentJpql = "SELECT new com.bongsco.api.adjust.annual.dto.MainResultDto(" +
-            "e.empNum, e.name, g.name, e.positionName, d.name, r.code, " +
-            "e.stdSalaryIncrementRate, asj.finalStdSalary, asj.stdSalary, " +
-            "asj.hpoBonus, asj.isInHpo, e.id, asj.id, g.id, r.id) " + baseQuery;
+        String contentJpql = """
+            SELECT new com.bongsco.api.adjust.annual.dto.MainResultDto(
+            e.empNum, e.name, g.name, e.positionName, d.name, r.code, 
+            e.stdSalaryIncrementRate, asj.finalStdSalary, asj.stdSalary, 
+            asj.hpoBonus, asj.isInHpo, e.id, asj.id, g.id, r.id) 
+            """ + baseQuery;
 
         // Count JPQL
         String countJpql = "SELECT COUNT(asj.id) " + baseQuery;
@@ -451,8 +451,6 @@ public class AdjustSubjectService {
 
         int totalPages = (int)Math.ceil((double)total / pageSize);
         int safePageNumber = Math.max(Math.min(pageNumber, totalPages - 1), 0);
-        
-        Pageable pageable = PageRequest.of(safePageNumber, pageSize);
 
         // content query
         List<MainResultDto> mainResultDtos = em.createQuery(contentJpql, MainResultDto.class)
@@ -462,8 +460,8 @@ public class AdjustSubjectService {
             .setParameter("filterGrade", filterGrade)
             .setParameter("filterDepartment", filterDepartment)
             .setParameter("filterRank", filterRank)
-            .setFirstResult((int)pageable.getOffset())
-            .setMaxResults(pageable.getPageSize())
+            .setFirstResult(safePageNumber * pageSize)
+            .setMaxResults(pageSize)
             .getResultList();
 
         Adjust adjust = adjustRepository.findById(adjustId).orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
