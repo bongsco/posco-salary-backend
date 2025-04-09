@@ -22,6 +22,8 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
     )
     List<AdjustSubject> findByAdjustId(Long adjustId);
 
+    List<AdjustSubject> findByAdjust_IdAndIsSubjectTrue(Long adjustId);
+
     @Query("""
         SELECT asj
         FROM AdjustSubject asj

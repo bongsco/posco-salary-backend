@@ -288,17 +288,14 @@ public class AdjustSubjectService {
         return getAdjLowerPaybandSubjectsResponses(adjSubjectSalaryDtos);
     }
 
-    public void calculateSalary(Long adjInfoId) {
-        // List<AdjustSubject> adjustSubjects = adjustSubjectRepository.findByAdjustId(adjInfoId)
-        //     .stream()
-        //     .filter(adjustSubject -> !adjustSubject.getDeleted())
-        //     .filter(AdjustSubject::getIsSubject)
-        //     .toList();
+    public void calculateSalary(Long adjustId) {
+        // List<AdjustSubject> adjustSubjects = adjustSubjectRepository.findByAdjust_IdAndIsSubjectTrue(adjustId);
         //
-        // Adjust adjust = adjustRepository.findById(adjInfoId)
+        // Adjust adjust = adjustRepository.findById(adjustId)
         //     .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
-        // Double evalAnnualSalaryIncrement =
-        //     Optional.ofNullable(adjust.getHpoSalaryIncrementRateByRank()).orElse(0.0) / 100;
+        //
+        // Double hpoSalaryIncrementByRank =
+        //     Optional.ofNullable(adjust.getHpoSalaryIncrementByRank()).orElse(0.0) / 100;
         // //5%일때 5로 들어간다는 전제하에 이렇게 해놓음
         //
         // adjustSubjects.stream().forEach(adjustSubject -> {

@@ -73,25 +73,25 @@ public class MainAdjustController {
     }
 
     @Operation(summary = "기준 연봉 계산", description = "사전 작업에서 입력한 내용을 기준으로 일괄적으로 기준 연봉 계산, payband 넘어가기전에 넣어줘야함")
-    @PatchMapping("/{adj_info_id}/calculate-salary")
-    public ResponseEntity<Void> calculateSalary(@PathVariable("adj_info_id") Long adjInfoId
+    @PatchMapping("/calculate-salary")
+    public ResponseEntity<Void> calculateSalary(@PathVariable("adjustId") Long adjustId
     ) {
-        adjSubjectService.calculateSalary(adjInfoId);
+        adjSubjectService.calculateSalary(adjustId);
         return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "성과금 계산", description = "사전 작업에서 입력한 내용을 기준으로 일괄적으로 성과금 계산, payband 넘어가기전에 넣어줘야함")
-    @PatchMapping("/{adj_info_id}/calculate-add-payment")
-    public ResponseEntity<Void> calculateAddPayment(@PathVariable("adj_info_id") Long adjInfoId
+    @PatchMapping("/calculate-add-payment")
+    public ResponseEntity<Void> calculateAddPayment(@PathVariable("adjustId") Long adjustId
     ) {
-        adjSubjectService.calculateAddPayment(adjInfoId);
+        adjSubjectService.calculateAddPayment(adjustId);
         return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "기준연봉 인상률 변경", description = "payband가 반영되어서 최종 연봉이 나왔을 때 인상률이 바뀜")
-    @PatchMapping("/{adj_info_id}/increment-rate")
-    public ResponseEntity<Void> incrementRate(@PathVariable("adj_info_id") Long adjInfoId) {
-        adjSubjectService.changeIncrementRate(adjInfoId);
+    @PatchMapping("/increment-rate")
+    public ResponseEntity<Void> incrementRate(@PathVariable("adjustId") Long adjustId) {
+        adjSubjectService.changeIncrementRate(adjustId);
         return ResponseEntity.noContent().build();
     }
 
