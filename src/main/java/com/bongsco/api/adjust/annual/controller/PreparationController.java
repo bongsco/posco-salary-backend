@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.bongsco.api.adjust.annual.dto.request.ChangedHighPerformGroupEmployeeRequest;
 import com.bongsco.api.adjust.annual.dto.request.ChangedSubjectUseEmployeeRequest;
 import com.bongsco.api.adjust.annual.dto.response.EmployeeResponse;
-import com.bongsco.api.adjust.annual.dto.response.HighPerformanceTableResponse;
+import com.bongsco.api.adjust.annual.dto.response.HpoEmployeesResponse;
 import com.bongsco.api.adjust.annual.service.AdjustSubjectService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -50,22 +50,22 @@ public class PreparationController {
     }
 
     @Operation(summary = "고성과조직 가산 여부 페이지 GET API", description = "고성과조직 가산 여부 테이블 조회")
-    @GetMapping("/{adj_info_id}/high-performance")
-    public ResponseEntity<HighPerformanceTableResponse> getCompensationTable(
-        @PathVariable("adj_info_id") Long adjInfoId
+    @GetMapping("/high-performance")
+    public ResponseEntity<HpoEmployeesResponse> getCompensationTable(
+        @PathVariable("adjustId") Long adjustId
     ) {
 
         return ResponseEntity.status(HttpStatus.OK)
-            .body(adjSubjectService.findHighPerformanceTable(adjInfoId));
+            .body(adjSubjectService.findHpoEmployees(adjustId));
     }
 
     @Operation(summary = "고성과조직 가산 여부 페이지 PATCH API", description = "고성과조직 가산 여부 업데이트")
-    @PatchMapping("/{adj_info_id}/high-performance")
+    @PatchMapping("/high-performance")
     public ResponseEntity<Void> updateHighPerformGroupEmployees(
-        @PathVariable("adj_info_id") Long adjInfoId,
+        @PathVariable("adjustId") Long adjustId,
         @Valid @RequestBody ChangedHighPerformGroupEmployeeRequest changedHighPerformGroupEmployeeRequest
     ) {
-        adjSubjectService.updateHighPerformGroupEmployee(adjInfoId, changedHighPerformGroupEmployeeRequest);
+        adjSubjectService.updateHighPerformGroupEmployee(adjustId, changedHighPerformGroupEmployeeRequest);
 
         return ResponseEntity.noContent().build();
     }
