@@ -3,6 +3,7 @@ package com.bongsco.api.adjust.common.service;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.bongsco.api.adjust.common.dto.response.StepperResponse;
 import com.bongsco.api.adjust.common.entity.Adjust;
@@ -29,6 +30,7 @@ public class AdjustStepService {
         return StepperResponse.from(adjustSteps);
     }
 
+    @Transactional
     public void initializeSteps(Long adjustId) {
         Adjust adjust = adjustRepository.findById(adjustId)
             .orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
@@ -46,6 +48,7 @@ public class AdjustStepService {
         adjustStepRepository.saveAll(adjustSteps);
     }
 
+    @Transactional
     public void changeIsDone(Long adjustStepId, Boolean isDone) {
         AdjustStep adjustStep = adjustStepRepository.findById(adjustStepId)
             .orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
