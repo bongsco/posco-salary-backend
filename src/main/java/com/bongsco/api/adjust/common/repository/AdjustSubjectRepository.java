@@ -193,6 +193,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
                 JOIN AdjustGrade ag ON ag.adjust.id = asj.adjust.id AND ag.grade.id = g.id
                 JOIN SalaryIncrementByRank s ON s.adjustGrade.id = ag.id AND s.rank.id = r.id
             WHERE asj.adjust.id = :adjustId
+                AND asj.isSubject = true
                 AND e.empNum LIKE COALESCE(:filterEmpNum, e.empNum)
                 AND e.name LIKE COALESCE(:filterName, e.name)
                 AND g.name = COALESCE(:filterGrade, g.name)
@@ -209,6 +210,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
                 JOIN AdjustGrade ag ON ag.adjust.id = asj.adjust.id AND ag.grade.id = g.id
                 JOIN SalaryIncrementByRank s ON s.adjustGrade.id = ag.id AND s.rank.id = r.id
             WHERE asj.adjust.id = :adjustId
+                AND asj.isSubject = true
                 AND e.empNum LIKE COALESCE(:filterEmpNum, e.empNum)
                 AND e.name LIKE COALESCE(:filterName, e.name)
                 AND g.name = COALESCE(:filterGrade, g.name)
