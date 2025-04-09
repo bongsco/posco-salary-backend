@@ -2,6 +2,7 @@ package com.bongsco.api.adjust.common.repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -190,4 +191,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
             WHERE s.adjust.id = :adjustId
         """)
     List<EmployeeResponse> findAllEmployeeResponsesByAdjustInfoId(@Param("adjustId") Long adjustId);
+
+    @Query("SELECT s.employee.id FROM AdjustSubject s WHERE s.adjust.id = :adjustId")
+    Set<Long> findEmployeeIdsByAdjustId(@Param("adjustId") Long adjustId);
 }
