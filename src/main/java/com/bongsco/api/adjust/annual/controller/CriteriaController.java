@@ -18,6 +18,7 @@ import com.bongsco.api.adjust.annual.dto.request.PaymentRateUpdateRequest;
 import com.bongsco.api.adjust.annual.dto.request.SubjectCriteriaRequest;
 import com.bongsco.api.adjust.annual.dto.response.PaybandCriteriaConfigListResponse;
 import com.bongsco.api.adjust.annual.dto.response.PaymentRateResponse;
+import com.bongsco.api.adjust.annual.dto.response.PaymentRateUpdateResponse;
 import com.bongsco.api.adjust.annual.dto.response.SubjectCriteriaResponse;
 import com.bongsco.api.adjust.annual.entity.PaybandCriteria;
 import com.bongsco.api.adjust.annual.service.CriteriaService;
@@ -53,7 +54,7 @@ public class CriteriaController {
         return ResponseEntity.ok(res);
     }
 
-    @GetMapping("/paymentRate")
+    @GetMapping("/paymentrate")
     public ResponseEntity<?> getPaymentRate(
         @PathVariable Long adjustId,
         @RequestParam List<String> gradeList
@@ -65,16 +66,13 @@ public class CriteriaController {
         ));
     }
 
-    @PatchMapping("/paymentRate")
+    @PatchMapping("/paymentrate")
     public ResponseEntity<?> updatePaymentRate(
         @PathVariable Long adjustId,
-        @RequestBody PaymentRateUpdateRequest request
+        @Valid @RequestBody PaymentRateUpdateRequest request
     ) {
         List<String> updatedGrades = criteriaService.updatePaymentRate(adjustId, request);
-        return ResponseEntity.ok(Map.of(
-            "message", "HPO and rank rate updated successfully",
-            "updatedGrades", updatedGrades
-        ));
+        return ResponseEntity.ok(new PaymentRateUpdateResponse(updatedGrades));
     }
 
     // TODO("Correct return type and logic")

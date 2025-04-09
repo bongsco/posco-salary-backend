@@ -198,31 +198,29 @@ public class CriteriaService {
         return PaymentRateResponse.builder()
             .hpoSalaryIncrementRate(adjust.getHpoSalaryIncrementRateByRank())
             .hpoExtraBonusMultiplier(adjust.getHpoBonusMultiplier())
-            .rank_rate(rankRateMap)
+            .paymentRates(rankRateMap)
             .build();
     }
 
     @Transactional
     public List<String> updatePaymentRate(Long adjustId, PaymentRateUpdateRequest request) {
-        // 기존 adjust 조회
         Adjust existingAdjust = adjustRepository.findById(adjustId)
             .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
 
-        // 기존 adjust 기반으로 새로운 Adjust 객체 생성
         Adjust updatedAdjust = existingAdjust.toBuilder()
             .id(adjustId)
             .hpoSalaryIncrementRateByRank(request.getHpoSalaryIncrementRate())
             .hpoBonusMultiplier(request.getHpoExtraBonusMultiplier())
             .build();
 
-        // 새로운 Adjust 저장
         adjustRepository.save(updatedAdjust);
 
         List<String> updatedGrades = new ArrayList<>();
+        List<SalaryIncrementByRank> entitiesToSave = new ArrayList<>();
 
-        for (Map.Entry<String, Map<String, PaymentRateUpdateRequest.PaymentRateValue>> gradeEntry : request.getRank_rate()
+        for (Map.Entry<String, Map<String, PaymentRateUpdateRequest.PaymentRateValue>> gradeEntry : request.getPaymentRates()
             .entrySet()) {
-            String gradeName = gradeEntry.getKey(); // P1
+            String gradeName = gradeEntry.getKey();
 
             Grade grade = gradeRepository.findByName(gradeName)
                 .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
@@ -232,7 +230,7 @@ public class CriteriaService {
 
             for (Map.Entry<String, PaymentRateUpdateRequest.PaymentRateValue> evalEntry : gradeEntry.getValue()
                 .entrySet()) {
-                String evalCode = evalEntry.getKey(); // S, A, ...
+                String evalCode = evalEntry.getKey();
                 Rank rank = rankRepository.findByCode(evalCode)
                     .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
 
@@ -251,11 +249,13 @@ public class CriteriaService {
                     .bonusMultiplier(values.getBonusMultiplier())
                     .build();
 
-                salaryIncrementRateByRankRepository.save(entity);
+                entitiesToSave.add(entity);
             }
 
             updatedGrades.add(gradeName);
         }
+
+        salaryIncrementRateByRankRepository.saveAll(entitiesToSave);
 
         return updatedGrades;
     }

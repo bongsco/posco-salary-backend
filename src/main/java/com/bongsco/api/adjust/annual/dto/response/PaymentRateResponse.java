@@ -15,5 +15,5 @@ import lombok.Getter;
 public class PaymentRateResponse {
     private Double hpoSalaryIncrementRate;
     private Double hpoExtraBonusMultiplier;
-    private Map<String, Map<String, PaymentRateDto>> rank_rate;
+    private Map<String, Map<String, PaymentRateDto>> paymentRates;
 }
