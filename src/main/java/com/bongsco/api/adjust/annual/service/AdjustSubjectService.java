@@ -4,7 +4,6 @@ import static com.bongsco.api.common.exception.ErrorCode.*;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -31,7 +30,6 @@ import com.bongsco.api.adjust.common.repository.AdjustSubjectRepository;
 import com.bongsco.api.adjust.common.repository.RepresentativeSalaryRepository;
 import com.bongsco.api.common.exception.CustomException;
 import com.bongsco.api.employee.entity.Employee;
-import com.bongsco.api.employee.entity.Grade;
 import com.bongsco.api.employee.repository.EmployeeRepository;
 import com.bongsco.api.employee.repository.GradeRepository;
 
@@ -448,39 +446,6 @@ public class AdjustSubjectService {
                 Optional.ofNullable(adjustSubject.getFinalStdSalary()).orElse(0.0) + Optional.ofNullable(
                     adjustSubject.getHpoBonus()).orElse(0.0));
         }).toList());
-    }
-
-    public void calculateRepresentativeVal(Long adjInfoId) {
-        List<AdjustSubject> adjustSubjects = adjustSubjectRepository.findByAdjustId(adjInfoId)
-            .stream()
-            .filter(adjustSubject -> !adjustSubject.getDeleted())
-            .filter(AdjustSubject::getIsSubject)
-            .toList();
-
-        Adjust adjust = adjustRepository.findById(adjInfoId)
-            .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
-        List<Grade> grades = gradeRepository.findAll();
-        Map<Long, Double> representativeVal = adjustSubjects.stream()
-            .filter(adjustSubject -> !adjustSubject.getDeleted())
-            .filter(adjustSubject -> adjustSubject.getFinalStdSalary() != null) //gradeId:대표값
-            .collect(Collectors.groupingBy(
-                s -> s.getGrade().getId(), // 1차 그룹화 (gradeId 기준)
-                Collectors.collectingAndThen(
-                    Collectors.toList(),
-                    AdjustSubjectService::calculateMedian // 상위 5% 제외 후 중간값
-                )
-            ));
-
-        representativeVal.entrySet().forEach(val -> {
-            representativeSalaryRepository.save(RepresentativeSalary.builder()
-                .adjust(adjust)
-                .grade(grades.stream()
-                    .filter(grade -> Objects.equals(grade.getId(), val.getKey()))
-                    .findFirst()
-                    .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND)))
-                .representativeVal(val.getValue())
-                .build());
-        });
     }
 
     public void changeIncrementRate(Long adjInfoId) {
