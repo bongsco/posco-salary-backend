@@ -15,15 +15,6 @@ import com.bongsco.api.employee.entity.Employee;
 public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
     @Query("""
-            SELECT e FROM Employee e
-            JOIN FETCH e.grade
-            JOIN FETCH e.employmentType
-            WHERE e.grade.id IN :gradeIds AND e.employmentType.id IN :employmentTypeIds
-        """)
-    List<Employee> findWithJoinByGradeIdsAndEmploymentTypeIds(@Param("gradeIds") Set<Long> gradeIds,
-        @Param("employmentTypeIds") Set<Long> employmentTypeIds);
-
-    @Query("""
             SELECT new com.bongsco.api.adjust.annual.dto.response.EmployeeSimple(e.id, e.grade, e.rank)
             FROM Employee e
             WHERE e.grade.id IN :gradeIds AND e.employmentType.id IN :employmentTypeIds
