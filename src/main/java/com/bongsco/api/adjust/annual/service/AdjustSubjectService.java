@@ -20,12 +20,10 @@ import com.bongsco.api.adjust.annual.dto.response.EmployeeResponse;
 import com.bongsco.api.adjust.annual.dto.response.MainAdjPaybandBothSubjectsResponse;
 import com.bongsco.api.adjust.annual.dto.response.MainResultResponses;
 import com.bongsco.api.adjust.annual.dto.response.PreprocessAdjSubjectsResponse;
-import com.bongsco.api.adjust.annual.entity.SalaryIncrementByRank;
 import com.bongsco.api.adjust.annual.repository.PaybandCriteriaRepository;
 import com.bongsco.api.adjust.annual.repository.SalaryIncrementByRankRepository;
 import com.bongsco.api.adjust.common.dto.AdjSubjectSalaryDto;
 import com.bongsco.api.adjust.common.entity.Adjust;
-import com.bongsco.api.adjust.common.entity.AdjustGrade;
 import com.bongsco.api.adjust.common.entity.AdjustSubject;
 import com.bongsco.api.adjust.common.entity.RepresentativeSalary;
 import com.bongsco.api.adjust.common.repository.AdjustGradeRepository;
@@ -408,6 +406,8 @@ public class AdjustSubjectService {
                 JOIN Grade g ON g.id = asj.grade.id
                 JOIN Department d ON d.id = e.department.id
                 JOIN Rank r ON r.id = asj.rank.id
+                JOIN AdjustGrade ag ON ag.adjust.id = asj.adjust.id AND ag.grade.id = g.id
+                JOIN SalaryIncrementByRank s ON s.adjustGrade.id = ag.id AND s.rank.id = r.id
                 WHERE asj.adjust.id = :adjustId
                     AND e.empNum LIKE COALESCE(:filterEmpNum, e.empNum)
                     AND e.name LIKE COALESCE(:filterName, e.name)
@@ -421,7 +421,7 @@ public class AdjustSubjectService {
             SELECT new com.bongsco.api.adjust.annual.dto.MainResultDto(
             e.empNum, e.name, g.name, e.positionName, d.name, r.code, 
             e.stdSalaryIncrementRate, asj.finalStdSalary, asj.stdSalary, 
-            asj.hpoBonus, asj.isInHpo, e.id, asj.id, g.id, r.id) 
+            asj.hpoBonus, asj.isInHpo, e.id, asj.id, g.id, r.id, ag.id, s.bonusMultiplier, s.salaryIncrementRate) 
             """ + baseQuery;
 
         // Count JPQL
@@ -465,7 +465,6 @@ public class AdjustSubjectService {
             .getResultList();
 
         Adjust adjust = adjustRepository.findById(adjustId).orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
-        List<AdjustGrade> adjustGrades = adjustGradeRepository.findByAdjustId(adjustId);
 
         List<MainResultResponses.MainResultResponse> responseList = mainResultDtos.stream().map(dto -> {
             String paybandResult =
@@ -474,17 +473,8 @@ public class AdjustSubjectService {
                         dto.getStdSalary() < dto.getFinalStdSalary() ? "적용(하한)" :
                             "미적용";
 
-            AdjustGrade adjustGrade = adjustGrades.stream()
-                .filter(a -> a.getGrade().getId() == dto.getGradeId())
-                .findFirst().orElse(null);
-
-            SalaryIncrementByRank salaryIncrementByRank = salaryIncrementByRankRepository
-                .findByRankIdAndAdjustGradeId(dto.getRankId(), adjustGrade.getId())
-                .orElse(null);
-
-            Double bonusMultiplier = salaryIncrementByRank != null ? salaryIncrementByRank.getBonusMultiplier() : 0.0;
-            Double salaryIncrementRate =
-                salaryIncrementByRank != null ? salaryIncrementByRank.getSalaryIncrementRate() : 0.0;
+            Double bonusMultiplier = Optional.ofNullable(dto.getBonusMultiplier()).orElse(0.0);
+            Double salaryIncrementRate = Optional.ofNullable(dto.getSalaryIncrementRate()).orElse(0.0);
 
             if (dto.getIsInHpo() != null && dto.getIsInHpo()) {
                 bonusMultiplier += Optional.ofNullable(adjust.getHpoBonusMultiplier()).orElse(0.0);

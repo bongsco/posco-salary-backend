@@ -26,4 +26,7 @@ public class MainResultDto {
     private Long adjustSubjectId;
     private Long gradeId;
     private Long rankId;
+    private Long adjustGradeId;
+    private Double bonusMultiplier;
+    private Double salaryIncrementRate;
 }
