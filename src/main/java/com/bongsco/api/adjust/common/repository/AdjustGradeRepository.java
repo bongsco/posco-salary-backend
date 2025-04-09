@@ -14,4 +14,6 @@ public interface AdjustGradeRepository extends JpaRepository<AdjustGrade, Long> 
             WHERE ag.adjust.id = :adjustId
         """)
     List<AdjustGrade> findByAdjustId(@Param("adjustId") Long adjustId);
+
+    List<AdjustGrade> findByAdjustIdAndIsActive(Long adjustId, boolean isActive);
 }

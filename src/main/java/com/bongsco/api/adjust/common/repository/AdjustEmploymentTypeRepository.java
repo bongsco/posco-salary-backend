@@ -14,4 +14,6 @@ public interface AdjustEmploymentTypeRepository extends JpaRepository<AdjustEmpl
             WHERE ae.adjust.id = :adjustId
         """)
     List<AdjustEmploymentType> findByAdjustId(@Param("adjustId") Long adjustId);
+
+    List<AdjustEmploymentType> findByAdjustIdAndIsActive(Long adjustId, boolean isActive);
 }

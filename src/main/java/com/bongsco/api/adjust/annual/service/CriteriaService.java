@@ -92,7 +92,6 @@ public class CriteriaService {
         Adjust adjust = adjustRepository.findById(adjustId)
             .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
 
-        // 날짜 업데이트
         adjust = adjust.toBuilder()
             .baseDate(request.getBaseDate())
             .exceptionStartDate(request.getExceptionStartDate())
@@ -107,42 +106,30 @@ public class CriteriaService {
         for (Map.Entry<Long, Boolean> entry : request.getGradeSelections().entrySet()) {
             Long id = entry.getKey();
             boolean checked = entry.getValue();
-            boolean exists = existingGrades.containsKey(id);
+            AdjustGrade existing = existingGrades.get(id);
 
-            if (checked && !exists) {
-                Grade grade = gradeRepository.findById(id)
-                    .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
-                adjustGradeRepository.save(
-                    AdjustGrade.builder().adjust(adjust).grade(grade).build()
-                );
-            } else if (!checked && exists) {
-                adjustGradeRepository.delete(existingGrades.get(id));
+            if (checked) {
+                if (existing == null) {
+                    Grade grade = gradeRepository.findById(id)
+                        .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
+                    adjustGradeRepository.save(
+                        AdjustGrade.builder()
+                            .adjust(adjust)
+                            .grade(grade)
+                            .isActive(true)
+                            .build()
+                    );
+                } else if (!existing.getIsActive()) {
+                    existing.setIsActive(true);
+                    adjustGradeRepository.save(existing);
+                }
+            } else {
+                if (existing != null && existing.getIsActive()) {
+                    existing.setIsActive(false);
+                    adjustGradeRepository.save(existing);
+                }
             }
         }
-
-        // SalaryIncrementRateByRank 생성
-        List<AdjustGrade> adjustGrades = adjustGradeRepository.findByAdjustId(adjustId);
-
-        List<SalaryIncrementByRank> oldRows = salaryIncrementByRankRepository.findByAdjustGradeIn(adjustGrades);
-        salaryIncrementByRankRepository.deleteAll(oldRows); // ✅ Soft Delete
-
-        List<Rank> allRanks = rankRepository.findAll();
-
-        List<SalaryIncrementByRank> newSalaryRates = new ArrayList<>();
-
-        for (AdjustGrade ag : adjustGrades) {
-            for (Rank rank : allRanks) {
-                SalaryIncrementByRank rate = SalaryIncrementByRank.builder()
-                    .adjustGrade(ag)
-                    .rank(rank)
-                    .salaryIncrementRate(null)
-                    .bonusMultiplier(null)
-                    .build();
-                newSalaryRates.add(rate);
-            }
-        }
-
-        salaryIncrementByRankRepository.saveAll(newSalaryRates);
 
         // 직급 처리
         Map<Long, AdjustEmploymentType> existingPayments = adjustEmploymentTypeRepository.findByAdjustId(adjustId)
@@ -152,41 +139,69 @@ public class CriteriaService {
         for (Map.Entry<Long, Boolean> entry : request.getPaymentSelections().entrySet()) {
             Long id = entry.getKey();
             boolean checked = entry.getValue();
-            boolean exists = existingPayments.containsKey(id);
+            AdjustEmploymentType existing = existingPayments.get(id);
 
-            if (checked && !exists) {
-                EmploymentType pc = employmentTypeRepository.findById(id)
-                    .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
-                adjustEmploymentTypeRepository.save(
-                    AdjustEmploymentType.builder().adjust(adjust).employmentType(pc).build()
-                );
-            } else if (!checked && exists) {
-                adjustEmploymentTypeRepository.delete(existingPayments.get(id));
+            if (checked) {
+                if (existing == null) {
+                    EmploymentType type = employmentTypeRepository.findById(id)
+                        .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
+                    adjustEmploymentTypeRepository.save(
+                        AdjustEmploymentType.builder()
+                            .adjust(adjust)
+                            .employmentType(type)
+                            .isActive(true)
+                            .build()
+                    );
+                } else if (!existing.getIsActive()) {
+                    existing.setIsActive(true);
+                    adjustEmploymentTypeRepository.save(existing);
+                }
+            } else {
+                if (existing != null && existing.getIsActive()) {
+                    existing.setIsActive(false);
+                    adjustEmploymentTypeRepository.save(existing);
+                }
             }
         }
 
-        // ✅ AdjustSubject 갱신 처리
-        // 1. 기준에 부합하는 gradeId, paymentId 추출
-        Set<Long> selectedGradeIds = adjustGradeRepository.findByAdjustId(adjustId).stream()
-            .map(link -> link.getGrade().getId())
+        // SalaryIncrementByRank 갱신 (isActive 기준)
+        List<AdjustGrade> activeAdjustGrades = adjustGradeRepository.findByAdjustIdAndIsActive(adjustId, true);
+        List<SalaryIncrementByRank> oldRows = salaryIncrementByRankRepository.findByAdjustGradeIn(activeAdjustGrades);
+        salaryIncrementByRankRepository.deleteAll(oldRows);
+
+        List<Rank> allRanks = rankRepository.findAll();
+        List<SalaryIncrementByRank> newRates = new ArrayList<>();
+        for (AdjustGrade ag : activeAdjustGrades) {
+            for (Rank rank : allRanks) {
+                newRates.add(SalaryIncrementByRank.builder()
+                    .adjustGrade(ag)
+                    .rank(rank)
+                    .salaryIncrementRate(null)
+                    .bonusMultiplier(null)
+                    .build()
+                );
+            }
+        }
+        salaryIncrementByRankRepository.saveAll(newRates);
+
+        // AdjustSubject 갱신
+        Set<Long> selectedGradeIds = activeAdjustGrades.stream()
+            .map(g -> g.getGrade().getId())
             .collect(Collectors.toSet());
 
-        Set<Long> selectedPaymentIds = adjustEmploymentTypeRepository.findByAdjustId(adjustId).stream()
-            .map(link -> link.getEmploymentType().getId())
+        Set<Long> selectedPaymentIds = adjustEmploymentTypeRepository.findByAdjustIdAndIsActive(adjustId, true).stream()
+            .map(p -> p.getEmploymentType().getId())
             .collect(Collectors.toSet());
 
-        // 2. 기존 AdjustSubject 삭제
         adjustSubjectRepository.deleteByAdjustId(adjustId);
 
-        // 3. Employee 조회 및 AdjustSubject 저장
         List<Employee> matchingEmployees = employeeRepository.findWithJoinByGradeIdsAndEmploymentTypeIds(
             selectedGradeIds, selectedPaymentIds
         );
 
-        Adjust finalAdjust = adjust;
         List<AdjustSubject> newSubjects = matchingEmployees.stream()
             .map(emp -> AdjustSubject.builder()
-                .adjust(finalAdjust)
+                .adjust(adjust)
                 .employee(emp)
                 .grade(emp.getGrade())
                 .rank(emp.getRank())
@@ -196,8 +211,8 @@ public class CriteriaService {
                 .stdSalary(null)
                 .hpoBonus(null)
                 .finalStdSalary(null)
-                .build()
-            ).toList();
+                .build())
+            .toList();
 
         adjustSubjectRepository.saveAll(newSubjects);
 
