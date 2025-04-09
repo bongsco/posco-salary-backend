@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+
 import com.bongsco.api.adjust.common.dto.AdjustSubjectSalaryDto;
 import com.bongsco.api.adjust.common.entity.AdjustSubject;
 
@@ -79,6 +80,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
     List<AdjustSubjectSalaryDto> findUpperExceededSubjects(@Param("adjustId") Long adjustId);
 
     @Query("""
+
             SELECT new com.bongsco.api.adjust.common.dto.AdjustSubjectSalaryDto(
                 asj.id,
                 e.id,

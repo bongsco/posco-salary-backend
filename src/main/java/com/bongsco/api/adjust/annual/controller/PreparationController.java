@@ -31,21 +31,20 @@ public class PreparationController {
     private final AdjustSubjectService adjSubjectService;
 
     @Operation(summary = "대상자 편성 페이지 GET API", description = "대상자 편성 페이지에서 조정 대상자와 비대상자 정보 반환")
-    @GetMapping("/{adj_info_id}/employees")
-    // TODO("Replace response type to single DTO Type")
+    @GetMapping("/employees")
     public ResponseEntity<List<EmployeeResponse>> getEmployees(
-        @PathVariable("adj_info_id") Long adjInfoId
+        @PathVariable("adjustId") Long adjustId
     ) {
-        return ResponseEntity.status(HttpStatus.OK).body(adjSubjectService.findAll(adjInfoId));
+        return ResponseEntity.status(HttpStatus.OK).body(adjSubjectService.findAll(adjustId));
     }
 
     @Operation(summary = "대상자 편성 페이지 PATCH API", description = "대상자 편성 페이지에서 변하는 조정 정보를 업데이트")
-    @PatchMapping("/{adj_info_id}/employees")
+    @PatchMapping("/employees")
     public ResponseEntity<Void> updateSubjectUseEmployee(
-        @PathVariable("adj_info_id") Long adjInfoId,
-        @Valid @RequestBody ChangedSubjectUseEmployeeRequest ChangedSubjectUseEmployeeRequest
+        @PathVariable("adjustId") Long adjustId,
+        @Valid @RequestBody ChangedSubjectUseEmployeeRequest changedSubjectUseEmployeeRequest
     ) {
-        adjSubjectService.updateSubjectUseEmployee(adjInfoId, ChangedSubjectUseEmployeeRequest);
+        adjSubjectService.updateSubjectUseEmployee(adjustId, changedSubjectUseEmployeeRequest);
 
         return ResponseEntity.noContent().build();
     }

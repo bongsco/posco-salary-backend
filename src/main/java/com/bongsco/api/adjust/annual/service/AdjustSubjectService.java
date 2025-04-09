@@ -18,7 +18,6 @@ import com.bongsco.api.adjust.annual.dto.request.ChangedSubjectUseEmployeeReques
 import com.bongsco.api.adjust.annual.dto.request.PaybandApplyUpdateRequest;
 import com.bongsco.api.adjust.annual.dto.response.AdjResultResponse;
 import com.bongsco.api.adjust.annual.dto.response.CompensationEmployeeResponse;
-import com.bongsco.api.adjust.annual.dto.response.EmployeeResponse;
 import com.bongsco.api.adjust.annual.dto.response.PaybandSubjectResponse;
 import com.bongsco.api.adjust.annual.dto.response.PreprocessAdjSubjectsResponse;
 import com.bongsco.api.adjust.annual.entity.PaybandCriteria;
@@ -74,24 +73,14 @@ public class AdjustSubjectService {
         }
     }
 
-    public List<EmployeeResponse> findAll(Long adjInfoId) {
-        // 연봉조정차수를 이용해 정기연봉조정대상자 테이블 가져오기
-        List<AdjustSubject> subjects = adjustSubjectRepository.findByAdjustId(adjInfoId);
-
-        return subjects.stream()
-            .filter(adjustSubject -> !adjustSubject.getDeleted())
-            .map(EmployeeResponse::from)
-            .toList();
-    }
-
     @Transactional
     public void updateSubjectUseEmployee(
-        Long adjInfoId,
+        Long adjustId,
         ChangedSubjectUseEmployeeRequest changedSubjectUseEmployeeRequest
     ) {
         changedSubjectUseEmployeeRequest.getChangedSubjectUseEmployee()
             .forEach(changedSubjectUseEmployee -> {
-                AdjustSubject adjustSubject = adjustSubjectRepository.findByAdjustIdAndEmployeeId(adjInfoId,
+                AdjustSubject adjustSubject = adjustSubjectRepository.findByAdjustIdAndEmployeeId(adjustId,
                         changedSubjectUseEmployee.getEmployeeId())
                     .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
                 AdjustSubject saveAdjustSubject = adjustSubject
