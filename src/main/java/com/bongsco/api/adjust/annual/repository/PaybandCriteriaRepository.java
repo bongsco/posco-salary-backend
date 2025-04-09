@@ -25,7 +25,6 @@ public interface PaybandCriteriaRepository extends JpaRepository<PaybandCriteria
             JOIN pc.grade g
             WHERE pc.adjust.id = :adjustId
               AND g.id = :gradeId
-              AND pc.deleted != true
         """)
     Optional<PaybandLimitInfo> findLimitInfo(
         @Param("adjustId") Long adjustId,

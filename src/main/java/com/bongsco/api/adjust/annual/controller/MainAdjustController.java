@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.bongsco.api.adjust.annual.dto.request.ChangedSubjectListRequest;
-import com.bongsco.api.adjust.annual.dto.response.MainAdjustPaybandBothSubjectsResponse;
+import com.bongsco.api.adjust.annual.dto.request.PaybandApplyListUpdateRequest;
+import com.bongsco.api.adjust.annual.dto.response.PaybandSubjectResponse;
 import com.bongsco.api.adjust.annual.service.AdjustSubjectService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,28 +29,19 @@ public class MainAdjustController {
 
     @Operation(summary = "payband 대상자", description = "payband 대상자 반환")
     @GetMapping("/payband/subjects")
-    public ResponseEntity<MainAdjustPaybandBothSubjectsResponse> getPaybandSubjects(
+    public ResponseEntity<PaybandSubjectResponse> getPaybandSubjects(
         @PathVariable("adjustId") Long adjustId
     ) {
-
         return ResponseEntity.status(HttpStatus.OK)
             .body(adjustSubjectService.getBothUpperLowerSubjects(adjustId));
     }
 
     @Operation(summary = "payband 여부 수정", description = "payband 여부 수정")
     @PatchMapping("/payband/subjects")
-    public ResponseEntity<Void> modifyPaybandSubjects(
-        @Valid @RequestBody ChangedSubjectListRequest changedSubjectListRequest
+    public ResponseEntity<Void> updatePaybandSubjects(
+        @Valid @RequestBody PaybandApplyListUpdateRequest paybandApplyListUpdateRequest
     ) {
-        changedSubjectListRequest
-            .getChangedSubject()
-            .forEach(subject -> {
-                adjustSubjectService.modifyAdjustSubject(
-                    subject.getAdjustSubjectId(),
-                    subject.getIsPaybandApplied()
-                );
-            });
-
+        adjustSubjectService.updateSubjectPaybandApplication(paybandApplyListUpdateRequest.getUpdatedSubjects());
         return ResponseEntity.noContent().build();
     }
 

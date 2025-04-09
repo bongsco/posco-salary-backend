@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-public class ChangedSubjectRequest {
+public class PaybandApplyUpdateRequest {
     @NotNull(message = "아이디는 null 일 수 없습니다.")
     private Long adjustSubjectId;
 

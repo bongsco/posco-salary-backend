@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-public class MainAdjustPaybandBothSubjectsResponse {
+public class PaybandSubjectResponse {
     private List<MainAdjustPaybandSubjectsResponse> upperAdjustSubjects;
     private List<MainAdjustPaybandSubjectsResponse> lowerAdjustSubjects;
 
