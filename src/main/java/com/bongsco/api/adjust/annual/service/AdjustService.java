@@ -6,13 +6,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.bongsco.api.adjust.annual.entity.SalaryIncrementByRank;
 import com.bongsco.api.adjust.annual.repository.SalaryIncrementByRankRepository;
@@ -117,7 +117,7 @@ public class AdjustService {
                 .author(projection.getAuthor())
                 .build() // DTO 객체 생성
             )
-            .collect(Collectors.toList());
+            .toList();
 
         // AdjustResponse 객체 생성 및 반환
         return AdjustResponse.builder()
@@ -139,6 +139,7 @@ public class AdjustService {
         adjustRepository.deleteById(adjustId);
     }
 
+    @Transactional
     public void postAdjustInfo(AdjustPostRequest postRequest) {
         /* 차수 정보 가져오기 */
         int yearMaxOrderNumber = Optional.ofNullable(
