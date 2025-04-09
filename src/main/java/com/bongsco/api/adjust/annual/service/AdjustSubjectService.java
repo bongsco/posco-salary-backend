@@ -72,7 +72,7 @@ public class AdjustSubjectService {
 
     public List<EmployeeResponse> findAll(Long adjInfoId) {
         // 연봉조정차수를 이용해 정기연봉조정대상자 테이블 가져오기
-        List<AdjustSubject> subjects = adjustSubjectRepository.findByAdjustId(adjInfoId);
+        List<AdjustSubject> subjects = adjustSubjectRepository.findByAdjust_Id(adjInfoId);
 
         return subjects.stream()
             .filter(adjustSubject -> !adjustSubject.getDeleted())
@@ -110,7 +110,7 @@ public class AdjustSubjectService {
 
     public PreprocessAdjSubjectsResponse findCompensationAll(Long adjInfoId) {
         // 연봉조정차수를 이용해 고성과조직 가산 대상 테이블 가져오기
-        List<AdjustSubject> subjects = adjustSubjectRepository.findByAdjustId(adjInfoId);
+        List<AdjustSubject> subjects = adjustSubjectRepository.findByAdjust_Id(adjInfoId);
 
         return new PreprocessAdjSubjectsResponse(subjects.stream()
             .filter(adjustSubject -> !adjustSubject.getDeleted())
@@ -374,7 +374,7 @@ public class AdjustSubjectService {
     }
 
     public AdjResultResponse getFinalResult(Long adjInfoId) {
-        List<AdjustSubject> adjustSubjects = adjustSubjectRepository.findByAdjustId(adjInfoId)
+        List<AdjustSubject> adjustSubjects = adjustSubjectRepository.findByAdjust_Id(adjInfoId)
             .stream()
             .filter(adjustSubject -> !adjustSubject.getDeleted())
             .filter(AdjustSubject::getIsSubject)
@@ -446,7 +446,7 @@ public class AdjustSubjectService {
     }
 
     public void changeIncrementRate(Long adjInfoId) {
-        List<AdjustSubject> adjustSubjects = adjustSubjectRepository.findByAdjustId(adjInfoId)
+        List<AdjustSubject> adjustSubjects = adjustSubjectRepository.findByAdjust_Id(adjInfoId)
             .stream()
             .filter(adjustSubject -> !adjustSubject.getDeleted())
             .filter(AdjustSubject::getIsSubject)

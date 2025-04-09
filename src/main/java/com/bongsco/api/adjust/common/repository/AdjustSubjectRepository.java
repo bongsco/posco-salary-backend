@@ -14,13 +14,7 @@ import com.bongsco.api.adjust.common.entity.AdjustSubject;
 
 @Repository
 public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Long> {
-    @Query("""
-        SELECT asj
-        FROM AdjustSubject asj
-        WHERE asj.adjust.id = :adjustId
-        """
-    )
-    List<AdjustSubject> findByAdjustId(Long adjustId);
+    List<AdjustSubject> findByAdjust_Id(Long adjustId);
 
     List<AdjustSubject> findByAdjust_IdAndIsSubjectTrue(Long adjustId);
 
