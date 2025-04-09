@@ -3,6 +3,8 @@ package com.bongsco.api.adjust.annual.dto.response;
 import java.time.LocalDate;
 
 import com.bongsco.api.adjust.common.entity.AdjustSubject;
+import com.bongsco.api.employee.entity.Employee;
+import com.bongsco.api.employee.entity.Rank;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -23,9 +25,16 @@ public class EmployeeResponse {
     private Boolean subjectUse;
 
     public static EmployeeResponse from(AdjustSubject adjustSubject) {
-        return new EmployeeResponse(adjustSubject.getEmployee().getId(), adjustSubject.getEmployee().getEmpNum(),
-            adjustSubject.getEmployee().getName(), adjustSubject.getEmployee().getHireDate(),
-            adjustSubject.getRank().getCode(),
-            adjustSubject.getIsSubject());
+        Employee emp = adjustSubject.getEmployee();
+        Rank rank = adjustSubject.getRank();
+
+        return new EmployeeResponse(
+            emp.getId(),
+            emp.getEmpNum(),
+            emp.getName(),
+            emp.getHireDate(),
+            rank.getCode(),
+            adjustSubject.getIsSubject()
+        );
     }
 }

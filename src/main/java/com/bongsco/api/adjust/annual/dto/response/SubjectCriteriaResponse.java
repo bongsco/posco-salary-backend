@@ -21,15 +21,5 @@ public class SubjectCriteriaResponse {
 
     private List<SelectableItemDto> grades;
     private List<SelectableItemDto> payments;
-
-    @Builder(toBuilder = true)
-    @AllArgsConstructor
-    @NoArgsConstructor(access = AccessLevel.PROTECTED)
-    @Getter
-    public static class SelectableItemDto {
-        private Long id;
-        private String name;
-        private boolean isChecked;
-    }
 }
 

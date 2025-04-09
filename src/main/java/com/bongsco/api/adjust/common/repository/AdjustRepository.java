@@ -1,6 +1,7 @@
 package com.bongsco.api.adjust.common.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -80,4 +81,7 @@ public interface AdjustRepository extends JpaRepository<Adjust, Long> {
         WHERE a.id = :adjustId
         """)
     List<RateInfo> findRateInfoByAdjustId(Long adjustId);
+
+    @Query("SELECT a FROM Adjust a WHERE a.id = :id")
+    Optional<Adjust> findByIdIncludingDeleted(@Param("id") Long id);
 }
