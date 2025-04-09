@@ -385,6 +385,7 @@ public class AdjustSubjectService {
         // });
     }
 
+    @Transactional
     public MainResultResponses getFinalResult(Long adjustId, String filterEmpNum, String filterName,
         String filterGrade, String filterDepartment, String filterRank,
         List<Map<String, String>> sorts, Integer pageNumber, Integer pageSize) {
