@@ -18,10 +18,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Getter
-@Builder
+@Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SQLDelete(sql = "UPDATE adjust_grade SET deleted = true WHERE id = ?")
@@ -41,5 +42,6 @@ public class AdjustGrade extends BaseEntity {
 
     @Column
     @Builder.Default
+    @Setter
     private Boolean isActive = false;
 }
