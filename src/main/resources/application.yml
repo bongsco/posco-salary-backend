@@ -3,7 +3,7 @@ spring:
     name: posco-salary-backend
 
   profiles:
-    active: local
+    active: dev
 
 
 
