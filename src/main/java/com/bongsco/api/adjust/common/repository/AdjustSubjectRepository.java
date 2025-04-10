@@ -9,7 +9,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.bongsco.api.adjust.annual.dto.AdjustSubjectIncrementDto;
 import com.bongsco.api.adjust.annual.dto.response.EmployeeResponse;
 import com.bongsco.api.adjust.annual.dto.response.HpoEmployee;
 import com.bongsco.api.adjust.common.dto.AdjustSubjectSalaryDto;
@@ -164,15 +163,12 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
     List<Object[]> findDtoByAdjustId(@Param("adjustId") Long adjustId);
 
     @Query("""
-            SELECT new com.bongsco.api.adjust.annual.dto.AdjustSubjectIncrementDto(
-                asj.employee.id,
-                asj.finalStdSalary
-            )
+            SELECT asj.employee, asj.finalStdSalary
             FROM AdjustSubject asj
             WHERE asj.adjust.id = :adjustId
                 AND asj.isSubject = true
         """)
-    List<AdjustSubjectIncrementDto> findAdjustSubjectIncrementDtoByAdjustId(@Param("adjustId") Long adjustId);
+    List<Object[]> findAdjustSubjectIncrementDtoByAdjustId(@Param("adjustId") Long adjustId);
 
     List<AdjustSubject> findAllByAdjustIdAndEmployeeIdIn(Long adjustId, List<Long> employeeIds);
 }

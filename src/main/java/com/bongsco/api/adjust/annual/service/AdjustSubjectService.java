@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.bongsco.api.adjust.annual.dto.AdjustSubjectIncrementDto;
 import com.bongsco.api.adjust.annual.dto.AdjustSubjectSalaryCalculateDto;
 import com.bongsco.api.adjust.annual.dto.request.ChangedHighPerformGroupEmployeeRequest;
 import com.bongsco.api.adjust.annual.dto.request.ChangedHighPerformGroupEmployeeRequest.ChangedHighPerformGroupEmployee;
@@ -361,24 +360,25 @@ public class AdjustSubjectService {
     }
 
     public void changeIncrementRate(Long adjustId) {
-        List<AdjustSubjectIncrementDto> adjustSubjectIncrementDtos = adjustSubjectRepository.findAdjustSubjectIncrementDtoByAdjustId(
+        List<Object[]> employeeAndDtos = adjustSubjectRepository.findAdjustSubjectIncrementDtoByAdjustId(
             adjustId);
 
-        adjustSubjectIncrementDtos.forEach(adjustSubjectIncrementDto -> {
+        List<Employee> updatedEmployees = employeeAndDtos.stream().map(employeeAndDto -> {
+            Employee employee = (Employee)employeeAndDto[0];
+            Double finalStdSalary = (Double)employeeAndDto[1];
+
             AdjustSubject beforeAdjustSubject = adjustSubjectRepository.findBeforeAdjSubject(adjustId,
-                adjustSubjectIncrementDto.getEmpId());
+                employee.getId());
             if (beforeAdjustSubject == null)
-                return; //신입 제외
+                return null; //신입 제외
 
             Double beforeFinalStdSalary = beforeAdjustSubject.getFinalStdSalary();
-            Double finalStdSalary = adjustSubjectIncrementDto.getFinalStdSalary();
             if (beforeFinalStdSalary == null || finalStdSalary == null) {
-                return;
+                return null;
             }
             Double finalStdSalaryIncrementRate = ((finalStdSalary - beforeFinalStdSalary) / beforeFinalStdSalary) * 100;
-
-            employeeRepository.changeIncrementRateById(adjustSubjectIncrementDto.getEmpId(),
-                finalStdSalaryIncrementRate);
-        });
+            return employee.toBuilder().stdSalaryIncrementRate(finalStdSalaryIncrementRate).build();
+        }).filter(Objects::nonNull).toList();
+        employeeRepository.saveAll(updatedEmployees);
     }
 }
