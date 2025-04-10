@@ -1,6 +1,7 @@
 package com.bongsco.api.employee.repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,6 +12,7 @@ import com.bongsco.api.adjust.annual.dto.response.SelectableItemDto;
 import com.bongsco.api.employee.entity.Grade;
 
 public interface GradeRepository extends JpaRepository<Grade, Long> {
+    Optional<Grade> findByName(String name);
 
     @Query("""
             SELECT new com.bongsco.api.adjust.annual.dto.response.SelectableItemDto(

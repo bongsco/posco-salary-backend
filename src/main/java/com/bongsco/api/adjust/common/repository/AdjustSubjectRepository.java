@@ -13,14 +13,35 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.bongsco.api.adjust.annual.dto.AdjustSubjectIncrementDto;
 import com.bongsco.api.adjust.annual.dto.AdjustSubjectSalaryDto;
+import com.bongsco.api.adjust.annual.dto.response.EmployeeResponse;
+import com.bongsco.api.adjust.annual.dto.response.HpoEmployee;
 import com.bongsco.api.adjust.common.dto.AdjSubjectSalaryDto;
 import com.bongsco.api.adjust.common.entity.AdjustSubject;
 
 @Repository
 public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Long> {
+
     List<AdjustSubject> findByAdjust_Id(Long adjustId);
 
-    List<AdjustSubject> findByAdjust_IdAndIsSubjectTrue(Long adjustId);
+    @Query("""
+        SELECT new com.bongsco.api.adjust.annual.dto.response.HpoEmployee(
+            emp.id,
+            emp.empNum,
+            emp.name, 
+            dept.name,
+            g.name,
+            r.code,
+            asj.isInHpo
+        )
+        FROM AdjustSubject asj          
+        JOIN asj.employee emp
+        JOIN emp.department dept
+        JOIN emp.grade g
+        JOIN emp.rank r    
+        WHERE asj.adjust.id = :adjustId 
+        AND asj.isSubject = true
+        """)
+    List<HpoEmployee> findByAdjustIdAndIsSubjectTrue(Long adjustId);
 
     @Query("""
         SELECT asj
@@ -81,7 +102,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
             pc.upperBound
         )
         FROM AdjustSubject asj
-        JOIN PaybandCriteria pc ON pc.grade.id = asj.grade.id 
+        JOIN PaybandCriteria pc ON pc.grade.id = asj.grade.id
         WHERE asj.adjust.id = :adjustId
             AND pc.adjust.id = :adjustId
             AND asj.isSubject = true
@@ -176,6 +197,22 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
     )
     List<AdjSubjectSalaryDto> findAllAdjSubjectAndStdSalaryAndLowerWithSearchKey(Long adjustId, String searchKey);
 
+    @Query("""
+            SELECT new com.bongsco.api.adjust.annual.dto.response.EmployeeResponse(
+                e.id,
+                e.empNum,
+                e.name,
+                e.hireDate,
+                r.code,
+                s.isSubject
+            )
+            FROM AdjustSubject s
+            JOIN s.employee e
+            JOIN e.rank r
+            WHERE s.adjust.id = :adjustId
+        """)
+    List<EmployeeResponse> findAllEmployeeResponsesByAdjustInfoId(@Param("adjustId") Long adjustId);
+
     @Query("SELECT s.employee.id FROM AdjustSubject s WHERE s.adjust.id = :adjustId")
     Set<Long> findEmployeeIdsByAdjustId(@Param("adjustId") Long adjustId);
 
@@ -221,4 +258,6 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
                 AND asj.isSubject = true
         """)
     List<AdjustSubjectIncrementDto> findAdjustSubjectIncrementDtoByAdjustId(@Param("adjustId") Long adjustId);
+
+    List<AdjustSubject> findAllByAdjustIdAndEmployeeIdIn(Long adjustId, List<Long> employeeIds);
 }
