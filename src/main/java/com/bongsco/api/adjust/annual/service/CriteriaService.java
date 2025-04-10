@@ -306,7 +306,8 @@ public class CriteriaService {
 
     @Transactional
     public PaybandCriteriaConfigListResponse getPaybandCriteria(Long adjustId) {
-        List<PaybandCriteria> existingPaybandCriteriaList = paybandCriteriaRepository.findByAdjustId(adjustId);
+        List<PaybandCriteria> existingPaybandCriteriaList = paybandCriteriaRepository.findByAdjustIdAndIsActiveTrue(
+            adjustId);
 
         return PaybandCriteriaConfigListResponse.from(existingPaybandCriteriaList);
     }
