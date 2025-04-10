@@ -24,7 +24,7 @@ public class ExcelDownloadService {
         byte[] excelFile = excelUtils.createExcelFile(headers, data);
 
         String fileName = URLEncoder.encode(
-            "엑셀다운로드_" + pageType + "_" + LocalDate.now(),
+            "bongsco_" + pageType + "_" + LocalDate.now(),
             StandardCharsets.UTF_8
         );
 
