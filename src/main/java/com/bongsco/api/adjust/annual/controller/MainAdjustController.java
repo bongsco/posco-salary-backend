@@ -53,7 +53,7 @@ public class MainAdjustController {
     }
 
     @Operation(summary = "정기 연봉 조정", description = "마지막 페이지, 계산값 모두 보여줌")
-    @GetMapping("/{adjust_id}/annual-adj")
+    @GetMapping("/annual-adj")
     public ResponseEntity<MainResultResponses> showResult(@PathVariable("adjust_id") Long adjustId,
         @RequestParam(value = "filterEmpNum", required = false) String filterEmpNum,
         @RequestParam(value = "filterName", required = false) String filterName,

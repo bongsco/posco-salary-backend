@@ -74,7 +74,7 @@ public class CriteriaController {
     }
 
     @Operation(summary = "payband 기준 설정 GET API", description = "payband 기준 가져옴")
-    @GetMapping("/{adjust_id}/payband")
+    @GetMapping("/payband")
     public ResponseEntity<PaybandCriteriaConfigListResponse> getPaybandCriteria(
         @PathVariable(name = "adjust_id") Long adjustId) {
 
@@ -82,7 +82,7 @@ public class CriteriaController {
     }
 
     @Operation(summary = "payband 기준 설정 PATCH API", description = "payband 기준 설정 수정된 값 반영")
-    @PatchMapping("/{adjust_id}/payband")
+    @PatchMapping("/payband")
     public ResponseEntity<Void> updatePaybandCriteria(
         @Valid @RequestBody PaybandCriteriaModifyRequest request,
         @PathVariable(name = "adjust_id") Long adjustId) {
