@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bongsco.api.adjust.annual.dto.AdjustSubjectSalaryDto;
 import com.bongsco.api.adjust.annual.dto.request.ChangedHighPerformGroupEmployeeRequest;
 import com.bongsco.api.adjust.annual.dto.request.ChangedSubjectUseEmployeeRequest;
 import com.bongsco.api.adjust.annual.dto.response.AdjResultResponse;
@@ -288,89 +289,67 @@ public class AdjustSubjectService {
         return getAdjLowerPaybandSubjectsResponses(adjSubjectSalaryDtos);
     }
 
-    public void calculateSalary(Long adjustId) {
-        // List<AdjustSubject> adjustSubjects = adjustSubjectRepository.findByAdjust_IdAndIsSubjectTrue(adjustId);
-        //
-        // Adjust adjust = adjustRepository.findById(adjustId)
-        //     .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
-        //
-        // Double hpoSalaryIncrementByRank =
-        //     Optional.ofNullable(adjust.getHpoSalaryIncrementByRank()).orElse(0.0) / 100;
-        // //5%일때 5로 들어간다는 전제하에 이렇게 해놓음
-        //
-        // adjustSubjects.stream().forEach(adjustSubject -> {
-        //     //기준연봉= 전년도 기준연봉+(직무기본연봉*평차등연봉인상률)
-        //
-        //     //전년도 기준연봉 불러옴
-        //     AdjustSubject beforeAdjustSubject = adjustSubjectRepository.findBeforeAdjSubject(adjInfoId,
-        //         adjustSubject.getEmployee().getId());
-        //     if (beforeAdjustSubject == null)
-        //         return; //신입 제외
-        //
-        //     //직무 기본 연봉 불러옴
-        //     Double gradeBaseSalary = adjustSubject.getGrade().getBaseSalary();
-        //
-        //     //연봉 인상률 불러옴
-        //     SalaryIncrementByRank salaryIncrementByRank = salaryIncrementRateByRankRepository.findByRankIdAndAdjustIdAndGradeId(
-        //         adjustSubject.getRank().getId(), adjInfoId, adjustSubject.getGrade().getId()).orElse(null);
-        //     Double evalDiffIncrement =
-        //         salaryIncrementByRank == null ? 0.0 : (salaryIncrementByRank.getSalaryIncrementRate() / 100);
-        //
-        //     //고성과 있으면
-        //     //평차등연봉인상률 = (직급, 평가별 평차연) * (1 + 고성과평차연)
-        //     if (adjustSubject.getIsInHpo()) {
-        //         evalDiffIncrement = evalDiffIncrement * (1 + evalAnnualSalaryIncrement);
-        //     }
-        //
-        //     Double newStdSalary =
-        //         (beforeAdjustSubject.getFinalStdSalary() == null ? 1000000 : beforeAdjustSubject.getFinalStdSalary())
-        //             + gradeBaseSalary * evalDiffIncrement;
-        //
-        //     AdjustSubject saveAdjustSubject = adjustSubject.toBuilder()
-        //         .stdSalary(newStdSalary)
-        //         .finalStdSalary(newStdSalary)
-        //         .build();
-        //     adjustSubjectRepository.save(saveAdjustSubject);
-        // });
-    }
+    @Transactional
+    public void calculateSalaryAndBonus(Long adjustId) {
+        List<AdjustSubjectSalaryDto> adjustSubjectSalaryDtos = adjustSubjectRepository.findDtoByAdjustId(adjustId);
 
-    public void calculateAddPayment(Long adjInfoId) {
-        // List<AdjustSubject> adjustSubjects = adjustSubjectRepository.findByAdjustId(adjInfoId)
-        //     .stream()
-        //     .filter(adjustSubject -> !adjustSubject.getDeleted())
-        //     .filter(AdjustSubject::getIsSubject)
-        //     .toList();
-        //
-        // Adjust adjust = adjustRepository.findById(adjInfoId)
-        //     .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
-        // Double evalPerformProvideRate =
-        //     Optional.ofNullable(adjust.getHpoBonusMultiplier()).orElse(100.0) / 100;
-        //
-        // adjustSubjects.stream().forEach(adjustSubject -> {
-        //     // 평가차등 경영 성과금 = 평차금기준임금(업적연봉기본지금) * 평가차등경영성과금지급률
-        //     // 평차금기준임금 = ((기준연봉월할액 + 직무기본연봉) / 2 ) + 12만원
-        //
-        //     // 직무기본연봉 가져옴
-        //     Double gradeBaseSalary = adjustSubject.getGrade().getBaseSalary();
-        //     Double rankBaseStandardSalary = (adjustSubject.getFinalStdSalary() + gradeBaseSalary) / 12 + 12;
-        //
-        //     //평가차등경영성과금지급률 가져옴
-        //     SalaryIncrementByRank salaryIncrementByRank = salaryIncrementRateByRankRepository.findByRankIdAndAdjustIdAndGradeId(
-        //         adjustSubject.getRank().getId(), adjInfoId, adjustSubject.getGrade().getId()).orElse(null);
-        //     Double evalDiffBonus =
-        //         salaryIncrementByRank == null ? 0.0 : (salaryIncrementByRank.getBonusMultiplier() / 100);
-        //
-        //     //고성과 조직일 경우
-        //     //평가차등경영성과금 지급률 = 평가차등경영성과금 지급률+고성과 경영성과금지급률
-        //     if (adjustSubject.getIsInHpo()) {
-        //         evalDiffBonus += evalPerformProvideRate;
-        //     }
-        //
-        //     Double newPerformAddPayment = (double)Math.round(rankBaseStandardSalary * evalDiffBonus);
-        //
-        //     AdjustSubject saveAdjustSubject = adjustSubject.toBuilder().hpoBonus(newPerformAddPayment).build();
-        //     adjustSubjectRepository.save(saveAdjustSubject);
-        // });
+        Adjust adjust = adjustRepository.findById(adjustId)
+            .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
+
+        Double hpoSalaryIncrementByRank =
+            Optional.ofNullable(adjust.getHpoSalaryIncrementByRank()).orElse(0.0) / 100;
+        //5%일때 5로 들어간다는 전제하에 이렇게 해놓음
+
+        Double hpoBonusMultiplier = Optional.ofNullable(adjust.getHpoBonusMultiplier()).orElse(0.0);
+
+        adjustSubjectSalaryDtos.stream().forEach(adjustSubjectDto -> {
+            //기준연봉= 전년도 기준연봉+(직무기본연봉*평차등연봉인상률)
+
+            //전년도 기준연봉 불러옴
+            AdjustSubject beforeAdjustSubject = adjustSubjectRepository.findBeforeAdjSubject(adjustId,
+                adjustSubjectDto.getEmpId());
+            if (beforeAdjustSubject == null)
+                return; //신입 제외
+
+            //직무 기본 연봉 불러옴
+            Double gradeBaseSalary = adjustSubjectDto.getBaseSalary();
+
+            //연봉 인상률 불러옴
+            Double evalDiffIncrement = adjustSubjectDto.getSalaryIncrementRate() / 100 + 1;
+
+            //고성과 있으면
+            //평차등연봉인상률 = (직급, 평가별 평차연) * (1 + 고성과평차연)
+            if (adjustSubjectDto.getIsInHpo()) {
+                evalDiffIncrement = evalDiffIncrement * (1 + hpoSalaryIncrementByRank) - 1;
+            }
+
+            Double newStdSalary =
+                (beforeAdjustSubject.getFinalStdSalary() == null ? 1000000 : beforeAdjustSubject.getFinalStdSalary())
+                    + gradeBaseSalary * evalDiffIncrement;
+
+            newStdSalary = Math.floor(newStdSalary / 1000) * 1000;
+
+            // 평가차등 경영 성과금 = 평차금기준임금(업적연봉기본지금) * 평가차등경영성과금지급률
+            // 평차금기준임금 = ((기준연봉월할액 + 직무기본연봉) / 2 ) + 12만원
+
+            Double rankBaseStandardSalary = (newStdSalary + gradeBaseSalary) / 12 + 12;
+
+            //평가차등경영성과금지급률 가져옴
+            Double bonusMultiplier =
+                adjustSubjectDto.getBonusMultiplier() / 100;
+
+            //고성과 조직일 경우
+            //평가차등경영성과금 지급률 = 평가차등경영성과금 지급률+고성과 경영성과금지급률
+            if (adjustSubjectDto.getIsInHpo()) {
+                bonusMultiplier += hpoBonusMultiplier / 100;
+            }
+
+            Double newHpoBonus = (double)Math.round(rankBaseStandardSalary * bonusMultiplier);
+
+            newHpoBonus = Math.floor(newHpoBonus / 1000) * 1000;
+
+            adjustSubjectRepository.saveById(adjustSubjectDto.getAdjustSubjectId(), newStdSalary, newHpoBonus);
+        });
     }
 
     public AdjResultResponse getFinalResult(Long adjInfoId) {

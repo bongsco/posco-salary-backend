@@ -72,19 +72,11 @@ public class MainAdjustController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "기준 연봉 계산", description = "사전 작업에서 입력한 내용을 기준으로 일괄적으로 기준 연봉 계산, payband 넘어가기전에 넣어줘야함")
+    @Operation(summary = "기준 연봉과 성과금 계산", description = "사전 작업에서 입력한 내용을 기준으로 일괄적으로 기준 연봉과 성과금 계산, payband 넘어가기전에 넣어줘야함")
     @PatchMapping("/calculate-salary")
     public ResponseEntity<Void> calculateSalary(@PathVariable("adjustId") Long adjustId
     ) {
-        adjSubjectService.calculateSalary(adjustId);
-        return ResponseEntity.noContent().build();
-    }
-
-    @Operation(summary = "성과금 계산", description = "사전 작업에서 입력한 내용을 기준으로 일괄적으로 성과금 계산, payband 넘어가기전에 넣어줘야함")
-    @PatchMapping("/calculate-add-payment")
-    public ResponseEntity<Void> calculateAddPayment(@PathVariable("adjustId") Long adjustId
-    ) {
-        adjSubjectService.calculateAddPayment(adjustId);
+        adjSubjectService.calculateSalaryAndBonus(adjustId);
         return ResponseEntity.noContent().build();
     }
 
