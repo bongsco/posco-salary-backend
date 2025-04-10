@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-public class ChangedSubjectListRequest {
+public class PaybandApplyListUpdateRequest {
     @Valid
-    private List<ChangedSubjectRequest> changedSubject;
+    private List<PaybandApplyUpdateRequest> updatedSubjects;
 }

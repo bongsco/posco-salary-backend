@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-public class AdjustSubjectSalaryDto {
+public class AdjustSubjectSalaryCalculateDto {
     private Long empId;
     private Double baseSalary;
     private Double salaryIncrementRate;

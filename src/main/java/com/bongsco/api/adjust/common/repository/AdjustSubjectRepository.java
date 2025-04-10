@@ -12,10 +12,10 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.bongsco.api.adjust.annual.dto.AdjustSubjectIncrementDto;
-import com.bongsco.api.adjust.annual.dto.AdjustSubjectSalaryDto;
+import com.bongsco.api.adjust.annual.dto.AdjustSubjectSalaryCalculateDto;
 import com.bongsco.api.adjust.annual.dto.response.EmployeeResponse;
 import com.bongsco.api.adjust.annual.dto.response.HpoEmployee;
-import com.bongsco.api.adjust.common.dto.AdjSubjectSalaryDto;
+import com.bongsco.api.adjust.common.dto.AdjustSubjectSalaryDto;
 import com.bongsco.api.adjust.common.entity.AdjustSubject;
 
 @Repository
@@ -68,134 +68,69 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
     )
     AdjustSubject findBeforeAdjSubject(Long adjustId, Long employeeId);
 
-    @Query("""
-        SELECT asj
-        FROM AdjustSubject asj
-        JOIN asj.employee e
-        WHERE asj.adjust.id = :adjustId
-            AND (e.empNum LIKE %:searchKey% OR e.name LIKE %:searchKey%)
-            AND asj.deleted != true
-            AND e.deleted != true
-        """
-    )
-    List<AdjustSubject> findByAdjustIdAndEmployeeName(
-        @Param("adjustId") Long adjustId,
-        @Param("searchKey") String searchKey
-    );
-
     Optional<AdjustSubject> findByAdjustIdAndEmployeeId(Long adjustId, Long employeeId);
 
     @Query("""
-        SELECT new com.bongsco.api.adjust.common.dto.AdjSubjectSalaryDto(
+        SELECT new com.bongsco.api.adjust.common.dto.AdjustSubjectSalaryDto(
             asj.id,
-            asj.employee.id,
+            e.id,
             asj.stdSalary,
             asj.finalStdSalary,
             asj.isPaybandApplied,
-            asj.grade.id,
-            asj.employee.empNum,
-            asj.employee.name,
-            asj.employee.department.name,
-            pc.grade.name,
-            asj.employee.positionName,
-            asj.employee.rank.name,
-            pc.upperBound
+            g.id,
+            e.empNum,
+            e.name,
+            d.name,
+            g.name,
+            e.positionName,
+            r.code,
+            pc.upperBound,
+            g.baseSalary
         )
         FROM AdjustSubject asj
-        JOIN PaybandCriteria pc ON pc.grade.id = asj.grade.id
+        JOIN asj.employee e
+        JOIN e.department d
+        JOIN e.rank r
+        JOIN asj.grade g
+        JOIN PaybandCriteria pc ON pc.grade.id = g.id
         WHERE asj.adjust.id = :adjustId
-            AND pc.adjust.id = :adjustId
-            AND asj.isSubject = true
-            AND asj.deleted != true AND pc.deleted != true AND asj.isSubject = true
-        """
-    )
-    List<AdjSubjectSalaryDto> findAllAdjSubjectAndStdSalaryAndUpper(@Param("adjustId") Long adjustId);
+          AND pc.adjust.id = :adjustId
+          AND asj.deleted != true
+          AND pc.deleted != true
+          AND asj.stdSalary > g.baseSalary * (pc.upperBound / 100.0)
+        """)
+    List<AdjustSubjectSalaryDto> findUpperExceededSubjects(@Param("adjustId") Long adjustId);
 
     @Query("""
-        SELECT new com.bongsco.api.adjust.common.dto.AdjSubjectSalaryDto(
+        SELECT new com.bongsco.api.adjust.common.dto.AdjustSubjectSalaryDto(
             asj.id,
-            asj.employee.id,
+            e.id,
             asj.stdSalary,
             asj.finalStdSalary,
             asj.isPaybandApplied,
-            asj.grade.id,
-            asj.employee.empNum,
-            asj.employee.name,
-            asj.employee.department.name,
-            pc.grade.name,
-            asj.employee.positionName,
-            asj.employee.rank.name,
-            pc.lowerBound
+            g.id,
+            e.empNum,
+            e.name,
+            d.name,
+            g.name,
+            e.positionName,
+            r.code,
+            pc.lowerBound,
+            g.baseSalary
         )
         FROM AdjustSubject asj
-        JOIN PaybandCriteria pc ON pc.grade.id = asj.grade.id
+        JOIN asj.employee e
+        JOIN e.department d
+        JOIN e.rank r
+        JOIN asj.grade g
+        JOIN PaybandCriteria pc ON pc.grade.id = g.id
         WHERE asj.adjust.id = :adjustId
-            AND pc.adjust.id = :adjustId
-            AND asj.isSubject = true
-            AND asj.deleted!=true
-            AND pc.deleted!=true
-            AND asj.isSubject=true
-        """
-    )
-    List<AdjSubjectSalaryDto> findAllAdjSubjectAndStdSalaryAndLower(@Param("adjustId") Long adjustId);
-
-    @Query("""
-        SELECT new com.bongsco.api.adjust.common.dto.AdjSubjectSalaryDto(
-            asj.id,
-            asj.employee.id,
-            asj.stdSalary,
-            asj.finalStdSalary,
-            asj.isPaybandApplied,
-            asj.grade.id,
-            asj.employee.empNum,
-            asj.employee.name,
-            asj.employee.department.name,
-            pc.grade.name,
-            asj.employee.positionName,
-            asj.employee.rank.name,
-            pc.upperBound
-        )
-        FROM AdjustSubject asj
-        JOIN PaybandCriteria pc
-            ON pc.grade.id = asj.grade.id
-        WHERE asj.adjust.id = :adjustId
-            AND pc.adjust.id = :adjustId
-            AND asj.isSubject = true
-            AND (
-                asj.employee.name LIKE %:searchKey%
-                OR asj.employee.empNum LIKE %:searchKey%
-            )
-            AND asj.deleted!=true AND pc.deleted!=true AND asj.isSubject=true
-        """
-    )
-    List<AdjSubjectSalaryDto> findAllAdjSubjectAndStdSalaryAndUpperWithSearchKey(Long adjustId, String searchKey);
-
-    @Query("""
-        SELECT new com.bongsco.api.adjust.common.dto.AdjSubjectSalaryDto(
-            asj.id,
-            asj.employee.id,
-            asj.stdSalary,
-            asj.finalStdSalary,
-            asj.isPaybandApplied,
-            asj.grade.id,
-            asj.employee.empNum,
-            asj.employee.name,
-            asj.employee.department.name,
-            pc.grade.name,
-            asj.employee.positionName,
-            asj.employee.rank.name,
-            pc.lowerBound
-        )
-        FROM AdjustSubject asj
-        JOIN PaybandCriteria pc ON pc.grade.id = asj.grade.id
-        WHERE asj.adjust.id = :adjustId AND pc.adjust.id = :adjustId AND asj.isSubject = true
-            AND (asj.employee.name LIKE %:searchKey% OR asj.employee.empNum LIKE %:searchKey%)
-            AND asj.deleted!=true
-            AND pc.deleted!=true
-            AND asj.isSubject=true
-        """
-    )
-    List<AdjSubjectSalaryDto> findAllAdjSubjectAndStdSalaryAndLowerWithSearchKey(Long adjustId, String searchKey);
+          AND pc.adjust.id = :adjustId
+          AND asj.deleted != true
+          AND pc.deleted != true
+          AND asj.stdSalary < g.baseSalary * (pc.lowerBound / 100.0)
+        """)
+    List<AdjustSubjectSalaryDto> findLowerExceededSubjects(@Param("adjustId") Long adjustId);
 
     @Query("""
             SELECT new com.bongsco.api.adjust.annual.dto.response.EmployeeResponse(
@@ -217,7 +152,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
     Set<Long> findEmployeeIdsByAdjustId(@Param("adjustId") Long adjustId);
 
     @Query("""
-                  SELECT new com.bongsco.api.adjust.annual.dto.AdjustSubjectSalaryDto(
+                  SELECT new com.bongsco.api.adjust.annual.dto.AdjustSubjectSalaryCalculateDto(
                   asj.employee.id,
                   asj.grade.baseSalary,
                   s.salaryIncrementRate,
@@ -231,7 +166,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
                   WHERE asj.adjust.id = :adjustId
                   AND asj.isSubject = true
         """)
-    List<AdjustSubjectSalaryDto> findDtoByAdjustId(@Param("adjustId") Long adjustId);
+    List<AdjustSubjectSalaryCalculateDto> findDtoByAdjustId(@Param("adjustId") Long adjustId);
 
     @Modifying(clearAutomatically = true)
     @Transactional

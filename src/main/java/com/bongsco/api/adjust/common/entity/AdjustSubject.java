@@ -10,6 +10,8 @@ import com.bongsco.api.employee.entity.Rank;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -56,7 +58,8 @@ public class AdjustSubject extends BaseEntity {
     private Boolean isInHpo;
 
     @Column
-    private Boolean isPaybandApplied;
+    @Enumerated(EnumType.STRING)
+    private PaybandAppliedType isPaybandApplied;
 
     @Column
     private Double stdSalary;

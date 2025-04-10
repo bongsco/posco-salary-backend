@@ -10,11 +10,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.bongsco.api.adjust.annual.dto.request.ChangedSubjectListRequest;
-import com.bongsco.api.adjust.annual.dto.response.MainAdjPaybandBothSubjectsResponse;
-import com.bongsco.api.adjust.annual.dto.response.MainAdjPaybandCriteriaResponse;
+import com.bongsco.api.adjust.annual.dto.request.PaybandApplyListUpdateRequest;
+import com.bongsco.api.adjust.annual.dto.response.PaybandSubjectResponse;
 import com.bongsco.api.adjust.annual.service.AdjustSubjectService;
-import com.bongsco.api.adjust.annual.service.PaybandCriteriaService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,49 +24,23 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @RequestMapping("/adjust/{adjustId}/main")
 public class MainAdjustController {
-    private final PaybandCriteriaService paybandCriteriaService;
-    private final AdjustSubjectService adjSubjectService;
-
-    @Operation(summary = "payband 기준", description = "직급별 payband 기준 표 반환")
-    @GetMapping("/{adj_info_id}/payband/criteria")
-    public ResponseEntity<MainAdjPaybandCriteriaResponse> getPaybandCriteria(
-        @PathVariable("adj_info_id") Long adjInfoId
-    ) {
-        MainAdjPaybandCriteriaResponse mainAdjPaybandCriteriaResponse = paybandCriteriaService.findAllPaybandCriteria(
-            adjInfoId);
-
-        return ResponseEntity.status(HttpStatus.OK).body(mainAdjPaybandCriteriaResponse);
-    }
+    private final AdjustSubjectService adjustSubjectService;
 
     @Operation(summary = "payband 대상자", description = "payband 대상자 반환")
-    @GetMapping("/{adj_info_id}/payband/subjects")
-    public ResponseEntity<MainAdjPaybandBothSubjectsResponse> getPaybandSubjects(
-        @PathVariable("adj_info_id") Long adjInfoId,
-        @RequestParam(value = "searchKey", required = false) String searchKey
+    @GetMapping("/payband/subjects")
+    public ResponseEntity<PaybandSubjectResponse> getPaybandSubjects(
+        @PathVariable("adjustId") Long adjustId
     ) {
-        if (searchKey != null) {
-            return ResponseEntity.status(HttpStatus.OK)
-                .body(adjSubjectService.getBothUpperLowerSubjectsWithSearchKey(adjInfoId, searchKey));
-        }
-
         return ResponseEntity.status(HttpStatus.OK)
-            .body(adjSubjectService.getBothUpperLowerSubjects(adjInfoId));
+            .body(adjustSubjectService.getBothUpperLowerSubjects(adjustId));
     }
 
     @Operation(summary = "payband 여부 수정", description = "payband 여부 수정")
-    @PatchMapping("/{adj_info_id}/payband/subjects")
-    public ResponseEntity<Void> modifyPaybandSubjects(
-        @PathVariable("adj_info_id") Long adjInfoId,
-        @Valid @RequestBody ChangedSubjectListRequest changedSubjectListRequest
+    @PatchMapping("/payband/subjects")
+    public ResponseEntity<Void> updatePaybandSubjects(
+        @Valid @RequestBody PaybandApplyListUpdateRequest paybandApplyListUpdateRequest
     ) {
-        changedSubjectListRequest
-            .getChangedSubject()
-            .stream()
-            .forEach(subject -> {
-                adjSubjectService.modifyAdjustSubject(subject.getAdjSubjectId(), subject.getPaybandUse(),
-                    subject.getLimitPrice());
-            });
-
+        adjustSubjectService.updateSubjectPaybandApplication(paybandApplyListUpdateRequest.getUpdatedSubjects());
         return ResponseEntity.noContent().build();
     }
 
@@ -76,14 +48,14 @@ public class MainAdjustController {
     @PatchMapping("/calculate-salary")
     public ResponseEntity<Void> calculateSalary(@PathVariable("adjustId") Long adjustId
     ) {
-        adjSubjectService.calculateSalaryAndBonus(adjustId);
+        adjustSubjectService.calculateSalaryAndBonus(adjustId);
         return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "기준연봉 인상률 변경", description = "payband가 반영되어서 최종 연봉이 나왔을 때 인상률이 바뀜")
     @PatchMapping("/increment-rate")
     public ResponseEntity<Void> incrementRate(@PathVariable("adjustId") Long adjustId) {
-        adjSubjectService.changeIncrementRate(adjustId);
+        adjustSubjectService.changeIncrementRate(adjustId);
         return ResponseEntity.noContent().build();
     }
 
