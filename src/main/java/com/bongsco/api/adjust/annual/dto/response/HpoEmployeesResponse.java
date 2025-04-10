@@ -1,6 +1,5 @@
 package com.bongsco.api.adjust.annual.dto.response;
 
-import java.time.LocalDate;
 import java.util.List;
 
 import lombok.AccessLevel;
@@ -13,13 +12,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-public class SubjectCriteriaResponse {
-
-    private LocalDate baseDate;
-    private LocalDate expStartDate;
-    private LocalDate expEndDate;
-
-    private List<SelectableItemDto> grades;
-    private List<SelectableItemDto> payments;
+public class HpoEmployeesResponse {
+    // 직급, 직급별 등급, 직급등급별 가산 정보를 수정
+    private List<RateInfo> salaryIncrementByRank;
+    private HpoSalaryInfo hpoSalaryInfo;
+    private List<HpoEmployee> highPerformanceEmployees;
 }
-

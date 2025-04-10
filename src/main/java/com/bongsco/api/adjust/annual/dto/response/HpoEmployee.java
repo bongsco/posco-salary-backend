@@ -1,4 +1,4 @@
-package com.bongsco.api.adjust.common.dto;
+package com.bongsco.api.adjust.annual.dto.response;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -6,22 +6,16 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Builder(toBuilder = true)
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-public class AdjSubjectSalaryDto {
-    private Long adjSubjectId;
+public class HpoEmployee {
     private Long employeeId;
-    private Double stdSalary;
-    private Double finalStdSalary;
-    private Boolean paybandUse;
-    private Long gradeId;
     private String empNum;
     private String name;
     private String depName;
     private String gradeName;
-    private String positionName;
     private String rankName;
-    private Double limitPrice;
+    private Boolean isInHpo;
 }
