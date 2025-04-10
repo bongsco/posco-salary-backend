@@ -23,6 +23,7 @@ import com.bongsco.api.adjust.common.dto.request.AdjustSearchRequest;
 import com.bongsco.api.adjust.common.dto.request.AdjustUpdateRequest;
 import com.bongsco.api.adjust.common.dto.response.AdjustResponse;
 import com.bongsco.api.adjust.common.dto.response.AdjustResponse.AdjustItemDto;
+import com.bongsco.api.adjust.common.dto.response.SingleAdjustResponse;
 import com.bongsco.api.adjust.common.entity.Adjust;
 import com.bongsco.api.adjust.common.entity.AdjustEmploymentType;
 import com.bongsco.api.adjust.common.entity.AdjustGrade;
@@ -57,6 +58,19 @@ public class AdjustService {
     private final RankRepository rankRepository;
     private final SalaryIncrementByRankRepository salaryIncrementByRankRepository;
     private final PaybandCriteriaRepository paybandCriteriaRepository;
+
+    public SingleAdjustResponse getAdjust(Long adjustId) {
+        Adjust adjust = adjustRepository.findById(adjustId).orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
+
+        String title = String.format(
+            "%d년 %d차 %s",
+            adjust.getYear(),
+            adjust.getOrderNumber(),
+            adjust.getAdjustType().getDisplayName()
+        );
+
+        return SingleAdjustResponse.builder().title(title).build();
+    }
 
     public AdjustResponse getAdjustInfo(AdjustSearchRequest adjustSearchRequest) {
         /* 페이지 정보 세팅 */

@@ -22,6 +22,7 @@ import com.bongsco.api.adjust.common.dto.request.AdjustPostRequest;
 import com.bongsco.api.adjust.common.dto.request.AdjustSearchRequest;
 import com.bongsco.api.adjust.common.dto.request.AdjustUpdateRequest;
 import com.bongsco.api.adjust.common.dto.response.AdjustResponse;
+import com.bongsco.api.adjust.common.dto.response.SingleAdjustResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -58,6 +59,12 @@ public class AdjustController {
         AdjustResponse response = adjustService.getAdjustInfo(adjustSearchRequest);
 
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "개별 조정 정보 조회", description = "특정 조정 ID를 가진 연봉 조정을 조회합니다.")
+    @GetMapping("/{adjustId}")
+    public ResponseEntity<SingleAdjustResponse> getAdjust(@PathVariable Long adjustId) {
+        return ResponseEntity.ok(adjustService.getAdjust(adjustId));
     }
 
     @Operation(summary = "조정 정보 수정")
