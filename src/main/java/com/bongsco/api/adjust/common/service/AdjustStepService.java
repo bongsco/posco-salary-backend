@@ -49,7 +49,7 @@ public class AdjustStepService {
     }
 
     @Transactional
-    public void changeIsDone(Long adjustId, Long stepId, Boolean isDone) {
+    public void changeIsDone(Long adjustId, String stepId, Boolean isDone) {
         AdjustStep adjustStep = adjustStepRepository.findByAdjust_IdAndStep_Id(adjustId, stepId);
         adjustStepRepository.save(adjustStep.toBuilder().isDone(isDone).build());
     }

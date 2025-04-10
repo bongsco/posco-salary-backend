@@ -32,7 +32,7 @@ public class StepperController {
     @Operation(summary = "step 상태 바꾸기", description = "저장시 완료로 바꿀때 씀")
     @PatchMapping("/step/{stepId}")
     public ResponseEntity<Void> changeState(@PathVariable("adjustId") Long adjustId,
-        @PathVariable("stepId") Long stepId,
+        @PathVariable("stepId") String stepId,
         @RequestParam(required = false, defaultValue = "true") Boolean isDone
     ) {
         adjustStepService.changeIsDone(adjustId, stepId, isDone);

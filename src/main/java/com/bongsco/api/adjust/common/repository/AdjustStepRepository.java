@@ -11,5 +11,5 @@ import com.bongsco.api.adjust.common.entity.AdjustStep;
 public interface AdjustStepRepository extends JpaRepository<AdjustStep, Long> {
     List<AdjustStep> findByAdjustIdOrderByStep_OrderNumberAsc(Long adjustId);
 
-    AdjustStep findByAdjust_IdAndStep_Id(Long adjustId, Long stepId);
+    AdjustStep findByAdjust_IdAndStep_Id(Long adjustId, String stepId);
 }
