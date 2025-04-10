@@ -1,5 +1,7 @@
 package com.bongsco.api.adjust.common.controller;
 
+import static com.bongsco.api.adjust.common.util.ParseSorts.*;
+
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
@@ -15,9 +17,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.bongsco.api.adjust.annual.service.AdjustService;
+import com.bongsco.api.adjust.common.domain.AdjustType;
 import com.bongsco.api.adjust.common.dto.request.AdjustPostRequest;
+import com.bongsco.api.adjust.common.dto.request.AdjustSearchRequest;
 import com.bongsco.api.adjust.common.dto.request.AdjustUpdateRequest;
 import com.bongsco.api.adjust.common.dto.response.AdjustResponse;
+import com.bongsco.api.adjust.common.dto.response.SingleAdjustResponse;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,21 +31,40 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
-@Tag(name = "Main API", description = "Main 관련 API 모음")
+@Tag(name = "Main(연봉조정조회 페이지) API", description = "Main(연봉조정조회) 관련 API 모음")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/adjust")
 public class AdjustController {
     private final AdjustService adjustService;
 
-    @Operation(summary = "조정 정보 조회", description = "startYear와 endYear를 통해 조정 정보를 조회합니다.")
+    @Operation(summary = "조정 정보 조회", description = "페이지, 페이지별 행의 수, 필터, 정렬 조건들을 통해 조정 정보를 조회합니다.")
     @GetMapping("/list")
     public ResponseEntity<AdjustResponse> getAdjustInfo(
-        @RequestParam(value = "startYear", required = false) Integer startYear,
-        @RequestParam(value = "endYear", required = false) Integer endYear) {
-        AdjustResponse response = adjustService.getAdjustInfo(startYear, endYear);
+        @RequestParam(value = "page", required = true) Integer page,
+        @RequestParam(value = "size", required = true) Integer size,
+        @RequestParam(value = "year", required = false) Integer year,
+        @RequestParam(value = "month", required = false) Integer month,
+        @RequestParam(value = "adjType", required = false) AdjustType adjType,
+        @RequestParam(value = "state", required = false) Boolean state,
+        @RequestParam(value = "isSubmitted", required = false) Boolean isSubmitted,
+        @RequestParam(value = "author", required = false) String author,
+        @RequestParam(value = "sort", required = false) String sort
+    ) throws JsonProcessingException {
+
+        AdjustSearchRequest adjustSearchRequest = new AdjustSearchRequest(
+            page, size, year, month, adjType, state, isSubmitted, author, extractSorts(sort)
+        );
+
+        AdjustResponse response = adjustService.getAdjustInfo(adjustSearchRequest);
 
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "개별 조정 정보 조회", description = "특정 조정 ID를 가진 연봉 조정을 조회합니다.")
+    @GetMapping("/{adjustId}")
+    public ResponseEntity<SingleAdjustResponse> getAdjust(@PathVariable Long adjustId) {
+        return ResponseEntity.ok(adjustService.getAdjust(adjustId));
     }
 
     @Operation(summary = "조정 정보 수정")
