@@ -181,7 +181,7 @@ public class CriteriaService {
                     .rank(emp.getRank())
                     .isSubject(true)
                     .isInHpo(false)
-                    .isPaybandApplied(false)
+                    .isPaybandApplied(null)
                     .stdSalary(null)
                     .hpoBonus(null)
                     .finalStdSalary(null)

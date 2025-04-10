@@ -18,6 +18,7 @@ import com.bongsco.api.adjust.annual.dto.request.ChangedSubjectUseEmployeeReques
 import com.bongsco.api.adjust.annual.dto.request.PaybandApplyUpdateRequest;
 import com.bongsco.api.adjust.annual.dto.response.AdjResultResponse;
 import com.bongsco.api.adjust.annual.dto.response.CompensationEmployeeResponse;
+import com.bongsco.api.adjust.annual.dto.response.EmployeeResponse;
 import com.bongsco.api.adjust.annual.dto.response.PaybandSubjectResponse;
 import com.bongsco.api.adjust.annual.dto.response.PreprocessAdjSubjectsResponse;
 import com.bongsco.api.adjust.annual.entity.PaybandCriteria;
@@ -71,6 +72,10 @@ public class AdjustSubjectService {
             // 홀수 개수일 때: 가운데 값 반환
             return Math.round(salaryPerGrade.get(middle).getFinalStdSalary() / 1000.0) * 1000.0;
         }
+    }
+
+    public List<EmployeeResponse> findAll(Long adjustId) {
+        return adjustSubjectRepository.findAllEmployeeResponsesByAdjustInfoId(adjustId);
     }
 
     @Transactional
