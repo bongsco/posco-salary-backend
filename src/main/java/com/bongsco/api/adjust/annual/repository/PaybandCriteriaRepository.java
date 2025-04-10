@@ -31,6 +31,8 @@ public interface PaybandCriteriaRepository extends JpaRepository<PaybandCriteria
         @Param("gradeId") Long gradeId
     );
 
+    List<PaybandCriteria> findByAdjustIdAndIsActiveTrue(Long adjustId);
+
     // ✅ 내부 인터페이스: 상한/하한 limit 계산 Projection
     interface PaybandLimitInfo {
         Double getUpperLimit(); // 상한 금액

@@ -305,40 +305,15 @@ public class CriteriaService {
     }
 
     @Transactional
-    public PaybandCriteriaConfigListResponse getPaybandCriteria(Long adjInfoId) {
-
-        List<PaybandCriteria> existingPaybandCriteriaList = paybandCriteriaRepository.findByAdjustId(adjInfoId);
-        Set<Long> existingGradeIdSet = existingPaybandCriteriaList.stream()
-            .map(pc -> pc.getGrade().getId())
-            .collect(Collectors.toSet());
-
-        List<Grade> grades = gradeRepository.findAll();
-        List<Grade> leftGrades = grades.stream()
-            .filter(grade -> !existingGradeIdSet.contains(grade.getId()))
-            .collect(Collectors.toList());
-
-        Adjust adjust = adjustRepository.findById(adjInfoId)
-            .orElseThrow(() -> new IllegalArgumentException("Invalid adjInfoId: " + adjInfoId));
-
-        List<PaybandCriteria> newPaybandCriteriaList = leftGrades.stream()
-            .map(grade ->
-                PaybandCriteria.builder()
-                    .grade(grade)
-                    .adjust(adjust)
-                    .upperBound(130.0)
-                    .lowerBound(70.0)
-                    .build()
-            ).collect(Collectors.toList());
-
-        paybandCriteriaRepository.saveAll(newPaybandCriteriaList);
-
-        existingPaybandCriteriaList.addAll(newPaybandCriteriaList);
+    public PaybandCriteriaConfigListResponse getPaybandCriteria(Long adjustId) {
+        List<PaybandCriteria> existingPaybandCriteriaList = paybandCriteriaRepository.findByAdjustIdAndIsActiveTrue(
+            adjustId);
 
         return PaybandCriteriaConfigListResponse.from(existingPaybandCriteriaList);
     }
 
     @Transactional
-    public List<PaybandCriteria> updatePaybandCriteria(PaybandCriteriaModifyRequest request) {
+    public void updatePaybandCriteria(PaybandCriteriaModifyRequest request) {
         List<PaybandCriteria> updatedPaybandCriteriaList = request.getPaybandCriteriaModifyDetailList()
             .stream()
             .map(paybandCriteriaModifyDetail -> {
@@ -354,6 +329,6 @@ public class CriteriaService {
             })
             .collect(Collectors.toList());
 
-        return paybandCriteriaRepository.saveAll(updatedPaybandCriteriaList);
+        paybandCriteriaRepository.saveAll(updatedPaybandCriteriaList);
     }
 }
