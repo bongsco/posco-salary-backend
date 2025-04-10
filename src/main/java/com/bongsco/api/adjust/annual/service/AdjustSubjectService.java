@@ -14,13 +14,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.bongsco.api.adjust.annual.dto.request.ChangedHighPerformGroupEmployeeRequest;
+import com.bongsco.api.adjust.annual.dto.request.ChangedHighPerformGroupEmployeeRequest.ChangedHighPerformGroupEmployee;
 import com.bongsco.api.adjust.annual.dto.request.ChangedSubjectUseEmployeeRequest;
 import com.bongsco.api.adjust.annual.dto.request.PaybandApplyUpdateRequest;
 import com.bongsco.api.adjust.annual.dto.response.AdjResultResponse;
-import com.bongsco.api.adjust.annual.dto.response.CompensationEmployeeResponse;
 import com.bongsco.api.adjust.annual.dto.response.EmployeeResponse;
+import com.bongsco.api.adjust.annual.dto.response.HpoEmployee;
+import com.bongsco.api.adjust.annual.dto.response.HpoEmployeesResponse;
+import com.bongsco.api.adjust.annual.dto.response.HpoSalaryInfo;
 import com.bongsco.api.adjust.annual.dto.response.PaybandSubjectResponse;
-import com.bongsco.api.adjust.annual.dto.response.PreprocessAdjSubjectsResponse;
+import com.bongsco.api.adjust.annual.dto.response.RateInfo;
 import com.bongsco.api.adjust.annual.entity.PaybandCriteria;
 import com.bongsco.api.adjust.annual.repository.PaybandCriteriaRepository;
 import com.bongsco.api.adjust.annual.repository.SalaryIncrementByRankRepository;
@@ -28,6 +31,7 @@ import com.bongsco.api.adjust.common.entity.Adjust;
 import com.bongsco.api.adjust.common.entity.AdjustSubject;
 import com.bongsco.api.adjust.common.entity.PaybandAppliedType;
 import com.bongsco.api.adjust.common.entity.RepresentativeSalary;
+import com.bongsco.api.adjust.common.repository.AdjustGradeRepository;
 import com.bongsco.api.adjust.common.repository.AdjustRepository;
 import com.bongsco.api.adjust.common.repository.AdjustSubjectRepository;
 import com.bongsco.api.adjust.common.repository.RepresentativeSalaryRepository;
@@ -50,6 +54,7 @@ public class AdjustSubjectService {
     private final RepresentativeSalaryRepository representativeSalaryRepository;
     private final GradeRepository gradeRepository;
     private final AdjustService adjustService;
+    private final AdjustGradeRepository adjustGradeRepository;
 
     public static Double calculateMedian(List<AdjustSubject> adjustSubjects) {
         if (adjustSubjects.isEmpty()) {
@@ -96,73 +101,58 @@ public class AdjustSubjectService {
             });
     }
 
-    public PreprocessAdjSubjectsResponse findCompensationAll(Long adjInfoId) {
-        // 연봉조정차수를 이용해 고성과조직 가산 대상 테이블 가져오기
-        List<AdjustSubject> subjects = adjustSubjectRepository.findByAdjustId(adjInfoId);
+    // 연봉조정차수를 이용해 고성과조직 가산 대상 테이블 가져오기
+    public HpoEmployeesResponse findHpoEmployees(Long adjustId) {
+        /* HPO 정보 가져오기 */
+        HpoSalaryInfo hpoInfo = adjustRepository.findHpoSalaryInfoById(
+            adjustId);
+        /* rank 정보 가져오기 */
+        List<RateInfo> rateInfo = adjustRepository.findRateInfoByAdjustId(adjustId);
+        /* HpoEmployee 찾기 */
+        List<HpoEmployee> employeeResponses = adjustSubjectRepository.findByAdjustIdAndIsSubjectTrue(adjustId);
 
-        return new PreprocessAdjSubjectsResponse(subjects.stream()
-            .filter(adjustSubject -> !adjustSubject.getDeleted())
-            .filter(AdjustSubject::getIsSubject)
-            .map(this::convertToResponse)
-            .collect(Collectors.toList()));
-    }
-
-    private CompensationEmployeeResponse convertToResponse(AdjustSubject adjustSubject) {
-        // CompensationEmployeeResponse 객체를 구성하는 함수
-        // CompensationEmployeeResponse response = new CompensationEmployeeResponse(
-        //     adjustSubject.getId(),
-        //     adjustSubject.getEmployee().getEmpNum(),
-        //     adjustSubject.getEmployee().getName(),
-        //     adjustSubject.getEmployee().getDepartment().getName(),
-        //     adjustSubject.getGrade().getName(),
-        //     adjustSubject.getRank().getCode(),
-        //     adjustSubject.getIsInHpo(),
-        //     adjustSubject.getAdjust().getHpoSalaryIncrementRateByRank(),
-        //     adjustSubject.getAdjust().getHpoBonusMultiplier()
-        // );
-        //
-        // SalaryIncrementByRank salaryIncrementByRank = salaryIncrementRateByRankRepository.findByRankIdAndAdjustIdAndGradeId(
-        //     adjustSubject.getRank().getId(),
-        //     adjustSubject.getAdjust().getId(),
-        //     adjustSubject.getGrade().getId()
-        // ).orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
-        //
-        // if (salaryIncrementByRank != null) {
-        //     response.setEvalDiffIncrement(salaryIncrementByRank.getSalaryIncrementRate());
-        //     response.setEvalDiffBonus(salaryIncrementByRank.getBonusMultiplier());
-        // }
-        //
-        // return response;
-
-        return null;
-    }
-
-    public PreprocessAdjSubjectsResponse findCompensationBySearchKey(Long adjInfoId, String searchKey) {
-        // 연봉조정차수&검색정보를 이용해 고성과조직 가산 대상 테이블 가져오기
-        List<AdjustSubject> subjects = adjustSubjectRepository.findByAdjustIdAndSearchKey(adjInfoId, searchKey);
-
-        return new PreprocessAdjSubjectsResponse(subjects.stream()
-            .filter(adjustSubject -> !adjustSubject.getDeleted())
-            .filter(AdjustSubject::getIsSubject)
-            .map(this::convertToResponse)
-            .collect(Collectors.toList()));
+        return HpoEmployeesResponse.builder()
+            .salaryIncrementByRank(rateInfo)
+            .hpoSalaryInfo(hpoInfo)
+            .highPerformanceEmployees(employeeResponses)
+            .build();
     }
 
     public void updateHighPerformGroupEmployee(
-        Long adjInfoId,
+        Long adjustId,
         ChangedHighPerformGroupEmployeeRequest changedHighPerformGroupEmployeeRequest
     ) {
-        changedHighPerformGroupEmployeeRequest.getChangedHighPerformGroupEmployee()
-            .forEach(changedHighPerformGroupEmployee -> {
-                AdjustSubject adjustSubject = adjustSubjectRepository.findByAdjustIdAndEmployeeId(adjInfoId,
-                        changedHighPerformGroupEmployee.getEmployeeId())
-                    .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
-                /* setInHighPerformGroup값 세팅 및 저장 */
-                AdjustSubject saveAdjustSubject = adjustSubject.toBuilder()
-                    .isInHpo(changedHighPerformGroupEmployee.getInHighPerformGroup())
+        // 요청 직원 ID 목록 추출
+        List<Long> employeeIds = changedHighPerformGroupEmployeeRequest.getChangedHighPerformGroupEmployee().stream()
+            .map(ChangedHighPerformGroupEmployee::getEmployeeId)
+            .collect(Collectors.toList());
+
+        // 관련 AdjustSubject 엔티티들 모두 조회
+        List<AdjustSubject> existingSubjects = adjustSubjectRepository.findAllByAdjustIdAndEmployeeIdIn(adjustId,
+            employeeIds);
+
+        // 조회된 엔티티들을 employeeId를 키로 하는 Map 변환
+        Map<Long, AdjustSubject> subjectsMap = existingSubjects.stream()
+            .collect(Collectors.toMap(subject -> subject.getEmployee().getId(), subject -> subject));
+
+        // 업데이트할 엔티티들을 담는 리스트
+        List<AdjustSubject> updatedSubjects = changedHighPerformGroupEmployeeRequest.getChangedHighPerformGroupEmployee()
+            .stream()
+            .map(requestItem -> {
+                AdjustSubject original = subjectsMap.get(requestItem.getEmployeeId());
+
+                if (original == null) {
+                    throw new CustomException(USER_NOT_FOUND);
+                }
+
+                return original.toBuilder()
+                    .isInHpo(requestItem.getIsInHpo())
                     .build();
-                adjustSubjectRepository.save(saveAdjustSubject);
-            });
+            })
+            .collect(Collectors.toList());
+
+        // 모두 저장
+        adjustSubjectRepository.saveAll(updatedSubjects);
     }
 
     public PaybandSubjectResponse getBothUpperLowerSubjects(Long adjustId) {
