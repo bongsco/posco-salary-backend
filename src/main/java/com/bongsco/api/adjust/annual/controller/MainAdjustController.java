@@ -31,6 +31,7 @@ public class MainAdjustController {
     public ResponseEntity<PaybandSubjectResponse> getPaybandSubjects(
         @PathVariable("adjustId") Long adjustId
     ) {
+        adjustSubjectService.calculateSalaryAndBonus(adjustId);
         return ResponseEntity.status(HttpStatus.OK)
             .body(adjustSubjectService.getBothUpperLowerSubjects(adjustId));
     }
@@ -44,26 +45,12 @@ public class MainAdjustController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "기준 연봉과 성과금 계산", description = "사전 작업에서 입력한 내용을 기준으로 일괄적으로 기준 연봉과 성과금 계산, payband 넘어가기전에 넣어줘야함")
-    @PatchMapping("/calculate-salary")
-    public ResponseEntity<Void> calculateSalary(@PathVariable("adjustId") Long adjustId
-    ) {
-        adjustSubjectService.calculateSalaryAndBonus(adjustId);
-        return ResponseEntity.noContent().build();
-    }
-
-    @Operation(summary = "기준연봉 인상률 변경", description = "payband가 반영되어서 최종 연봉이 나왔을 때 인상률이 바뀜")
-    @PatchMapping("/increment-rate")
-    public ResponseEntity<Void> incrementRate(@PathVariable("adjustId") Long adjustId) {
-        adjustSubjectService.changeIncrementRate(adjustId);
-        return ResponseEntity.noContent().build();
-    }
-
     @Operation(summary = "정기 연봉 조정", description = "마지막 페이지, 계산값 모두 보여줌")
-    @PatchMapping("/{adj_info_id}/annual-adj")
-    public ResponseEntity<Void> showResult(@PathVariable("adj_info_id") Long adjInfoId,
+    @PatchMapping("/annual-adj")
+    public ResponseEntity<Void> showResult(@PathVariable("adjustId") Long adjustId,
         @RequestParam(value = "searchKey", required = false) String searchKey
     ) {
+        adjustSubjectService.changeIncrementRate(adjustId);
         // TODO("Implement endpoint")
 
         return ResponseEntity.noContent().build();
