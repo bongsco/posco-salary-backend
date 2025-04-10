@@ -5,14 +5,11 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.bongsco.api.adjust.annual.dto.AdjustSubjectIncrementDto;
-import com.bongsco.api.adjust.annual.dto.AdjustSubjectSalaryCalculateDto;
 import com.bongsco.api.adjust.annual.dto.response.EmployeeResponse;
 import com.bongsco.api.adjust.annual.dto.response.HpoEmployee;
 import com.bongsco.api.adjust.common.dto.AdjustSubjectSalaryDto;
@@ -152,13 +149,11 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
     Set<Long> findEmployeeIdsByAdjustId(@Param("adjustId") Long adjustId);
 
     @Query("""
-                  SELECT new com.bongsco.api.adjust.annual.dto.AdjustSubjectSalaryCalculateDto(
+                  SELECT asj, new com.bongsco.api.adjust.annual.dto.AdjustSubjectSalaryCalculateDto(
                   asj.employee.id,
                   asj.grade.baseSalary,
                   s.salaryIncrementRate,
-                  s.bonusMultiplier,
-                  asj.id,
-                  asj.isInHpo
+                  s.bonusMultiplier
                   )
                   FROM AdjustSubject asj
                   JOIN AdjustGrade ag ON ag.grade.id = asj.grade.id AND asj.adjust.id = ag.adjust.id
@@ -166,22 +161,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
                   WHERE asj.adjust.id = :adjustId
                   AND asj.isSubject = true
         """)
-    List<AdjustSubjectSalaryCalculateDto> findDtoByAdjustId(@Param("adjustId") Long adjustId);
-
-    @Modifying(clearAutomatically = true)
-    @Transactional
-    @Query(
-        """
-                UPDATE AdjustSubject asj
-                SET asj.stdSalary = :newStdSalary, asj.finalStdSalary = :newStdSalary, asj.hpoBonus = :newHpoBonus
-                WHERE asj.id = :adjustSubjectId
-                    AND asj.isSubject = true
-            """
-    )
-    void saveById(
-        @Param("adjustSubjectId") Long adjustSubjectId,
-        @Param("newStdSalary") Double newStdSalary,
-        @Param("newHpoBonus") Double newHpoBonus);
+    List<Object[]> findDtoByAdjustId(@Param("adjustId") Long adjustId);
 
     @Query("""
             SELECT new com.bongsco.api.adjust.annual.dto.AdjustSubjectIncrementDto(

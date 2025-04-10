@@ -216,9 +216,6 @@ public class AdjustSubjectService {
 
     @Transactional
     public void calculateSalaryAndBonus(Long adjustId) {
-        List<AdjustSubjectSalaryCalculateDto> adjustSubjectSalaryDtos = adjustSubjectRepository.findDtoByAdjustId(
-            adjustId);
-
         Adjust adjust = adjustRepository.findById(adjustId)
             .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
 
@@ -228,14 +225,21 @@ public class AdjustSubjectService {
 
         Double hpoBonusMultiplier = Optional.ofNullable(adjust.getHpoBonusMultiplier()).orElse(0.0);
 
-        adjustSubjectSalaryDtos.stream().forEach(adjustSubjectDto -> {
+        List<Object[]> asjAndDtos = adjustSubjectRepository.findDtoByAdjustId(
+            adjustId);
+        List<AdjustSubject> updatedSubjects = asjAndDtos.stream().map(asjAndDto -> {
+
+            AdjustSubject subject = (AdjustSubject)asjAndDto[0];
+            AdjustSubjectSalaryCalculateDto adjustSubjectDto = (AdjustSubjectSalaryCalculateDto)asjAndDto[1];
+
             //기준연봉= 전년도 기준연봉+(직무기본연봉*평차등연봉인상률)
 
             //전년도 기준연봉 불러옴
             AdjustSubject beforeAdjustSubject = adjustSubjectRepository.findBeforeAdjSubject(adjustId,
                 adjustSubjectDto.getEmpId());
+
             if (beforeAdjustSubject == null)
-                return; //신입 제외
+                return null; //신입 제외
 
             //직무 기본 연봉 불러옴
             Double gradeBaseSalary = adjustSubjectDto.getBaseSalary();
@@ -245,7 +249,7 @@ public class AdjustSubjectService {
 
             //고성과 있으면
             //평차등연봉인상률 = (직급, 평가별 평차연) * (1 + 고성과평차연)
-            if (adjustSubjectDto.getIsInHpo()) {
+            if (subject.getIsInHpo()) {
                 evalDiffIncrement = evalDiffIncrement * (1 + hpoSalaryIncrementByRank) - 1;
             }
 
@@ -266,7 +270,7 @@ public class AdjustSubjectService {
 
             //고성과 조직일 경우
             //평가차등경영성과금 지급률 = 평가차등경영성과금 지급률+고성과 경영성과금지급률
-            if (adjustSubjectDto.getIsInHpo()) {
+            if (subject.getIsInHpo()) {
                 bonusMultiplier += hpoBonusMultiplier / 100;
             }
 
@@ -274,8 +278,14 @@ public class AdjustSubjectService {
 
             newHpoBonus = Math.floor(newHpoBonus / 1000) * 1000;
 
-            adjustSubjectRepository.saveById(adjustSubjectDto.getAdjustSubjectId(), newStdSalary, newHpoBonus);
-        });
+            return subject.toBuilder()
+                .stdSalary(newStdSalary)
+                .finalStdSalary(newStdSalary)
+                .hpoBonus(newHpoBonus)
+                .build();
+        }).filter(Objects::nonNull).toList();
+
+        adjustSubjectRepository.saveAll(updatedSubjects);
     }
 
     public AdjResultResponse getFinalResult(Long adjInfoId) {
