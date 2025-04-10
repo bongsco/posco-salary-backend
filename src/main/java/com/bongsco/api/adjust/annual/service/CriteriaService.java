@@ -306,33 +306,7 @@ public class CriteriaService {
 
     @Transactional
     public PaybandCriteriaConfigListResponse getPaybandCriteria(Long adjustId) {
-
         List<PaybandCriteria> existingPaybandCriteriaList = paybandCriteriaRepository.findByAdjustId(adjustId);
-        Set<Long> existingGradeIdSet = existingPaybandCriteriaList.stream()
-            .map(pc -> pc.getGrade().getId())
-            .collect(Collectors.toSet());
-
-        List<Grade> grades = gradeRepository.findAll();
-        List<Grade> leftGrades = grades.stream()
-            .filter(grade -> !existingGradeIdSet.contains(grade.getId()))
-            .collect(Collectors.toList());
-
-        Adjust adjust = adjustRepository.findById(adjustId)
-            .orElseThrow(() -> new IllegalArgumentException("Invalid adjInfoId: " + adjustId));
-
-        List<PaybandCriteria> newPaybandCriteriaList = leftGrades.stream()
-            .map(grade ->
-                PaybandCriteria.builder()
-                    .grade(grade)
-                    .adjust(adjust)
-                    .upperBound(130.0)
-                    .lowerBound(70.0)
-                    .build()
-            ).collect(Collectors.toList());
-
-        paybandCriteriaRepository.saveAll(newPaybandCriteriaList);
-
-        existingPaybandCriteriaList.addAll(newPaybandCriteriaList);
 
         return PaybandCriteriaConfigListResponse.from(existingPaybandCriteriaList);
     }
