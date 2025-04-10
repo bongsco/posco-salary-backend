@@ -24,4 +24,6 @@ public class AdjustPostRequest {
 
     @NotNull(message = "적용 만료 일자(endDate)는 필수 입력값입니다.")
     private LocalDate endDate;
+
+    private String author;
 }
