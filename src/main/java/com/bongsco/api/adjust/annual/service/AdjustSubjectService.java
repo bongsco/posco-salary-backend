@@ -355,11 +355,12 @@ public class AdjustSubjectService {
         Adjust adjust = adjustRepository.findById(adjustId).orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
 
         List<MainResultResponses.MainResultResponse> responseList = resultAndPageInfo.getContent().stream().map(dto -> {
-            String paybandResult =
-                dto.getStdSalary() == null || dto.getFinalStdSalary() == null ? "미적용" :
-                    dto.getStdSalary() > dto.getFinalStdSalary() ? "적용(상한)" :
-                        dto.getStdSalary() < dto.getFinalStdSalary() ? "적용(하한)" :
-                            "미적용";
+            String paybandResult;
+            switch (dto.getIsPaybandApplied()) {
+                case UPPER -> paybandResult = "적용(상한)";
+                case LOWER -> paybandResult = "적용(하한)";
+                default -> paybandResult = "미적용";
+            }
 
             Double bonusMultiplier = Optional.ofNullable(dto.getBonusMultiplier()).orElse(0.0);
             Double salaryIncrementRate = Optional.ofNullable(dto.getSalaryIncrementRate()).orElse(0.0);

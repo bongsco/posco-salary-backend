@@ -139,9 +139,9 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
     @Query(
         value = """
              SELECT new com.bongsco.api.adjust.annual.dto.MainResultDto(
-                 e.empNum, e.name, g.name, e.positionName, d.name, r.code,\s
-                 e.stdSalaryIncrementRate, asj.finalStdSalary, asj.stdSalary,\s
-                 asj.hpoBonus, asj.isInHpo, e.id, asj.id, g.id, r.id, ag.id, s.bonusMultiplier, s.salaryIncrementRate)
+                 e.empNum, e.name, g.name, e.positionName, d.name, r.code,
+                 e.stdSalaryIncrementRate, asj.finalStdSalary, asj.stdSalary,
+                 asj.hpoBonus, asj.isInHpo, e.id, asj.id, g.id, r.id, ag.id, s.bonusMultiplier, s.salaryIncrementRate, asj.isPaybandApplied)
             FROM AdjustSubject asj
                 JOIN Employee e ON e.id = asj.employee.id\s
                 JOIN Grade g ON g.id = asj.grade.id
@@ -160,7 +160,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
         countQuery = """
             SELECT COUNT(asj.id)
             FROM AdjustSubject asj
-                JOIN Employee e ON e.id = asj.employee.id\s
+                JOIN Employee e ON e.id = asj.employee.id
                 JOIN Grade g ON g.id = asj.grade.id
                 JOIN Department d ON d.id = e.department.id
                 JOIN Rank r ON r.id = asj.rank.id

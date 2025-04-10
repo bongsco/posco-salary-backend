@@ -1,5 +1,7 @@
 package com.bongsco.api.adjust.annual.dto;
 
+import com.bongsco.api.adjust.common.entity.PaybandAppliedType;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,4 +31,5 @@ public class MainResultDto {
     private Long adjustGradeId;
     private Double bonusMultiplier;
     private Double salaryIncrementRate;
+    private PaybandAppliedType isPaybandApplied;
 }
