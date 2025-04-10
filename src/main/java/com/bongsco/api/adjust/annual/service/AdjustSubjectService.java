@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bongsco.api.adjust.annual.dto.AdjustSubjectIncrementDto;
 import com.bongsco.api.adjust.annual.dto.AdjustSubjectSalaryDto;
 import com.bongsco.api.adjust.annual.dto.request.ChangedHighPerformGroupEmployeeRequest;
 import com.bongsco.api.adjust.annual.dto.request.ChangedSubjectUseEmployeeRequest;
@@ -424,26 +425,25 @@ public class AdjustSubjectService {
         }).toList());
     }
 
-    public void changeIncrementRate(Long adjInfoId) {
-        List<AdjustSubject> adjustSubjects = adjustSubjectRepository.findByAdjust_Id(adjInfoId)
-            .stream()
-            .filter(adjustSubject -> !adjustSubject.getDeleted())
-            .filter(AdjustSubject::getIsSubject)
-            .toList();
+    public void changeIncrementRate(Long adjustId) {
+        List<AdjustSubjectIncrementDto> adjustSubjectIncrementDtos = adjustSubjectRepository.findAdjustSubjectIncrementDtoByAdjustId(
+            adjustId);
 
-        adjustSubjects.forEach(adjustSubject -> {
-            Employee employee = adjustSubject.getEmployee();
-            AdjustSubject beforeAdjustSubject = adjustSubjectRepository.findBeforeAdjSubject(adjInfoId,
-                employee.getId());
+        adjustSubjectIncrementDtos.forEach(adjustSubjectIncrementDto -> {
+            AdjustSubject beforeAdjustSubject = adjustSubjectRepository.findBeforeAdjSubject(adjustId,
+                adjustSubjectIncrementDto.getEmpId());
+            if (beforeAdjustSubject == null)
+                return; //신입 제외
 
             Double beforeFinalStdSalary = beforeAdjustSubject.getFinalStdSalary();
-            Double finalStdSalary = adjustSubject.getFinalStdSalary();
+            Double finalStdSalary = adjustSubjectIncrementDto.getFinalStdSalary();
             if (beforeFinalStdSalary == null || finalStdSalary == null) {
                 return;
             }
             Double finalStdSalaryIncrementRate = ((finalStdSalary - beforeFinalStdSalary) / beforeFinalStdSalary) * 100;
 
-            employeeRepository.save(employee.toBuilder().stdSalaryIncrementRate(finalStdSalaryIncrementRate).build());
+            employeeRepository.changeIncrementRateById(adjustSubjectIncrementDto.getEmpId(),
+                finalStdSalaryIncrementRate);
         });
     }
 }

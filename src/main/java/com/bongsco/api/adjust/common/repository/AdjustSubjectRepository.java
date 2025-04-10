@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bongsco.api.adjust.annual.dto.AdjustSubjectIncrementDto;
 import com.bongsco.api.adjust.annual.dto.AdjustSubjectSalaryDto;
 import com.bongsco.api.adjust.common.dto.AdjSubjectSalaryDto;
 import com.bongsco.api.adjust.common.entity.AdjustSubject;
@@ -39,6 +40,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
         WHERE asj.adjust.id < :adjustId
             AND asj.employee.id = :employeeId
             AND asj.deleted != true
+            AND asj.isSubject = true
         ORDER BY asj.adjust.id DESC
         LIMIT 1
         """
@@ -208,4 +210,15 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
         @Param("adjustSubjectId") Long adjustSubjectId,
         @Param("newStdSalary") Double newStdSalary,
         @Param("newHpoBonus") Double newHpoBonus);
+
+    @Query("""
+            SELECT new com.bongsco.api.adjust.annual.dto.AdjustSubjectIncrementDto(
+                asj.employee.id,
+                asj.finalStdSalary
+            )
+            FROM AdjustSubject asj
+            WHERE asj.adjust.id = :adjustId
+                AND asj.isSubject = true
+        """)
+    List<AdjustSubjectIncrementDto> findAdjustSubjectIncrementDtoByAdjustId(@Param("adjustId") Long adjustId);
 }
