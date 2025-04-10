@@ -1,6 +1,7 @@
 package com.bongsco.api.adjust.annual.entity;
 
 import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import com.bongsco.api.adjust.common.entity.Adjust;
 import com.bongsco.api.common.entity.BaseEntity;
@@ -25,6 +26,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SQLDelete(sql = "UPDATE payband_criteria SET deleted = true WHERE id = ?")
+@SQLRestriction("deleted = false")
 public class PaybandCriteria extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,10 +40,13 @@ public class PaybandCriteria extends BaseEntity {
     @JoinColumn(name = "grade_id", nullable = false)
     private Grade grade;
 
-    @Column
+    @Column(nullable = false)
     private Double upperBound;
 
-    @Column
+    @Column(nullable = false)
     private Double lowerBound;
+
+    @Column(nullable = false)
+    private Boolean isActive;
 }
 

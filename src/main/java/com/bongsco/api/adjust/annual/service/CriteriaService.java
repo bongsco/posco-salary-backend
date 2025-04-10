@@ -2,6 +2,8 @@ package com.bongsco.api.adjust.annual.service;
 
 import static com.bongsco.api.common.exception.ErrorCode.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -12,11 +14,13 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bongsco.api.adjust.annual.dto.PaymentRateDto;
 import com.bongsco.api.adjust.annual.dto.request.PaybandCriteriaModifyRequest;
-import com.bongsco.api.adjust.annual.dto.request.RankIncrementRateRequest;
+import com.bongsco.api.adjust.annual.dto.request.PaymentRateUpdateRequest;
 import com.bongsco.api.adjust.annual.dto.request.SubjectCriteriaRequest;
 import com.bongsco.api.adjust.annual.dto.response.EmployeeSimple;
 import com.bongsco.api.adjust.annual.dto.response.PaybandCriteriaConfigListResponse;
+import com.bongsco.api.adjust.annual.dto.response.PaymentRateResponse;
 import com.bongsco.api.adjust.annual.dto.response.SelectableItemDto;
 import com.bongsco.api.adjust.annual.dto.response.SubjectCriteriaResponse;
 import com.bongsco.api.adjust.annual.entity.PaybandCriteria;
@@ -35,6 +39,7 @@ import com.bongsco.api.common.exception.CustomException;
 import com.bongsco.api.common.exception.ErrorCode;
 import com.bongsco.api.employee.entity.Employee;
 import com.bongsco.api.employee.entity.Grade;
+import com.bongsco.api.employee.entity.Rank;
 import com.bongsco.api.employee.repository.EmployeeRepository;
 import com.bongsco.api.employee.repository.EmploymentTypeRepository;
 import com.bongsco.api.employee.repository.GradeRepository;
@@ -176,7 +181,7 @@ public class CriteriaService {
                     .rank(emp.getRank())
                     .isSubject(true)
                     .isInHpo(false)
-                    .isPaybandApplied(false)
+                    .isPaybandApplied(null)
                     .stdSalary(null)
                     .hpoBonus(null)
                     .finalStdSalary(null)
@@ -213,129 +218,102 @@ public class CriteriaService {
         );
     }
 
-    @Transactional
-    public List<SalaryIncrementByRank> saveRankIncrementRates(Long adjInfoId, RankIncrementRateRequest request) {
-        // Adjust existingAdjust = adjustRepository.findById(adjInfoId)
-        //     .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
-        //
-        // Adjust updatedAdjust = existingAdjust.toBuilder()
-        //     .hpoSalaryIncrementRateByRank(request.getEvalDiffIncrementPromoted())
-        //     .hpoBonusMultiplier(request.getEvalDiffBonusPromoted())
-        //     .build();
-        //
-        // // 모든 rank_id -> grade_id -> 상세 정보 매핑
-        // List<SalaryIncrementByRank> salaryIncrementByRanks = request.getRankData().entrySet().stream()
-        //     .flatMap(rankEntry -> {
-        //         Long rankId = rankEntry.getKey();
-        //         Rank rank = rankRepository.findById(rankId)
-        //             .orElseThrow(() -> new IllegalArgumentException("Rank not found with ID: " + rankId));
-        //
-        //         return rankEntry.getValue().entrySet().stream().map(gradeEntry -> {
-        //             return SalaryIncrementByRank.builder()
-        //                 .adjustGrade(salaryIncrementRateByRankRepository.findByRankIdAndAdjustGradeId(rankId))
-        //                 .rank(rank)
-        //                 .evalDiffBonus(gradeEntry.getValue().getEvalDiffBonus())
-        //                 .evalDiffIncrement(gradeEntry.getValue().getEvalDiffIncrement())
-        //                 .build();
-        //         });
-        //     })
-        //     .collect(Collectors.toList());
-        //
-        // return salaryIncrementRateByRankRepository.saveAll(salaryIncrementByRanks);
+    public PaymentRateResponse getPaymentRate(Long adjustId, List<String> gradeList) {
+        Adjust adjust = adjustRepository.findById(adjustId)
+            .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
 
-        return null;
+        List<SalaryIncrementByRank> rates =
+            salaryIncrementByRankRepository.findByAdjustIdAndGradeNames(adjustId, gradeList);
+
+        Map<String, Map<String, PaymentRateDto>> rankRateMap = new HashMap<>();
+
+        for (SalaryIncrementByRank rate : rates) {
+            String grade = rate.getAdjustGrade().getGrade().getName(); // "P1", "P2"
+            String evalGrade = rate.getRank().getCode();               // "S", "A"
+
+            rankRateMap
+                .computeIfAbsent(grade, g -> new HashMap<>())
+                .put(evalGrade, new PaymentRateDto(
+                    rate.getSalaryIncrementRate(),
+                    rate.getBonusMultiplier()
+                ));
+        }
+
+        return PaymentRateResponse.builder()
+            .hpoSalaryIncrementRate(adjust.getHpoSalaryIncrementByRank())
+            .hpoExtraBonusMultiplier(adjust.getHpoBonusMultiplier())
+            .paymentRates(rankRateMap)
+            .build();
     }
 
     @Transactional
-    public List<SalaryIncrementByRank> updateRankIncrementRates(Long adjInfoId, RankIncrementRateRequest request) {
-        // Adjust existingAdjust = adjustRepository.findById(adjInfoId)
-        //     .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
-        //
-        // Adjust updatedAdjust = existingAdjust.toBuilder()
-        //     .hpoSalaryIncrementRateByRank(request.getEvalDiffIncrementPromoted())
-        //     .hpoBonusMultiplier(request.getEvalDiffBonusPromoted())
-        //     .build();
-        //
-        // List<SalaryIncrementByRank> updatedSalaryIncrementByRanks = request.getRankData().entrySet().stream()
-        //     .flatMap(rankEntry -> {
-        //         Long rankId = rankEntry.getKey();
-        //         Rank rank = rankRepository.findById(rankId)
-        //             .orElseThrow(() -> new IllegalArgumentException("Rank not found with ID: " + rankId));
-        //
-        //         return rankEntry.getValue().entrySet().stream().map(gradeEntry -> {
-        //             Long gradeId = gradeEntry.getKey();
-        //             Grade grade = gradeRepository.findById(gradeId)
-        //                 .orElseThrow(() -> new IllegalArgumentException("Grade not found with ID: " + gradeId));
-        //
-        //             RankIncrementRateRequest.RankIncrementRateDetail detail = gradeEntry.getValue();
-        //
-        //             // 기존 데이터 존재 여부 확인
-        //             Optional<SalaryIncrementByRank> existingRecord =
-        //                 salaryIncrementRateByRankRepository.findByRankIdAndAdjustIdAndGradeId(rankId, adjInfoId,
-        //                     gradeId);
-        //
-        //             if (existingRecord.isPresent()) {
-        //                 // 기존 데이터 업데이트
-        //                 SalaryIncrementByRank existingRate = existingRecord.get();
-        //                 existingRate = existingRate.toBuilder()
-        //                     .evalDiffBonus(detail.getEvalDiffBonus())
-        //                     .evalDiffIncrement(detail.getEvalDiffIncrement())
-        //                     .build();
-        //                 return existingRate;
-        //             } else {
-        //                 // 새로운 데이터 생성
-        //                 return SalaryIncrementByRank.builder()
-        //                     .adjust(updatedAdjust)
-        //                     .rank(rank)
-        //                     .grade(grade)
-        //                     .evalDiffBonus(detail.getEvalDiffBonus())
-        //                     .evalDiffIncrement(detail.getEvalDiffIncrement())
-        //                     .build();
-        //             }
-        //         });
-        //     })
-        //     .collect(Collectors.toList());
-        //
-        // return salaryIncrementRateByRankRepository.saveAll(updatedSalaryIncrementByRanks);
+    public List<String> updatePaymentRate(Long adjustId, PaymentRateUpdateRequest request) {
+        Adjust existingAdjust = adjustRepository.findById(adjustId)
+            .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
 
-        return null;
+        Adjust updatedAdjust = existingAdjust.toBuilder()
+            .id(adjustId)
+            .hpoSalaryIncrementByRank(request.getHpoSalaryIncrementRate())
+            .hpoBonusMultiplier(request.getHpoExtraBonusMultiplier())
+            .build();
+
+        adjustRepository.save(updatedAdjust);
+
+        List<String> updatedGrades = new ArrayList<>();
+        List<SalaryIncrementByRank> entitiesToSave = new ArrayList<>();
+
+        for (Map.Entry<String, Map<String, PaymentRateUpdateRequest.PaymentRateValue>> gradeEntry : request.getPaymentRates()
+            .entrySet()) {
+            String gradeName = gradeEntry.getKey();
+
+            Grade grade = gradeRepository.findByName(gradeName)
+                .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
+
+            AdjustGrade adjustGrade = adjustGradeRepository.findByAdjustIdAndGradeId(adjustId, grade.getId())
+                .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
+
+            for (Map.Entry<String, PaymentRateUpdateRequest.PaymentRateValue> evalEntry : gradeEntry.getValue()
+                .entrySet()) {
+                String evalCode = evalEntry.getKey();
+                Rank rank = rankRepository.findByCode(evalCode)
+                    .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
+
+                PaymentRateUpdateRequest.PaymentRateValue values = evalEntry.getValue();
+
+                SalaryIncrementByRank entity = salaryIncrementByRankRepository
+                    .findByRankIdAndAdjustGradeId(rank.getId(), adjustGrade.getId())
+                    .orElse(SalaryIncrementByRank.builder()
+                        .rank(rank)
+                        .adjustGrade(adjustGrade)
+                        .build());
+
+                entity = entity.toBuilder()
+                    .id(entity.getId())
+                    .salaryIncrementRate(values.getIncrementRate())
+                    .bonusMultiplier(values.getBonusMultiplier())
+                    .build();
+
+                entitiesToSave.add(entity);
+            }
+
+            updatedGrades.add(gradeName);
+        }
+
+        salaryIncrementByRankRepository.saveAll(entitiesToSave);
+
+        return updatedGrades;
     }
 
     @Transactional
-    public PaybandCriteriaConfigListResponse getPaybandCriteria(Long adjInfoId) {
-
-        List<PaybandCriteria> existingPaybandCriteriaList = paybandCriteriaRepository.findByAdjustId(adjInfoId);
-        Set<Long> existingGradeIdSet = existingPaybandCriteriaList.stream()
-            .map(pc -> pc.getGrade().getId())
-            .collect(Collectors.toSet());
-
-        List<Grade> grades = gradeRepository.findAll();
-        List<Grade> leftGrades = grades.stream()
-            .filter(grade -> !existingGradeIdSet.contains(grade.getId()))
-            .collect(Collectors.toList());
-
-        Adjust adjust = adjustRepository.findById(adjInfoId)
-            .orElseThrow(() -> new IllegalArgumentException("Invalid adjInfoId: " + adjInfoId));
-
-        List<PaybandCriteria> newPaybandCriteriaList = leftGrades.stream()
-            .map(grade ->
-                PaybandCriteria.builder()
-                    .grade(grade)
-                    .adjust(adjust)
-                    .upperBound(130.0)
-                    .lowerBound(70.0)
-                    .build()
-            ).collect(Collectors.toList());
-
-        paybandCriteriaRepository.saveAll(newPaybandCriteriaList);
-
-        existingPaybandCriteriaList.addAll(newPaybandCriteriaList);
+    public PaybandCriteriaConfigListResponse getPaybandCriteria(Long adjustId) {
+        List<PaybandCriteria> existingPaybandCriteriaList = paybandCriteriaRepository.findByAdjustIdAndIsActiveTrue(
+            adjustId);
 
         return PaybandCriteriaConfigListResponse.from(existingPaybandCriteriaList);
     }
 
     @Transactional
-    public List<PaybandCriteria> updatePaybandCriteria(PaybandCriteriaModifyRequest request) {
+    public void updatePaybandCriteria(PaybandCriteriaModifyRequest request) {
         List<PaybandCriteria> updatedPaybandCriteriaList = request.getPaybandCriteriaModifyDetailList()
             .stream()
             .map(paybandCriteriaModifyDetail -> {
@@ -351,6 +329,6 @@ public class CriteriaService {
             })
             .collect(Collectors.toList());
 
-        return paybandCriteriaRepository.saveAll(updatedPaybandCriteriaList);
+        paybandCriteriaRepository.saveAll(updatedPaybandCriteriaList);
     }
 }
