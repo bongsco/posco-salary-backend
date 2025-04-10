@@ -13,7 +13,6 @@ import org.springframework.stereotype.Repository;
 import com.bongsco.api.adjust.common.domain.AdjustType;
 import com.bongsco.api.adjust.annual.dto.response.HpoSalaryInfo;
 import com.bongsco.api.adjust.annual.dto.response.RateInfo;
-import com.bongsco.api.adjust.common.dto.AdjSubjectSalaryDto;
 import com.bongsco.api.adjust.common.entity.Adjust;
 import com.bongsco.api.adjust.common.repository.reflection.AdjustItemProjection;
 
@@ -29,32 +28,6 @@ public interface AdjustRepository extends JpaRepository<Adjust, Long> {
         """
     )
     List<Adjust> findLatestAdjustInfo(@Param("id") Long id);
-
-    @Query("""
-        SELECT new com.bongsco.api.adjust.common.dto.AdjSubjectSalaryDto(
-            asj.id,
-            asj.employee.id,
-            asj.stdSalary,
-            asj.finalStdSalary,
-            asj.isPaybandApplied,
-            asj.grade.id,
-            asj.employee.empNum,
-            asj.employee.name,
-            asj.employee.department.name,
-            pc.grade.name,
-            asj.employee.positionName,
-            asj.employee.rank.name,
-            pc.upperBound
-        )
-        FROM AdjustSubject asj
-        JOIN PaybandCriteria pc ON pc.grade.id = asj.grade.id
-        WHERE asj.adjust.id = :adjustId
-            AND pc.adjust.id = :adjustId
-            AND asj.isSubject = true
-            AND asj.deleted != true AND pc.deleted != true AND asj.isSubject = true
-        """
-    )
-    List<AdjSubjectSalaryDto> findAllAdjSubjectAndStdSalaryAndUpper(@Param("adjustId") Long adjustId);
 
     @Query("""
         SELECT new com.bongsco.api.adjust.annual.dto.response.HpoSalaryInfo(
