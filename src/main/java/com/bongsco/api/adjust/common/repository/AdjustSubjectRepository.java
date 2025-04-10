@@ -201,6 +201,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
                 UPDATE AdjustSubject asj
                 SET asj.stdSalary = :newStdSalary, asj.finalStdSalary = :newStdSalary, asj.hpoBonus = :newHpoBonus
                 WHERE asj.id = :adjustSubjectId
+                    AND asj.isSubject = true
             """
     )
     void saveById(
