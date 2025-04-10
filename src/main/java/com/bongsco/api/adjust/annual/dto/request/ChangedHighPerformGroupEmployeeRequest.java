@@ -26,6 +26,6 @@ public class ChangedHighPerformGroupEmployeeRequest {
         @NotNull(message = "직원 아이디는 null 일 수 없습니다.")
         private Long employeeId;
         @NotNull(message = "고성과조직 적용 여부는 null 일 수 없습니다.")
-        private Boolean inHighPerformGroup;
+        private Boolean isInHpo;
     }
 }

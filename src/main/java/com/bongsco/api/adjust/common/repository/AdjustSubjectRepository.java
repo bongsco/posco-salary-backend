@@ -10,11 +10,33 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.bongsco.api.adjust.annual.dto.response.EmployeeResponse;
+import com.bongsco.api.adjust.annual.dto.response.HpoEmployee;
 import com.bongsco.api.adjust.common.dto.AdjSubjectSalaryDto;
 import com.bongsco.api.adjust.common.entity.AdjustSubject;
 
 @Repository
 public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Long> {
+
+    @Query("""
+        SELECT new com.bongsco.api.adjust.annual.dto.response.HpoEmployee(
+            emp.id,
+            emp.empNum,
+            emp.name, 
+            dept.name,
+            g.name,
+            r.code,
+            asj.isInHpo
+        )
+        FROM AdjustSubject asj          
+        JOIN asj.employee emp
+        JOIN emp.department dept
+        JOIN emp.grade g
+        JOIN emp.rank r    
+        WHERE asj.adjust.id = :adjustId 
+        AND asj.isSubject = true
+        """)
+    List<HpoEmployee> findByAdjustIdAndIsSubjectTrue(Long adjustId);
+
     @Query("""
         SELECT asj
         FROM AdjustSubject asj
@@ -81,7 +103,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
             pc.upperBound
         )
         FROM AdjustSubject asj
-        JOIN PaybandCriteria pc ON pc.grade.id = asj.grade.id 
+        JOIN PaybandCriteria pc ON pc.grade.id = asj.grade.id
         WHERE asj.adjust.id = :adjustId
             AND pc.adjust.id = :adjustId
             AND asj.isSubject = true
@@ -194,4 +216,6 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
 
     @Query("SELECT s.employee.id FROM AdjustSubject s WHERE s.adjust.id = :adjustId")
     Set<Long> findEmployeeIdsByAdjustId(@Param("adjustId") Long adjustId);
+
+    List<AdjustSubject> findAllByAdjustIdAndEmployeeIdIn(Long adjustId, List<Long> employeeIds);
 }
