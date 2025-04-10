@@ -14,7 +14,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bongsco.api.adjust.annual.entity.PaybandCriteria;
 import com.bongsco.api.adjust.annual.entity.SalaryIncrementByRank;
+import com.bongsco.api.adjust.annual.repository.PaybandCriteriaRepository;
 import com.bongsco.api.adjust.annual.repository.SalaryIncrementByRankRepository;
 import com.bongsco.api.adjust.common.dto.request.AdjustPostRequest;
 import com.bongsco.api.adjust.common.dto.request.AdjustSearchRequest;
@@ -54,6 +56,7 @@ public class AdjustService {
     private final StepRepository stepRepository;
     private final RankRepository rankRepository;
     private final SalaryIncrementByRankRepository salaryIncrementByRankRepository;
+    private final PaybandCriteriaRepository paybandCriteriaRepository;
 
     public AdjustResponse getAdjustInfo(AdjustSearchRequest adjustSearchRequest) {
         /* 페이지 정보 세팅 */
@@ -211,6 +214,19 @@ public class AdjustService {
             }
         }
         salaryIncrementByRankRepository.saveAll(ratesToSave);
+
+        /* Payband_criteria table 추가 조정차수, 직급 카티션 곱 하한값: 80, 상한값 : 120 */
+        List<PaybandCriteria> paybandCriteriaToSave = new ArrayList<>();
+        for (Grade grade : allGrades) {
+            PaybandCriteria paybandCriteria = PaybandCriteria.builder()
+                .adjust(savedAdjust)
+                .grade(grade)
+                .upperBound(120.0)
+                .lowerBound(80.0)
+                .build();
+            paybandCriteriaToSave.add(paybandCriteria);
+        }
+        paybandCriteriaRepository.saveAll(paybandCriteriaToSave);
     }
 
     public Long getBeforeAdjInfoId(Long adjInfoId) {
