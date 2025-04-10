@@ -3,7 +3,6 @@ package com.bongsco.api.adjust.annual.controller;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -20,7 +19,6 @@ import com.bongsco.api.adjust.annual.dto.response.PaybandCriteriaConfigListRespo
 import com.bongsco.api.adjust.annual.dto.response.PaymentRateResponse;
 import com.bongsco.api.adjust.annual.dto.response.PaymentRateUpdateResponse;
 import com.bongsco.api.adjust.annual.dto.response.SubjectCriteriaResponse;
-import com.bongsco.api.adjust.annual.entity.PaybandCriteria;
 import com.bongsco.api.adjust.annual.service.CriteriaService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -75,19 +73,20 @@ public class CriteriaController {
         return ResponseEntity.ok(new PaymentRateUpdateResponse(updatedGrades));
     }
 
-    // TODO("Correct return type and logic")
-    @GetMapping("/{adj_info_id}/payband")
+    @Operation(summary = "payband 기준 설정 GET API", description = "payband 기준 가져옴")
+    @GetMapping("/{adjust_id}/payband")
     public ResponseEntity<PaybandCriteriaConfigListResponse> getPaybandCriteria(
-        @PathVariable(name = "adj_info_id") Long adjInfoId) {
+        @PathVariable(name = "adjust_id") Long adjustId) {
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(criteriaService.getPaybandCriteria(adjInfoId));
+        return ResponseEntity.ok(criteriaService.getPaybandCriteria(adjustId));
     }
 
-    // TODO("Correct return type and logic")
-    @PatchMapping("/{adj_info_id}/payband")
-    public ResponseEntity<String> updatePaybandCriteria(
-        @Valid @RequestBody PaybandCriteriaModifyRequest request) {
-        List<PaybandCriteria> updatedData = criteriaService.updatePaybandCriteria(request);
-        return ResponseEntity.ok("TODO: fix payband");
+    @Operation(summary = "payband 기준 설정 PATCH API", description = "payband 기준 설정 수정된 값 반영")
+    @PatchMapping("/{adjust_id}/payband")
+    public ResponseEntity<Void> updatePaybandCriteria(
+        @Valid @RequestBody PaybandCriteriaModifyRequest request,
+        @PathVariable(name = "adjust_id") Long adjustId) {
+        criteriaService.updatePaybandCriteria(request);
+        return ResponseEntity.noContent().build();
     }
 }

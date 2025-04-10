@@ -40,10 +40,13 @@ public class PaybandCriteria extends BaseEntity {
     @JoinColumn(name = "grade_id", nullable = false)
     private Grade grade;
 
-    @Column
+    @Column(nullable = false)
     private Double upperBound;
 
-    @Column
+    @Column(nullable = false)
     private Double lowerBound;
+
+    @Column(nullable = false)
+    private Boolean isActive;
 }
 
