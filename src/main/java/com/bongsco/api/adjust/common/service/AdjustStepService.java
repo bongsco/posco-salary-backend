@@ -49,9 +49,8 @@ public class AdjustStepService {
     }
 
     @Transactional
-    public void changeIsDone(Long adjustStepId, Boolean isDone) {
-        AdjustStep adjustStep = adjustStepRepository.findById(adjustStepId)
-            .orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
+    public void changeIsDone(Long adjustId, Long stepId, Boolean isDone) {
+        AdjustStep adjustStep = adjustStepRepository.findByAdjust_IdAndStep_Id(adjustId, stepId);
         adjustStepRepository.save(adjustStep.toBuilder().isDone(isDone).build());
     }
 }
