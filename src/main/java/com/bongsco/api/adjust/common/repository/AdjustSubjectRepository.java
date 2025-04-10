@@ -17,6 +17,8 @@ import com.bongsco.api.adjust.common.entity.AdjustSubject;
 @Repository
 public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Long> {
 
+    List<AdjustSubject> findByAdjust_Id(Long adjustId);
+
     @Query("""
         SELECT new com.bongsco.api.adjust.annual.dto.response.HpoEmployee(
             emp.id,
@@ -41,14 +43,6 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
         SELECT asj
         FROM AdjustSubject asj
         WHERE asj.adjust.id = :adjustId
-        """
-    )
-    List<AdjustSubject> findByAdjustId(Long adjustId);
-
-    @Query("""
-        SELECT asj
-        FROM AdjustSubject asj
-        WHERE asj.adjust.id = :adjustId
             AND (
                 asj.employee.empNum LIKE %:searchKey%
                 OR asj.employee.name LIKE %:searchKey%
@@ -63,6 +57,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
         WHERE asj.adjust.id < :adjustId
             AND asj.employee.id = :employeeId
             AND asj.deleted != true
+            AND asj.isSubject = true
         ORDER BY asj.adjust.id DESC
         LIMIT 1
         """
@@ -151,6 +146,29 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
 
     @Query("SELECT s.employee.id FROM AdjustSubject s WHERE s.adjust.id = :adjustId")
     Set<Long> findEmployeeIdsByAdjustId(@Param("adjustId") Long adjustId);
+
+    @Query("""
+                  SELECT asj, new com.bongsco.api.adjust.annual.dto.AdjustSubjectSalaryCalculateDto(
+                  asj.employee.id,
+                  asj.grade.baseSalary,
+                  s.salaryIncrementRate,
+                  s.bonusMultiplier
+                  )
+                  FROM AdjustSubject asj
+                  JOIN AdjustGrade ag ON ag.grade.id = asj.grade.id AND asj.adjust.id = ag.adjust.id
+                  JOIN SalaryIncrementByRank s ON asj.rank.id = s.rank.id AND ag.id = s.adjustGrade.id
+                  WHERE asj.adjust.id = :adjustId
+                  AND asj.isSubject = true
+        """)
+    List<Object[]> findDtoByAdjustId(@Param("adjustId") Long adjustId);
+
+    @Query("""
+            SELECT asj.employee, asj.finalStdSalary
+            FROM AdjustSubject asj
+            WHERE asj.adjust.id = :adjustId
+                AND asj.isSubject = true
+        """)
+    List<Object[]> findAdjustSubjectIncrementDtoByAdjustId(@Param("adjustId") Long adjustId);
 
     List<AdjustSubject> findAllByAdjustIdAndEmployeeIdIn(Long adjustId, List<Long> employeeIds);
 }

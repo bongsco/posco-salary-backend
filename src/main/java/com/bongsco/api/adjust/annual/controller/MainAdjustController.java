@@ -5,7 +5,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -32,6 +31,7 @@ public class MainAdjustController {
     public ResponseEntity<PaybandSubjectResponse> getPaybandSubjects(
         @PathVariable("adjustId") Long adjustId
     ) {
+        adjustSubjectService.calculateSalaryAndBonus(adjustId);
         return ResponseEntity.status(HttpStatus.OK)
             .body(adjustSubjectService.getBothUpperLowerSubjects(adjustId));
     }
@@ -45,43 +45,14 @@ public class MainAdjustController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "기준 연봉 계산", description = "사전 작업에서 입력한 내용을 기준으로 일괄적으로 기준 연봉 계산, payband 넘어가기전에 넣어줘야함")
-    @PatchMapping("/{adj_info_id}/calculate-salary")
-    public ResponseEntity<Void> calculateSalary(@PathVariable("adj_info_id") Long adjInfoId
-    ) {
-        adjustSubjectService.calculateSalary(adjInfoId);
-        return ResponseEntity.noContent().build();
-    }
-
-    @Operation(summary = "성과금 계산", description = "사전 작업에서 입력한 내용을 기준으로 일괄적으로 성과금 계산, payband 넘어가기전에 넣어줘야함")
-    @PatchMapping("/{adj_info_id}/calculate-add-payment")
-    public ResponseEntity<Void> calculateAddPayment(@PathVariable("adj_info_id") Long adjInfoId
-    ) {
-        adjustSubjectService.calculateAddPayment(adjInfoId);
-        return ResponseEntity.noContent().build();
-    }
-
     @Operation(summary = "정기 연봉 조정", description = "마지막 페이지, 계산값 모두 보여줌")
-    @PatchMapping("/{adj_info_id}/annual-adj")
-    public ResponseEntity<Void> showResult(@PathVariable("adj_info_id") Long adjInfoId,
+    @PatchMapping("/annual-adj")
+    public ResponseEntity<Void> showResult(@PathVariable("adjustId") Long adjustId,
         @RequestParam(value = "searchKey", required = false) String searchKey
     ) {
+        adjustSubjectService.changeIncrementRate(adjustId);
         // TODO("Implement endpoint")
 
-        return ResponseEntity.noContent().build();
-    }
-
-    @Operation(summary = "대표값 생성", description = "본 조정에서 보여주는 대표값을 미리 저장 해놓음")
-    @PostMapping("/{adj_info_id}/calculate-representative-val")
-    public ResponseEntity<Void> calculateRepresentativeVal(@PathVariable("adj_info_id") Long adjInfoId) {
-        adjustSubjectService.calculateRepresentativeVal(adjInfoId);
-        return ResponseEntity.noContent().build();
-    }
-
-    @Operation(summary = "기준연봉 인상률 변경", description = "본 조정이 반영 됐을 때 인상률이 바뀜")
-    @PatchMapping("/{adj_info_id}/increment-rate")
-    public ResponseEntity<Void> incrementRate(@PathVariable("adj_info_id") Long adjInfoId) {
-        adjustSubjectService.changeIncrementRate(adjInfoId);
         return ResponseEntity.noContent().build();
     }
 }
