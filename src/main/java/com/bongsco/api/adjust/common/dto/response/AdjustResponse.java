@@ -62,8 +62,15 @@ public class AdjustResponse {
             this.month = month;
             this.adjustType = AdjustType.valueOf(adjustType).getDisplayName();
             this.orderNumber = orderNumber;
-            this.stepName = StepName.valueOf(stepName).getDisplayName();
-            this.detailStepName = detailStepName;
+
+            if (stepName != null) {
+                this.stepName = StepName.valueOf(stepName).getDisplayName();
+                this.detailStepName = detailStepName;
+            } else {
+                this.stepName = null;
+                this.detailStepName = null;
+            }
+
             this.isSubmitted = isSubmitted;
             this.baseDate = baseDate;
             this.startDate = startDate;
