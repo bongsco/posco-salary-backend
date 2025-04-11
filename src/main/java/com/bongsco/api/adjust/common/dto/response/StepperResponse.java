@@ -2,10 +2,9 @@ package com.bongsco.api.adjust.common.dto.response;
 
 import static com.bongsco.api.adjust.common.domain.StepName.*;
 
-import java.util.HashMap;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.bongsco.api.adjust.common.domain.StepName;
 import com.bongsco.api.adjust.common.entity.AdjustStep;
@@ -26,15 +25,15 @@ public class StepperResponse {
     public static StepperResponse from(List<AdjustStep> adjustSteps) {
         List<StepData> criteriaDatas = adjustSteps.stream()
             .filter(adjustStep -> adjustStep.getStep().getName() == CRITERIA)
-            .map(StepData::from).collect(Collectors.toList());
+            .map(StepData::from).toList();
 
         List<StepData> preparationDatas = adjustSteps.stream()
             .filter(adjustStep -> adjustStep.getStep().getName() == PREPARATION)
-            .map(StepData::from).collect(Collectors.toList());
+            .map(StepData::from).toList();
 
         List<StepData> mainDatas = adjustSteps.stream()
             .filter(adjustStep -> adjustStep.getStep().getName() == MAIN)
-            .map(StepData::from).collect(Collectors.toList());
+            .map(StepData::from).toList();
 
         return new StepperResponse(Map.of(CRITERIA, criteriaDatas, PREPARATION, preparationDatas, MAIN, mainDatas));
     }
@@ -44,20 +43,24 @@ public class StepperResponse {
     @NoArgsConstructor(access = AccessLevel.PROTECTED)
     @Getter
     public static class StepData {
-        private Map<String, Object> step;
+        private Long id;
+        private String text;
+        private String state;
+        private String date;
+        private String url;
 
         public static StepData from(AdjustStep adjustStep) {
-            Map<String, Object> step = new HashMap<>();
-            step.put("id", adjustStep.getId());
-            step.put("text", adjustStep.getStep().getDetailStepName());
-            if (adjustStep.getIsDone()) {
-                step.put("state", "DONE");
-                step.put("date", adjustStep.getUpdatedAt());
-            } else {
-                step.put("state", "UNDONE");
-            }
-            step.put("url", adjustStep.getStep().getUrl());
-            return new StepData(step);
+            return StepData.builder()
+                .id(adjustStep.getId())
+                .text(adjustStep.getStep().getDetailStepName())
+                .date(Boolean.TRUE.equals(adjustStep.getIsDone())
+                    ? adjustStep.getUpdatedAt()
+                    .format(new DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd hh:mm").toFormatter())
+                    : null
+                )
+                .url(adjustStep.getStep().getUrl())
+                .state(Boolean.TRUE.equals(adjustStep.getIsDone()) ? "DONE" : "UNDONE").
+                build();
         }
     }
 }
