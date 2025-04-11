@@ -11,9 +11,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.bongsco.api.adjust.annual.dto.MainResultDto;
 import com.bongsco.api.adjust.annual.dto.response.EmployeeResponse;
 import com.bongsco.api.adjust.annual.dto.response.HpoEmployee;
+import com.bongsco.api.adjust.annual.repository.reflection.MainResultProjection;
 import com.bongsco.api.adjust.common.dto.AdjustSubjectSalaryDto;
 import com.bongsco.api.adjust.common.entity.AdjustSubject;
 
@@ -133,10 +133,12 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
 
     @Query(
         value = """
-             SELECT new com.bongsco.api.adjust.annual.dto.MainResultDto(
-                 e.empNum, e.name, g.name, e.positionName, d.name, r.code,
-                 e.stdSalaryIncrementRate, asj.finalStdSalary, asj.stdSalary,
-                 asj.hpoBonus, asj.isInHpo, e.id, asj.id, g.id, r.id, ag.id, s.bonusMultiplier, s.salaryIncrementRate, asj.isPaybandApplied)
+             SELECT 
+                 e.empNum as empNum, e.name as name, g.name as gradeName, e.positionName as positionName, d.name as depName, r.code as rankCode,
+                 e.stdSalaryIncrementRate as stdSalaryIncrementRate, asj.finalStdSalary as finalStdSalary, asj.stdSalary as stdSalary,
+                 asj.hpoBonus as hpoBonus, asj.isInHpo as isInHpo, e.id as empId, asj.id as adjustSubjectId, g.id as gradeId, r.id as rankId, 
+                 ag.id as adjustGradeId, s.bonusMultiplier as bonusMultiplier, s.salaryIncrementRate as salaryIncrementRate, 
+                 asj.isPaybandApplied as isPaybandApplied, COALESCE(asj.finalStdSalary, 0) + COALESCE(asj.hpoBonus, 0) AS totalSalary
             FROM AdjustSubject asj
                 JOIN Employee e ON e.id = asj.employee.id
                 JOIN Grade g ON g.id = asj.grade.id
@@ -170,7 +172,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
                 AND r.code = COALESCE(:filterRank, r.code)
             """
     )
-    Page<MainResultDto> findResultDtoWithPagination(
+    Page<MainResultProjection> findResultDtoWithPagination(
         @Param("adjustId") Long adjustId,
         @Param("filterEmpNum") String filterEmpNum,
         @Param("filterName") String filterName,
