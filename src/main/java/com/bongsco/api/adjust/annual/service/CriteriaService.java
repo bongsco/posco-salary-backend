@@ -228,8 +228,6 @@ public class CriteriaService {
             .map(c -> c.getGrade().getName()) // "P1", "P2", ...
             .toList();
 
-        System.out.println("📌 gradeList: " + gradeList);
-
         List<SalaryIncrementByRank> rates =
             salaryIncrementByRankRepository.findByAdjustIdAndGradeNames(adjustId, gradeList);
 
