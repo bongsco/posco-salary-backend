@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.bongsco.api.adjust.annual.dto.request.PaybandCriteriaModifyRequest;
@@ -54,10 +53,9 @@ public class CriteriaController {
 
     @GetMapping("/paymentrate")
     public ResponseEntity<?> getPaymentRate(
-        @PathVariable Long adjustId,
-        @RequestParam List<String> gradeList
+        @PathVariable Long adjustId
     ) {
-        PaymentRateResponse response = criteriaService.getPaymentRate(adjustId, gradeList);
+        PaymentRateResponse response = criteriaService.getPaymentRate(adjustId);
         return ResponseEntity.ok(Map.of(
             "message", "success",
             "data", response
