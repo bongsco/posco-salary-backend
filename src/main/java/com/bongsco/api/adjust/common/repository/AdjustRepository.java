@@ -10,9 +10,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.bongsco.api.adjust.common.domain.AdjustType;
 import com.bongsco.api.adjust.annual.dto.response.HpoSalaryInfo;
 import com.bongsco.api.adjust.annual.dto.response.RateInfo;
+import com.bongsco.api.adjust.common.domain.AdjustType;
 import com.bongsco.api.adjust.common.entity.Adjust;
 import com.bongsco.api.adjust.common.repository.reflection.AdjustItemProjection;
 
@@ -73,14 +73,16 @@ public interface AdjustRepository extends JpaRepository<Adjust, Long> {
             a.base_date ,
             a.start_date,
             a.end_date,
-            a.author
+            a.author,
+            nps.url
         FROM
             adjust a
         LEFT JOIN (
             SELECT
                 rs.adjust_id,
                 s.name AS step_name,
-                s.detail_step_name
+                s.detail_step_name,
+                s.url
             FROM (
                 SELECT
                     adjust_id,
@@ -102,6 +104,7 @@ public interface AdjustRepository extends JpaRepository<Adjust, Long> {
             AND (:state IS NULL OR (:state = TRUE AND nps.step_name IS NULL) OR (:state = FALSE AND nps.step_name IS NOT NULL))
             AND (:adjustType IS NULL OR a.adjust_type = :adjustType)
             AND (:author IS NULL OR a.author LIKE CONCAT('%', :author, '%'))
+            AND NOT a.deleted
         """,
         countQuery = """
             SELECT count(*)

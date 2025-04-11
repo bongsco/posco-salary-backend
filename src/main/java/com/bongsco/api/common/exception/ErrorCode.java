@@ -14,6 +14,7 @@ public enum ErrorCode {
     INVALID_REFRESH_TOKEN(BAD_REQUEST, "", "리프레시 토큰이 유효하지 않습니다"),
     MISMATCH_REFRESH_TOKEN(BAD_REQUEST, "", "리프레시 토큰의 유저 정보가 일치하지 않습니다"),
     CANNOT_NULL_INPUT(BAD_REQUEST, "", "NULL값은 입력할 수 없습니다"),
+    EXCEL_DOWNLOAD_MAKE(BAD_REQUEST, "", "엑셀 생성 중 오류 발생"),
 
     /* 401 UNAUTHORIZED : 인증되지 않은 사용자 */
     INVALID_AUTH_TOKEN(UNAUTHORIZED, "", "권한 정보가 없는 토큰입니다"),
