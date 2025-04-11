@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 
 import com.bongsco.api.adjust.annual.dto.MainResultExcelDto;
 import com.bongsco.api.adjust.annual.dto.response.EmployeeResponse;
-import com.bongsco.api.adjust.common.repository.AdjustRepository;
+import com.bongsco.api.adjust.annual.dto.response.PaybandSubjectResponse;
 import com.bongsco.api.adjust.common.repository.AdjustSubjectRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -16,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 public class ExcelDataProvider {
 
     private final AdjustSubjectRepository adjustSubjectRepository;
-    private final AdjustRepository adjustRepository;
 
     public List<String> getHeadersByPageType(String pageType) {
         return switch (pageType) {
@@ -83,6 +82,48 @@ public class ExcelDataProvider {
                             Optional.ofNullable(dto.getFinalStdSalary()).orElse(0.0) +
                                 Optional.ofNullable(dto.getHpoBonus()).orElse(0.0)        // 계약연봉 조정후
                         )
+                    ))
+                    .toList();
+            }
+
+            case "upperPayband" -> {
+                List<PaybandSubjectResponse.MainAdjustPaybandSubjectsResponse> upperList =
+                    adjustSubjectRepository.findUpperExceededSubjects(adjustId).stream()
+                        .map(PaybandSubjectResponse.MainAdjustPaybandSubjectsResponse::from)
+                        .toList();
+
+                yield upperList.stream()
+                    .map(dto -> List.of(
+                        dto.getEmpNum(),                                // 직번
+                        dto.getName(),                                  // 성명
+                        dto.getDepName(),                        // 부서
+                        dto.getGradeName(),                              // 직급
+                        dto.getRankCode(),                             // 평가등급
+                        String.valueOf(dto.getStdSalary()),    // 기준연봉 월할액
+                        String.valueOf(dto.getLimitPrice()),     // 상한 금액
+                        "적용(상한)",                                     // Payband 적용
+                        ""                                              // 비고 (빈 값)
+                    ))
+                    .toList();
+            }
+
+            case "lowerPayband" -> {
+                List<PaybandSubjectResponse.MainAdjustPaybandSubjectsResponse> lowerList =
+                    adjustSubjectRepository.findLowerExceededSubjects(adjustId).stream()
+                        .map(PaybandSubjectResponse.MainAdjustPaybandSubjectsResponse::from)
+                        .toList();
+
+                yield lowerList.stream()
+                    .map(dto -> List.of(
+                        dto.getEmpNum(),                                // 직번
+                        dto.getName(),                                  // 성명
+                        dto.getDepName(),                        // 부서
+                        dto.getGradeName(),                              // 직급
+                        dto.getRankCode(),                              // 평가등급
+                        String.valueOf(dto.getStdSalary()),    // 기준연봉 월할액
+                        String.valueOf(dto.getLimitPrice()),     // 상한 금액
+                        "적용(하한)",                                     // Payband 적용
+                        ""                                              // 비고 (빈 값)
                     ))
                     .toList();
             }
