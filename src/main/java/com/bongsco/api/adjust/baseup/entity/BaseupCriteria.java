@@ -1,6 +1,7 @@
 package com.bongsco.api.adjust.baseup.entity;
 
 import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import com.bongsco.api.adjust.common.entity.Adjust;
 import com.bongsco.api.common.entity.BaseEntity;
@@ -27,6 +28,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SQLDelete(sql = "UPDATE baseup_criteria SET deleted = true WHERE id = ?")
+@SQLRestriction("deleted = false")
 public class BaseupCriteria extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
