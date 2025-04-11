@@ -222,11 +222,13 @@ public class CriteriaService {
         Adjust adjust = adjustRepository.findById(adjustId)
             .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
 
-        List<PaybandCriteria> criteriaList = paybandCriteriaRepository.findByAdjustIdAndIsActiveTrue(adjustId);
+        List<AdjustGrade> criteriaList = adjustGradeRepository.findByAdjustIdAndIsActiveTrue(adjustId);
 
         List<String> gradeList = criteriaList.stream()
             .map(c -> c.getGrade().getName()) // "P1", "P2", ...
             .toList();
+
+        System.out.println("📌 gradeList: " + gradeList);
 
         List<SalaryIncrementByRank> rates =
             salaryIncrementByRankRepository.findByAdjustIdAndGradeNames(adjustId, gradeList);
