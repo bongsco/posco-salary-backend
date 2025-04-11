@@ -104,6 +104,7 @@ public interface AdjustRepository extends JpaRepository<Adjust, Long> {
             AND (:state IS NULL OR (:state = TRUE AND nps.step_name IS NULL) OR (:state = FALSE AND nps.step_name IS NOT NULL))
             AND (:adjustType IS NULL OR a.adjust_type = :adjustType)
             AND (:author IS NULL OR a.author LIKE CONCAT('%', :author, '%'))
+            AND NOT a.deleted
         """,
         countQuery = """
             SELECT count(*)
