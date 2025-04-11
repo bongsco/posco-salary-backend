@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.bongsco.api.adjust.annual.dto.AdjustSubjectSalaryCalculateDto;
-import com.bongsco.api.adjust.annual.dto.MainResultDto;
 import com.bongsco.api.adjust.annual.dto.request.ChangedHighPerformGroupEmployeeRequest;
 import com.bongsco.api.adjust.annual.dto.request.ChangedHighPerformGroupEmployeeRequest.ChangedHighPerformGroupEmployee;
 import com.bongsco.api.adjust.annual.dto.request.ChangedSubjectUseEmployeeRequest;
@@ -32,6 +31,7 @@ import com.bongsco.api.adjust.annual.dto.response.PaybandSubjectResponse;
 import com.bongsco.api.adjust.annual.dto.response.RateInfo;
 import com.bongsco.api.adjust.annual.repository.PaybandCriteriaRepository;
 import com.bongsco.api.adjust.annual.repository.SalaryIncrementByRankRepository;
+import com.bongsco.api.adjust.annual.repository.reflection.MainResultProjection;
 import com.bongsco.api.adjust.common.entity.Adjust;
 import com.bongsco.api.adjust.common.entity.AdjustSubject;
 import com.bongsco.api.adjust.common.entity.PaybandAppliedType;
@@ -296,13 +296,13 @@ public class AdjustSubjectService {
         List<Map<String, String>> sorts, Integer pageNumber, Integer pageSize) {
 
         Map<String, String> mapping = Map.of(
-            "empNum", "e.empNum",
-            "name", "e.name",
-            "departmentName", "d.name",
-            "gradeName", "g.name",
-            "rankCode", "r.code",
-            "stdSalary", "asj.finalStdSalary",
-            "totalSalary", "asj.finalStdSalary+asj.hpoBonus"
+            "empNum", "empNum",
+            "name", "name",
+            "departmentName", "depName",
+            "gradeName", "gradeName",
+            "rankCode", "rankCode",
+            "stdSalary", "finalStdSalary",
+            "totalSalary", "totalSalary"
         );
 
         List<Sort.Order> sortOrders = new ArrayList<>(); //초기값은 id
@@ -327,12 +327,12 @@ public class AdjustSubjectService {
         /* Pageable 객체 생성 */
         Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(sortOrders));
 
-        Page<MainResultDto> resultAndPageInfo = adjustSubjectRepository.findResultDtoWithPagination(
+        Page<MainResultProjection> resultAndPageInfo = adjustSubjectRepository.findResultDtoWithPagination(
             adjustId,
             filterEmpNum == null ? null : "%" + filterEmpNum + "%",
             filterName == null ? null : "%" + filterName + "%",
             filterGrade,
-            filterDepartment,
+            filterDepartment == null ? null : "%" + filterDepartment + "%",
             filterRank,
             pageable
         );
@@ -340,13 +340,13 @@ public class AdjustSubjectService {
         Adjust adjust = adjustRepository.findById(adjustId).orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
 
         List<MainResultResponses.MainResultResponse> responseList = resultAndPageInfo.getContent().stream().map(dto -> {
-            String paybandResult;
-            switch (dto.getIsPaybandApplied()) {
-                case UPPER -> paybandResult = "적용(상한)";
-                case LOWER -> paybandResult = "적용(하한)";
-                default -> paybandResult = "미적용";
-            }
-
+            String paybandResult = Optional.ofNullable(dto.getIsPaybandApplied())
+                .map(t -> switch (t) {
+                    case UPPER -> "적용(상한)";
+                    case LOWER -> "적용(하한)";
+                    default -> "미적용";
+                })
+                .orElse("미적용");
             Double bonusMultiplier = Optional.ofNullable(dto.getBonusMultiplier()).orElse(0.0);
             Double salaryIncrementRate = Optional.ofNullable(dto.getSalaryIncrementRate()).orElse(0.0);
 
