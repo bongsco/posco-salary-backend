@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.bongsco.api.adjust.annual.dto.MainResultDto;
+import com.bongsco.api.adjust.annual.dto.MainResultExcelDto;
 import com.bongsco.api.adjust.annual.dto.response.EmployeeResponse;
 import com.bongsco.api.adjust.annual.dto.response.HpoEmployee;
 import com.bongsco.api.adjust.common.dto.AdjustSubjectSalaryDto;
@@ -222,4 +223,23 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
     List<Object[]> findAdjustSubjectIncrementDtoByAdjustId(@Param("adjustId") Long adjustId);
 
     List<AdjustSubject> findAllByAdjustIdAndEmployeeIdIn(Long adjustId, List<Long> employeeIds);
+
+    @Query("""
+            SELECT new com.bongsco.api.adjust.annual.dto.MainResultExcelDto(
+                e.empNum, e.name, g.name, e.positionName, d.name, r.code,
+                e.stdSalaryIncrementRate, asj.finalStdSalary, asj.stdSalary,
+                asj.hpoBonus, asj.isInHpo, e.id, asj.id, g.id, r.id, ag.id,
+                s.bonusMultiplier, s.salaryIncrementRate, asj.isPaybandApplied
+            )
+            FROM AdjustSubject asj
+            JOIN Employee e ON e.id = asj.employee.id
+            JOIN Grade g ON g.id = asj.grade.id
+            JOIN Department d ON d.id = e.department.id
+            JOIN Rank r ON r.id = asj.rank.id
+            JOIN AdjustGrade ag ON ag.adjust.id = asj.adjust.id AND ag.grade.id = g.id
+            JOIN SalaryIncrementByRank s ON s.adjustGrade.id = ag.id AND s.rank.id = r.id
+            WHERE asj.adjust.id = :adjustId
+            AND asj.isSubject = true
+        """)
+    List<MainResultExcelDto> findAllResultDtoByAdjustId(@Param("adjustId") Long adjustId);
 }

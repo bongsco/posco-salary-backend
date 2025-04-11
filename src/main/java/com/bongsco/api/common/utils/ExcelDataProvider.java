@@ -1,10 +1,13 @@
 package com.bongsco.api.common.utils;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
+import com.bongsco.api.adjust.annual.dto.MainResultExcelDto;
 import com.bongsco.api.adjust.annual.dto.response.EmployeeResponse;
+import com.bongsco.api.adjust.common.repository.AdjustRepository;
 import com.bongsco.api.adjust.common.repository.AdjustSubjectRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -13,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 public class ExcelDataProvider {
 
     private final AdjustSubjectRepository adjustSubjectRepository;
+    private final AdjustRepository adjustRepository;
 
     public List<String> getHeadersByPageType(String pageType) {
         return switch (pageType) {
@@ -45,6 +49,40 @@ public class ExcelDataProvider {
                         e.getName(),
                         e.getHireDate().toString(),
                         e.getRankName()
+                    ))
+                    .toList();
+            }
+            case "adjustResult" -> {
+                List<MainResultExcelDto> resultList = adjustSubjectRepository.findAllResultDtoByAdjustId(adjustId);
+
+                yield resultList.stream()
+                    .map(dto -> List.of(
+                        dto.getEmpNum(),                                 // 직번
+                        dto.getName(),                                   // 성명
+                        dto.getRankCode(),                               // 직급
+                        dto.getPositionName(),                           // 직책
+                        dto.getDepName(),                                // 부서
+                        dto.getGradeName(),                              // 평가등급
+
+                        String.valueOf(dto.getSalaryIncrementRate()),    // 평차연봉인상률
+                        String.valueOf(dto.getBonusMultiplier()),         // 평차금인상률
+                        String.valueOf(dto.getStdSalaryIncrementRate()), // 기준연봉 인상률
+
+                        dto.getIsPaybandApplied() == null ? "미적용" :
+                            switch (dto.getIsPaybandApplied()) {
+                                case UPPER -> "적용(상한)";
+                                case LOWER -> "적용(하한)";
+                                default -> "미적용";
+                            },
+
+                        String.valueOf(0.0), // 기준연봉 조정전 → dto에 없음 → 나중에 계산된 값 반영하려면 수정 필요
+                        String.valueOf(dto.getFinalStdSalary()),         // 기준연봉 조정후
+
+                        String.valueOf(0.0), // 계약연봉 조정전 → 마찬가지로 없음
+                        String.valueOf(
+                            Optional.ofNullable(dto.getFinalStdSalary()).orElse(0.0) +
+                                Optional.ofNullable(dto.getHpoBonus()).orElse(0.0)        // 계약연봉 조정후
+                        )
                     ))
                     .toList();
             }
