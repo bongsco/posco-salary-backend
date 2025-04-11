@@ -12,6 +12,8 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/**") // 모든 경로에 대해
             .allowedOrigins(
                 "http://localhost:3000",
+                "http://dzbukx9wf12yc.cloudfront.net",
+                "http://dupsbg9oaweks.cloudfront.net",
                 "https://dzbukx9wf12yc.cloudfront.net",
                 "https://dupsbg9oaweks.cloudfront.net"
             )
