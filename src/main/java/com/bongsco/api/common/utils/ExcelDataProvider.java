@@ -7,7 +7,11 @@ import org.springframework.stereotype.Component;
 
 import com.bongsco.api.adjust.annual.dto.MainResultExcelDto;
 import com.bongsco.api.adjust.annual.dto.response.EmployeeResponse;
+import com.bongsco.api.adjust.annual.dto.response.HpoEmployee;
+import com.bongsco.api.adjust.annual.dto.response.HpoSalaryInfo;
 import com.bongsco.api.adjust.annual.dto.response.PaybandSubjectResponse;
+import com.bongsco.api.adjust.annual.dto.response.RateInfo;
+import com.bongsco.api.adjust.common.repository.AdjustRepository;
 import com.bongsco.api.adjust.common.repository.AdjustSubjectRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -16,13 +20,13 @@ import lombok.RequiredArgsConstructor;
 public class ExcelDataProvider {
 
     private final AdjustSubjectRepository adjustSubjectRepository;
+    private final AdjustRepository adjustRepository;
 
     public List<String> getHeadersByPageType(String pageType) {
         return switch (pageType) {
-            case "main" -> List.of("연도", "월", "조정유형", "상태", "통합인사반영여부", "진행단계", "등록일", "등록자");
             case "Subject", "NonSubject" -> List.of("직번", "성명", "채용일자", "평가등급");
             case "highOrgSubject" ->
-                List.of("직번", "성명", "부서", "직급", "평가등급", "고성과조직 가산", "평가차등 연봉 인상률", "평가차등 경영성과금 지급률");
+                List.of("직번", "성명", "부서", "직급", "평가등급", "고성과조직 가산 대상 여부", "평가차등 연봉 인상률", "평가차등 경영성과금 지급률");
             case "upperPayband" -> List.of("직번", "성명", "부서", "직급", "평가등급", "기준연봉 월할액", "상한 금액", "Payband 적용", "비고");
             case "lowerPayband" -> List.of("직번", "성명", "부서", "직급", "평가등급", "기준연봉 월할액", "하한 금액", "Payband 적용", "비고");
             case "adjustResult" ->
@@ -125,6 +129,35 @@ public class ExcelDataProvider {
                         "적용(하한)",                                     // Payband 적용
                         ""                                              // 비고 (빈 값)
                     ))
+                    .toList();
+            }
+
+            case "highOrgSubject" -> {
+
+                HpoSalaryInfo hpoInfo = adjustRepository.findHpoSalaryInfoById(adjustId);
+                List<RateInfo> rateInfos = adjustRepository.findRateInfoByAdjustId(adjustId);
+                List<HpoEmployee> employees = adjustSubjectRepository.findByAdjustIdAndIsSubjectTrue(adjustId);
+
+                yield employees.stream()
+                    .map(emp -> {
+                        // 각 사원의 직급 + 등급으로 매칭되는 RateInfo 찾기
+                        RateInfo rate = rateInfos.stream()
+                            .filter(r -> r.getGradeName().equals(emp.getGradeName()) &&
+                                r.getRankCode().equals(emp.getRankName()))
+                            .findFirst()
+                            .orElse(null);
+
+                        return List.of(
+                            emp.getEmpNum(),
+                            emp.getName(),
+                            emp.getDepName(),
+                            emp.getGradeName(),
+                            emp.getRankName(),
+                            emp.getIsInHpo() ? "대상" : "비대상",
+                            String.format("%.2f%", hpoInfo.getHpoSalaryIncrementRate()),
+                            String.format("%.2f%", hpoInfo.getHpoBonusMultiplier())
+                        );
+                    })
                     .toList();
             }
 
