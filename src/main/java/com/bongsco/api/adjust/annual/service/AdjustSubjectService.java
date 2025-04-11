@@ -332,7 +332,7 @@ public class AdjustSubjectService {
             filterEmpNum == null ? null : "%" + filterEmpNum + "%",
             filterName == null ? null : "%" + filterName + "%",
             filterGrade,
-            filterDepartment,
+            filterDepartment == null ? null : "%" + filterDepartment + "%",
             filterRank,
             pageable
         );

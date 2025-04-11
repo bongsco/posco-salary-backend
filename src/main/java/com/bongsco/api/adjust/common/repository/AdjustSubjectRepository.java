@@ -138,7 +138,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
                  e.stdSalaryIncrementRate, asj.finalStdSalary, asj.stdSalary,
                  asj.hpoBonus, asj.isInHpo, e.id, asj.id, g.id, r.id, ag.id, s.bonusMultiplier, s.salaryIncrementRate, asj.isPaybandApplied)
             FROM AdjustSubject asj
-                JOIN Employee e ON e.id = asj.employee.id\s
+                JOIN Employee e ON e.id = asj.employee.id
                 JOIN Grade g ON g.id = asj.grade.id
                 JOIN Department d ON d.id = e.department.id
                 JOIN Rank r ON r.id = asj.rank.id
@@ -149,7 +149,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
                 AND e.empNum LIKE COALESCE(:filterEmpNum, e.empNum)
                 AND e.name LIKE COALESCE(:filterName, e.name)
                 AND g.name = COALESCE(:filterGrade, g.name)
-                AND d.name = COALESCE(:filterDepartment, d.name)
+                AND d.name LIKE COALESCE(:filterDepartment, d.name)
                 AND r.code = COALESCE(:filterRank, r.code)
             """,
         countQuery = """
@@ -166,7 +166,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
                 AND e.empNum LIKE COALESCE(:filterEmpNum, e.empNum)
                 AND e.name LIKE COALESCE(:filterName, e.name)
                 AND g.name = COALESCE(:filterGrade, g.name)
-                AND d.name = COALESCE(:filterDepartment, d.name)
+                AND d.name LIKE COALESCE(:filterDepartment, d.name)
                 AND r.code = COALESCE(:filterRank, r.code)
             """
     )
