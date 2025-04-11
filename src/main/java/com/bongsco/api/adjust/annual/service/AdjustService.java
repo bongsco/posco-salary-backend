@@ -132,6 +132,7 @@ public class AdjustService {
                 .startDate(projection.getStartDate())
                 .endDate(projection.getEndDate())
                 .author(projection.getAuthor())
+                .url(projection.getUrl())
                 .build() // DTO 객체 생성
             )
             .toList();

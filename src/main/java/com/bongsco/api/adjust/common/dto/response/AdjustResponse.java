@@ -42,6 +42,7 @@ public class AdjustResponse {
         private LocalDate startDate;
         private LocalDate endDate;
         private String author;
+        private String url;
 
         @PersistenceCreator
         public AdjustItemDto(
@@ -56,7 +57,8 @@ public class AdjustResponse {
             LocalDate baseDate,
             LocalDate startDate,
             LocalDate endDate,
-            String author) {
+            String author,
+            String url) {
             this.id = id;
             this.year = year;
             this.month = month;
@@ -76,6 +78,7 @@ public class AdjustResponse {
             this.startDate = startDate;
             this.endDate = endDate;
             this.author = author;
+            this.url = url;
         }
     }
 }
