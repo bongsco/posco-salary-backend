@@ -73,14 +73,16 @@ public interface AdjustRepository extends JpaRepository<Adjust, Long> {
             a.base_date ,
             a.start_date,
             a.end_date,
-            a.author
+            a.author,
+            nps.url
         FROM
             adjust a
         LEFT JOIN (
             SELECT
                 rs.adjust_id,
                 s.name AS step_name,
-                s.detail_step_name
+                s.detail_step_name,
+                s.url
             FROM (
                 SELECT
                     adjust_id,

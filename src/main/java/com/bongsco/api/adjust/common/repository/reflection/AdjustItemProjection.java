@@ -26,4 +26,6 @@ public interface AdjustItemProjection {
     LocalDate getEndDate();
 
     String getAuthor();
+
+    String getUrl();
 }
