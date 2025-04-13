@@ -27,8 +27,11 @@ public class ExcelDownloadService {
             "bongsco_" + pageType + "_" + LocalDate.now(),
             StandardCharsets.UTF_8
         );
-
-        response.setContentType("ms-vnd/excel");
+        
+        response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        response.setHeader("Pragma", "no-cache");
+        response.setDateHeader("Expires", 0);
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setHeader("Content-Disposition", "attachment; filename=" + fileName + ".xlsx");
         response.getOutputStream().write(excelFile);
         response.flushBuffer();
