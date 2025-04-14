@@ -43,5 +43,5 @@ public class AdjustEmploymentType extends BaseEntity {
     @Column
     @Builder.Default
     @Setter
-    private Boolean isActive = false;
+    private Boolean isActive = true;
 }
