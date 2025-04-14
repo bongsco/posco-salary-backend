@@ -331,16 +331,12 @@ public class AdjustSubjectService {
             adjustId,
             (filterEmpNum == null || filterEmpNum.isEmpty()) ? null :
                 filterEmpNum.stream().map(empNum -> "%" + empNum + "%").toArray(String[]::new),
-
             (filterName == null || filterName.isEmpty()) ? null :
                 filterName.stream().map(name -> "%" + name + "%").toArray(String[]::new),
-
             (filterGrade == null || filterGrade.isEmpty()) ? null :
                 filterGrade,
-
             (filterDepartment == null || filterDepartment.isEmpty()) ? null :
                 filterDepartment.stream().map(dep -> "%" + dep + "%").toArray(String[]::new),
-
             (filterRank == null || filterRank.isEmpty()) ? null :
                 filterRank,
             filterEmpNum == null || filterEmpNum.isEmpty(),
@@ -348,7 +344,6 @@ public class AdjustSubjectService {
             filterGrade == null || filterGrade.isEmpty(),
             filterDepartment == null || filterDepartment.isEmpty(),
             filterRank == null || filterRank.isEmpty(),
-
             pageable
         );
 
