@@ -2,6 +2,8 @@ package com.bongsco.api.adjust.annual.controller;
 
 import static com.bongsco.api.adjust.common.util.ParseSorts.*;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -57,9 +59,9 @@ public class MainAdjustController {
     public ResponseEntity<MainResultResponses> showResult(@PathVariable("adjustId") Long adjustId,
         @RequestParam(value = "filterEmpNum", required = false) String filterEmpNum,
         @RequestParam(value = "filterName", required = false) String filterName,
-        @RequestParam(value = "filterGrade", required = false) String filterGrade,
+        @RequestParam(value = "filterGrade", required = false) List<String> filterGrade,
         @RequestParam(value = "filterDepartment", required = false) String filterDepartment,
-        @RequestParam(value = "filterRank", required = false) String filterRank,
+        @RequestParam(value = "filterRank", required = false) List<String> filterRank,
         @RequestParam(value = "sorts", required = false) String sorts,
         @RequestParam(value = "pageNumber", required = false, defaultValue = "1") @Min(1) Integer pageNumber,
         @RequestParam(value = "pageSize", required = false, defaultValue = "5") Integer pageSize
@@ -69,5 +71,6 @@ public class MainAdjustController {
         return ResponseEntity.ok(
             adjustSubjectService.getFinalResult(adjustId, filterEmpNum, filterName, filterGrade, filterDepartment,
                 filterRank, extractSorts(sorts), pageNumber - 1, pageSize));
+
     }
 }
