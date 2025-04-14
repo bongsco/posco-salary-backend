@@ -151,9 +151,9 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
                 AND asj.isSubject = true
                 AND e.empNum LIKE COALESCE(:filterEmpNum, e.empNum)
                 AND e.name LIKE COALESCE(:filterName, e.name)
-                AND g.name = COALESCE(:filterGrade, g.name)
+                AND (:filterGrade IS NULL OR g.name IN (:filterGrade))
                 AND d.name LIKE COALESCE(:filterDepartment, d.name)
-                AND r.code = COALESCE(:filterRank, r.code)
+                AND (:filterRank IS NULL OR r.code IN (:filterRank))
             """,
         countQuery = """
             SELECT COUNT(asj.id)
@@ -168,18 +168,18 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
                 AND asj.isSubject = true
                 AND e.empNum LIKE COALESCE(:filterEmpNum, e.empNum)
                 AND e.name LIKE COALESCE(:filterName, e.name)
-                AND g.name = COALESCE(:filterGrade, g.name)
+                AND (:filterGrade IS NULL OR g.name IN (:filterGrade))
                 AND d.name LIKE COALESCE(:filterDepartment, d.name)
-                AND r.code = COALESCE(:filterRank, r.code)
+                AND (:filterRank IS NULL OR r.code IN (:filterRank))
             """
     )
     Page<MainResultProjection> findResultDtoWithPagination(
         @Param("adjustId") Long adjustId,
         @Param("filterEmpNum") String filterEmpNum,
         @Param("filterName") String filterName,
-        @Param("filterGrade") String filterGrade,
+        @Param("filterGrade") List<String> filterGrade,
         @Param("filterDepartment") String filterDepartment,
-        @Param("filterRank") String filterRank,
+        @Param("filterRank") List<String> filterRank,
         Pageable pageable);
 
     @Query("""

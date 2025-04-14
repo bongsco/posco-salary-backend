@@ -292,7 +292,7 @@ public class AdjustSubjectService {
 
     @Transactional
     public MainResultResponses getFinalResult(Long adjustId, String filterEmpNum, String filterName,
-        String filterGrade, String filterDepartment, String filterRank,
+        List<String> filterGrade, String filterDepartment, List<String> filterRank,
         List<Map<String, String>> sorts, Integer pageNumber, Integer pageSize) {
 
         Map<String, String> mapping = Map.of(
