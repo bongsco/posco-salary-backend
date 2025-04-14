@@ -344,7 +344,6 @@ public class AdjustSubjectService {
             (filterRank == null || filterRank.isEmpty()) ? null :
                 filterRank,
             filterEmpNum == null || filterEmpNum.isEmpty(),
-
             filterName == null || filterName.isEmpty(),
             filterGrade == null || filterGrade.isEmpty(),
             filterDepartment == null || filterDepartment.isEmpty(),
