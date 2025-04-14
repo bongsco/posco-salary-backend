@@ -2,6 +2,8 @@ package com.bongsco.api.adjust.annual.service;
 
 import static com.bongsco.api.common.exception.ErrorCode.*;
 
+import java.time.LocalDate;
+import java.time.Month;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -164,15 +166,19 @@ public class AdjustService {
             adjustRepository.findMaxOrderNumberByYear(postRequest.getStartDate().getYear(), postRequest.getType())
         ).orElse(0).intValue();
 
+        LocalDate today = LocalDate.now();
         /* adjust 추가 */
         Adjust adjust = Adjust.builder()
             .year(postRequest.getStartDate().getYear())
             .month(postRequest.getStartDate().getMonthValue())
             .adjustType(postRequest.getType())
+            .baseDate(today)
             .isSubmitted(false)
             .orderNumber(yearMaxOrderNumber + 1) // 현재 해당년도의 Max 차수에 +1을 해서 다음 차수 정보 세팅
             .startDate(postRequest.getStartDate())
             .endDate(postRequest.getEndDate())
+            .exceptionStartDate(today)
+            .exceptionEndDate(LocalDate.of(today.getYear(), Month.DECEMBER, 31))
             .author(postRequest.getAuthor())
             .build();
         Adjust savedAdjust = adjustRepository.save(adjust);
