@@ -57,10 +57,10 @@ public class MainAdjustController {
     @Operation(summary = "정기 연봉 조정", description = "마지막 페이지, 계산값 모두 보여줌")
     @GetMapping("/annual-adj")
     public ResponseEntity<MainResultResponses> showResult(@PathVariable("adjustId") Long adjustId,
-        @RequestParam(value = "filterEmpNum", required = false) String filterEmpNum,
-        @RequestParam(value = "filterName", required = false) String filterName,
+        @RequestParam(value = "filterEmpNum", required = false) List<String> filterEmpNum,
+        @RequestParam(value = "filterName", required = false) List<String> filterName,
         @RequestParam(value = "filterGrade", required = false) List<String> filterGrade,
-        @RequestParam(value = "filterDepartment", required = false) String filterDepartment,
+        @RequestParam(value = "filterDepartment", required = false) List<String> filterDepartment,
         @RequestParam(value = "filterRank", required = false) List<String> filterRank,
         @RequestParam(value = "sorts", required = false) String sorts,
         @RequestParam(value = "pageNumber", required = false, defaultValue = "1") @Min(1) Integer pageNumber,

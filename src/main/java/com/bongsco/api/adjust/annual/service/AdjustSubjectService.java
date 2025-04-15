@@ -291,8 +291,8 @@ public class AdjustSubjectService {
     }
 
     @Transactional
-    public MainResultResponses getFinalResult(Long adjustId, String filterEmpNum, String filterName,
-        List<String> filterGrade, String filterDepartment, List<String> filterRank,
+    public MainResultResponses getFinalResult(Long adjustId, List<String> filterEmpNum, List<String> filterName,
+        List<String> filterGrade, List<String> filterDepartment, List<String> filterRank,
         List<Map<String, String>> sorts, Integer pageNumber, Integer pageSize) {
 
         Map<String, String> mapping = Map.of(
@@ -322,18 +322,23 @@ public class AdjustSubjectService {
         }
 
         /* 모두 다 같으면 id를 기준으로 정렬되도록 id 조건 마지막에 추가 */
-        sortOrders.add(Sort.Order.desc("asj.id"));
+        sortOrders.add(Sort.Order.desc("adjustSubjectId"));
 
         /* Pageable 객체 생성 */
         Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(sortOrders));
 
         Page<MainResultProjection> resultAndPageInfo = adjustSubjectRepository.findResultDtoWithPagination(
             adjustId,
-            filterEmpNum == null ? null : "%" + filterEmpNum + "%",
-            filterName == null ? null : "%" + filterName + "%",
-            filterGrade,
-            filterDepartment == null ? null : "%" + filterDepartment + "%",
-            filterRank,
+            (filterEmpNum == null || filterEmpNum.isEmpty()) ? null :
+                filterEmpNum.stream().map(empNum -> "%" + empNum + "%").toArray(String[]::new),
+            (filterName == null || filterName.isEmpty()) ? null :
+                filterName.stream().map(name -> "%" + name + "%").toArray(String[]::new),
+            (filterGrade == null || filterGrade.isEmpty()) ? null :
+                filterGrade.toArray(new String[0]),
+            (filterDepartment == null || filterDepartment.isEmpty()) ? null :
+                filterDepartment.stream().map(dep -> "%" + dep + "%").toArray(String[]::new),
+            (filterRank == null || filterRank.isEmpty()) ? null :
+                filterRank.toArray(new String[0]),
             pageable
         );
 
