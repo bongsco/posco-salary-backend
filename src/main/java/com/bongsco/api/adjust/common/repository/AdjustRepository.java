@@ -86,8 +86,7 @@ public interface AdjustRepository extends JpaRepository<Adjust, Long> {
             FROM (
                 SELECT
                     adjust_id,
-                    step_id,
-                    ROW_NUMBER() OVER(PARTITION BY adjust_id ORDER BY step_id ASC) as rn
+                    step_id
                 FROM
                     adjust_step
                 WHERE
@@ -95,8 +94,11 @@ public interface AdjustRepository extends JpaRepository<Adjust, Long> {
             ) rs
             JOIN
                 step s ON rs.step_id = s.id
-            WHERE
-                rs.rn = 1
+            ORDER BY (CASE WHEN s.name = 'CRITERIA' THEN 1 
+                        WHEN s.name = 'PREPARATION' THEN 2
+                        WHEN s.name = 'MAIN' THEN 3 
+                        ELSE 999 END), s.order_number
+            FETCH FIRST 1 ROWS ONLY
         ) nps ON a.id = nps.adjust_id
         WHERE (COALESCE(array_length(CAST(:year AS integer[]), 1), 0) = 0 OR a.year = ANY(CAST(:year AS integer[])))
             AND (COALESCE(array_length(CAST(:month AS integer[]), 1), 0) = 0 OR a.month = ANY (CAST(:month AS integer[])))
@@ -117,12 +119,12 @@ public interface AdjustRepository extends JpaRepository<Adjust, Long> {
                 SELECT
                     rs.adjust_id,
                     s.name AS step_name,
-                    s.detail_step_name
+                    s.detail_step_name,
+                    s.url
                 FROM (
                     SELECT
                         adjust_id,
-                        step_id,
-                        ROW_NUMBER() OVER(PARTITION BY adjust_id ORDER BY step_id ASC) as rn
+                        step_id
                     FROM
                         adjust_step
                     WHERE
@@ -130,8 +132,11 @@ public interface AdjustRepository extends JpaRepository<Adjust, Long> {
                 ) rs
                 JOIN
                     step s ON rs.step_id = s.id
-                WHERE
-                    rs.rn = 1
+                ORDER BY (CASE WHEN s.name = 'CRITERIA' THEN 1 
+                            WHEN s.name = 'PREPARATION' THEN 2
+                            WHEN s.name = 'MAIN' THEN 3 
+                            ELSE 999 END), s.order_number
+                FETCH FIRST 1 ROWS ONLY
             ) nps ON a.id = nps.adjust_id
             WHERE (COALESCE(array_length(CAST(:year AS integer[]), 1), 0) = 0 OR a.year = ANY(CAST(:year AS integer[])))
                 AND (COALESCE(array_length(CAST(:month AS integer[]), 1), 0) = 0 OR a.month = ANY (CAST(:month AS integer[])))
