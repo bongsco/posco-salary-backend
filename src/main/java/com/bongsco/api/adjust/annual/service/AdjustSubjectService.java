@@ -334,16 +334,11 @@ public class AdjustSubjectService {
             (filterName == null || filterName.isEmpty()) ? null :
                 filterName.stream().map(name -> "%" + name + "%").toArray(String[]::new),
             (filterGrade == null || filterGrade.isEmpty()) ? null :
-                filterGrade,
+                filterGrade.toArray(new String[0]),
             (filterDepartment == null || filterDepartment.isEmpty()) ? null :
                 filterDepartment.stream().map(dep -> "%" + dep + "%").toArray(String[]::new),
             (filterRank == null || filterRank.isEmpty()) ? null :
-                filterRank,
-            filterEmpNum == null || filterEmpNum.isEmpty(),
-            filterName == null || filterName.isEmpty(),
-            filterGrade == null || filterGrade.isEmpty(),
-            filterDepartment == null || filterDepartment.isEmpty(),
-            filterRank == null || filterRank.isEmpty(),
+                filterRank.toArray(new String[0]),
             pageable
         );
 

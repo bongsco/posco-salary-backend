@@ -150,11 +150,11 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
         JOIN salary_increment_by_rank s ON s.adjust_grade_id = ag.id AND s.rank_id = r.id
         WHERE asj.adjust_id = :adjustId
             AND asj.is_subject = true
-            AND (:empNumIsNull OR e.emp_num LIKE ANY(:filterEmpNum))
-            AND (:nameIsNull OR e.name LIKE ANY(:filterName ))
-            AND (:gradeIsNull OR g.name IN (:filterGrade))
-            AND (:departmentIsNull OR d.name LIKE ANY(:filterDepartment ))
-            AND (:rankIsNull OR r.code IN (:filterRank))
+            AND (COALESCE(array_length(CAST(:filterEmpNum AS text[]), 1), 0) = 0 OR e.emp_num LIKE ANY(CAST(:filterEmpNum AS text[])))
+            AND (COALESCE(array_length(CAST(:filterName AS text[]), 1), 0) = 0 OR e.name LIKE ANY(CAST(:filterName AS text[])))
+            AND (COALESCE(array_length(CAST(:filterGrade AS text[]), 1), 0) = 0 OR g.name = ANY (CAST(:filterGrade AS text[])))
+            AND (COALESCE(array_length(CAST(:filterDepartment AS text[]), 1), 0) = 0 OR d.name LIKE ANY(CAST(:filterDepartment AS text[])))
+            AND (COALESCE(array_length(CAST(:filterRank AS text[]), 1), 0) = 0 OR r.code = ANY (CAST(:filterRank AS text[])))
         """,
         countQuery = """
         SELECT COUNT(asj.id)
@@ -166,12 +166,12 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
         JOIN adjust_grade ag ON ag.adjust_id = asj.adjust_id AND ag.grade_id = g.id
         JOIN salary_increment_by_rank s ON s.adjust_grade_id = ag.id AND s.rank_id = r.id
         WHERE asj.adjust_id = :adjustId
-           AND asj.is_subject = true
-            AND (:empNumIsNull OR e.emp_num LIKE ANY(:filterEmpNum))
-            AND (:nameIsNull OR e.name LIKE ANY(:filterName ))
-            AND (:gradeIsNull OR g.name IN (:filterGrade))
-            AND (:departmentIsNull OR d.name LIKE ANY(:filterDepartment ))
-            AND (:rankIsNull OR r.code IN (:filterRank))
+            AND asj.is_subject = true
+            AND (COALESCE(array_length(CAST(:filterEmpNum AS text[]), 1), 0) = 0 OR e.emp_num LIKE ANY(CAST(:filterEmpNum AS text[])))
+            AND (COALESCE(array_length(CAST(:filterName AS text[]), 1), 0) = 0 OR e.name LIKE ANY(CAST(:filterName AS text[])))
+            AND (COALESCE(array_length(CAST(:filterGrade AS text[]), 1), 0) = 0 OR g.name = ANY (CAST(:filterGrade AS text[])))
+            AND (COALESCE(array_length(CAST(:filterDepartment AS text[]), 1), 0) = 0 OR d.name LIKE ANY(CAST(:filterDepartment AS text[])))
+            AND (COALESCE(array_length(CAST(:filterRank AS text[]), 1), 0) = 0 OR r.code = ANY (CAST(:filterRank AS text[])))
         """,
         nativeQuery = true
     )
@@ -179,14 +179,9 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
         @Param("adjustId") Long adjustId,
         @Param("filterEmpNum") String[] filterEmpNum,
         @Param("filterName") String[] filterName,
-        @Param("filterGrade") List<String> filterGrade,
+        @Param("filterGrade") String[] filterGrade,
         @Param("filterDepartment") String[] filterDepartment,
-        @Param("filterRank") List<String> filterRank,
-        @Param("empNumIsNull") Boolean empNumIsNull,
-        @Param("nameIsNull") Boolean nameIsNull,
-        @Param("gradeIsNull") Boolean gradeIsNull,
-        @Param("departmentIsNull") Boolean departmentIsNull,
-        @Param("rankIsNull") Boolean rankIsNull,
+        @Param("filterRank") String[] filterRank,
         Pageable pageable
     );
 
