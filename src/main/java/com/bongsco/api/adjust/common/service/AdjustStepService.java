@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bongsco.api.adjust.common.domain.StepName;
 import com.bongsco.api.adjust.common.dto.response.StepperResponse;
 import com.bongsco.api.adjust.common.entity.Adjust;
 import com.bongsco.api.adjust.common.entity.AdjustStep;
@@ -52,5 +53,15 @@ public class AdjustStepService {
     public void changeIsDone(Long adjustId, String stepId, Boolean isDone) {
         AdjustStep adjustStep = adjustStepRepository.findByAdjust_IdAndStep_Id(adjustId, stepId);
         adjustStepRepository.save(adjustStep.toBuilder().isDone(isDone).build());
+    }
+
+    @Transactional
+    public void resetMain(Long adjustId) {
+        List<AdjustStep> criteriaSteps = adjustStepRepository.findAllByAdjust_IdAndStep_Name(adjustId, StepName.MAIN)
+            .stream()
+            .map(e -> e.toBuilder().isDone(false).build())
+            .toList();
+
+        adjustStepRepository.saveAll(criteriaSteps);
     }
 }

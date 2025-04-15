@@ -217,6 +217,11 @@ public class AdjustSubjectService {
     }
 
     @Transactional
+    public void initializeIsPaybandApplied(Long adjustId) {
+        adjustSubjectRepository.saveAll(adjustSubjectRepository.findByAdjust_Id(adjustId).stream().map(as -> as.toBuilder().isPaybandApplied(PaybandAppliedType.NONE).build()).collect(Collectors.toList()));
+    }
+
+    @Transactional
     public void calculateSalaryAndBonus(Long adjustId) {
         Adjust adjust = adjustRepository.findById(adjustId)
             .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
@@ -284,7 +289,6 @@ public class AdjustSubjectService {
                 .stdSalary(newStdSalary)
                 .finalStdSalary(newStdSalary)
                 .hpoBonus(newHpoBonus)
-                .isPaybandApplied(PaybandAppliedType.NONE)
                 .build();
         }).filter(Objects::nonNull).toList();
 

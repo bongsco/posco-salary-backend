@@ -16,6 +16,7 @@ import com.bongsco.api.adjust.annual.dto.request.ChangedSubjectUseEmployeeReques
 import com.bongsco.api.adjust.annual.dto.response.EmployeeResponse;
 import com.bongsco.api.adjust.annual.dto.response.HpoEmployeesResponse;
 import com.bongsco.api.adjust.annual.service.AdjustSubjectService;
+import com.bongsco.api.adjust.common.service.AdjustStepService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,6 +29,8 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/adjust/{adjustId}/preparation")
 public class PreparationController {
     private final AdjustSubjectService adjSubjectService;
+    private final AdjustSubjectService adjustSubjectService;
+    private final AdjustStepService adjustStepService;
 
     @Operation(summary = "대상자 편성 페이지 GET API", description = "대상자 편성 페이지에서 조정 대상자와 비대상자 정보 반환")
     @GetMapping("/employees")
@@ -53,7 +56,6 @@ public class PreparationController {
     public ResponseEntity<HpoEmployeesResponse> getCompensationTable(
         @PathVariable("adjustId") Long adjustId
     ) {
-
         return ResponseEntity.status(HttpStatus.OK)
             .body(adjSubjectService.findHpoEmployees(adjustId));
     }
@@ -65,7 +67,8 @@ public class PreparationController {
         @Valid @RequestBody ChangedHighPerformGroupEmployeeRequest changedHighPerformGroupEmployeeRequest
     ) {
         adjSubjectService.updateHighPerformGroupEmployee(adjustId, changedHighPerformGroupEmployeeRequest);
-
+        adjustSubjectService.initializeIsPaybandApplied(adjustId);
+        adjustStepService.resetMain(adjustId);
         return ResponseEntity.noContent().build();
     }
 }

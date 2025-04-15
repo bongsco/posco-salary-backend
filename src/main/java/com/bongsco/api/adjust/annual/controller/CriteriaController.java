@@ -18,7 +18,10 @@ import com.bongsco.api.adjust.annual.dto.response.PaybandCriteriaConfigListRespo
 import com.bongsco.api.adjust.annual.dto.response.PaymentRateResponse;
 import com.bongsco.api.adjust.annual.dto.response.PaymentRateUpdateResponse;
 import com.bongsco.api.adjust.annual.dto.response.SubjectCriteriaResponse;
+import com.bongsco.api.adjust.annual.service.AdjustService;
+import com.bongsco.api.adjust.annual.service.AdjustSubjectService;
 import com.bongsco.api.adjust.annual.service.CriteriaService;
+import com.bongsco.api.adjust.common.service.AdjustStepService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -31,6 +34,8 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/adjust/{adjustId}/criteria")
 public class CriteriaController {
     private final CriteriaService criteriaService;
+    private final AdjustSubjectService adjustSubjectService;
+    private final AdjustStepService adjustStepService;
 
     @Operation(summary = "대상자 기준 설정 GET API", description = "대상자 기준 설정 기존 값 전달")
     @GetMapping("/subject")
@@ -68,6 +73,8 @@ public class CriteriaController {
         @Valid @RequestBody PaymentRateUpdateRequest request
     ) {
         List<String> updatedGrades = criteriaService.updatePaymentRate(adjustId, request);
+        adjustSubjectService.initializeIsPaybandApplied(adjustId);
+        adjustStepService.resetMain(adjustId);
         return ResponseEntity.ok(new PaymentRateUpdateResponse(updatedGrades));
     }
 
@@ -85,6 +92,8 @@ public class CriteriaController {
         @Valid @RequestBody PaybandCriteriaModifyRequest request,
         @PathVariable(name = "adjustId") Long adjustId) {
         criteriaService.updatePaybandCriteria(request);
+        adjustSubjectService.initializeIsPaybandApplied(adjustId);
+        adjustStepService.resetMain(adjustId);
         return ResponseEntity.noContent().build();
     }
 }
