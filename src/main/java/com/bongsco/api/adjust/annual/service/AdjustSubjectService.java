@@ -30,34 +30,29 @@ import com.bongsco.api.adjust.annual.dto.response.MainResultResponses;
 import com.bongsco.api.adjust.annual.dto.response.PaybandSubjectResponse;
 import com.bongsco.api.adjust.annual.dto.response.RateInfo;
 import com.bongsco.api.adjust.annual.repository.PaybandCriteriaRepository;
-import com.bongsco.api.adjust.annual.repository.SalaryIncrementByRankRepository;
 import com.bongsco.api.adjust.annual.repository.reflection.MainResultProjection;
 import com.bongsco.api.adjust.common.entity.Adjust;
 import com.bongsco.api.adjust.common.entity.AdjustSubject;
 import com.bongsco.api.adjust.common.entity.PaybandAppliedType;
-import com.bongsco.api.adjust.common.repository.AdjustGradeRepository;
 import com.bongsco.api.adjust.common.repository.AdjustRepository;
 import com.bongsco.api.adjust.common.repository.AdjustSubjectRepository;
-import com.bongsco.api.adjust.common.repository.RepresentativeSalaryRepository;
+import com.bongsco.api.adjust.common.service.AdjustStepService;
 import com.bongsco.api.common.exception.CustomException;
 import com.bongsco.api.employee.entity.Employee;
 import com.bongsco.api.employee.repository.EmployeeRepository;
-import com.bongsco.api.employee.repository.GradeRepository;
 
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Service
 public class AdjustSubjectService {
     private final AdjustSubjectRepository adjustSubjectRepository;
-    private final SalaryIncrementByRankRepository salaryIncrementByRankRepository;
     private final PaybandCriteriaRepository paybandCriteriaRepository;
     private final EmployeeRepository employeeRepository;
     private final AdjustRepository adjustRepository;
-    private final RepresentativeSalaryRepository representativeSalaryRepository;
-    private final GradeRepository gradeRepository;
-    private final AdjustService adjustService;
-    private final AdjustGradeRepository adjustGradeRepository;
+    private final AdjustStepService adjustStepService;
+    private final EntityManager entityManager;
 
     public static Double calculateMedian(List<AdjustSubject> adjustSubjects) {
         if (adjustSubjects.isEmpty()) {
@@ -121,6 +116,7 @@ public class AdjustSubjectService {
             .build();
     }
 
+    @Transactional
     public void updateHighPerformGroupEmployee(
         Long adjustId,
         ChangedHighPerformGroupEmployeeRequest changedHighPerformGroupEmployeeRequest
@@ -128,7 +124,7 @@ public class AdjustSubjectService {
         // 요청 직원 ID 목록 추출
         List<Long> employeeIds = changedHighPerformGroupEmployeeRequest.getChangedHighPerformGroupEmployee().stream()
             .map(ChangedHighPerformGroupEmployee::getEmployeeId)
-            .collect(Collectors.toList());
+            .toList();
 
         // 관련 AdjustSubject 엔티티들 모두 조회
         List<AdjustSubject> existingSubjects = adjustSubjectRepository.findAllByAdjustIdAndEmployeeIdIn(adjustId,
@@ -152,10 +148,12 @@ public class AdjustSubjectService {
                     .isInHpo(requestItem.getIsInHpo())
                     .build();
             })
-            .collect(Collectors.toList());
+            .toList();
 
         // 모두 저장
         adjustSubjectRepository.saveAll(updatedSubjects);
+        this.initializeIsPaybandApplied(adjustId);
+        adjustStepService.resetMain(adjustId);
     }
 
     public PaybandSubjectResponse getBothUpperLowerSubjects(Long adjustId) {
@@ -200,9 +198,9 @@ public class AdjustSubjectService {
                 Double lowerLimit = Optional.ofNullable(limitInfo.getLowerLimit()).orElse(Double.MIN_VALUE);
 
                 // Enum 타입에 따라 처리
-                if (request.getIsPaybandApplied() == PaybandAppliedType.UPPER & stdSalary > upperLimit) {
+                if (request.getIsPaybandApplied() == PaybandAppliedType.UPPER && stdSalary > upperLimit) {
                     finalStdSalary = upperLimit;
-                } else if (request.getIsPaybandApplied() == PaybandAppliedType.LOWER & stdSalary < lowerLimit) {
+                } else if (request.getIsPaybandApplied() == PaybandAppliedType.LOWER && stdSalary < lowerLimit) {
                     finalStdSalary = lowerLimit;
                 }
             }
@@ -216,9 +214,14 @@ public class AdjustSubjectService {
         adjustSubjectRepository.saveAll(updatedSubjects);
     }
 
-    @Transactional
     public void initializeIsPaybandApplied(Long adjustId) {
-        adjustSubjectRepository.saveAll(adjustSubjectRepository.findByAdjust_Id(adjustId).stream().map(as -> as.toBuilder().isPaybandApplied(PaybandAppliedType.NONE).build()).collect(Collectors.toList()));
+        adjustSubjectRepository.updatePaybandAppliedTypeByAdjustId(adjustId);
+        entityManager.clear();
+
+        // adjustSubjectRepository.saveAll(adjustSubjectRepository.findByAdjust_Id(adjustId)
+        //     .stream()
+        //     .map(as -> as.toBuilder().isPaybandApplied(PaybandAppliedType.NONE).build())
+        //     .collect(Collectors.toList()));
     }
 
     @Transactional

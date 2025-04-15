@@ -7,6 +7,7 @@ import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -20,24 +21,29 @@ import com.bongsco.api.adjust.common.entity.AdjustSubject;
 
 @Repository
 public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Long> {
-
-    List<AdjustSubject> findByAdjust_Id(Long adjustId);
+    @Modifying
+    @Query(value = """
+        UPDATE AdjustSubject adjs
+            SET adjs.isPaybandApplied = "NONE"
+        WHERE adjs.adjust.id = :adjustId
+        """)
+    void updatePaybandAppliedTypeByAdjustId(@Param("adjustId") Long adjustId);
 
     @Query("""
         SELECT new com.bongsco.api.adjust.annual.dto.response.HpoEmployee(
             emp.id,
             emp.empNum,
-            emp.name, 
+            emp.name,
             dept.name,
             g.name,
             r.code,
             asj.isInHpo
         )
-        FROM AdjustSubject asj          
+        FROM AdjustSubject asj
         JOIN asj.employee emp
         JOIN emp.department dept
         JOIN emp.grade g
-        JOIN emp.rank r    
+        JOIN emp.rank r
         WHERE asj.adjust.id = :adjustId 
         AND asj.isSubject = true
         """)
@@ -134,45 +140,45 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
 
     @Query(
         value = """
-        SELECT 
-            e.emp_num AS empNum, e.name AS name, g.name AS gradeName, e.position_name AS positionName, d.name AS depName, r.code AS rankCode,
-            e.std_salary_increment_rate AS stdSalaryIncrementRate, asj.final_std_salary AS finalStdSalary, asj.std_salary AS stdSalary,
-            asj.hpo_bonus AS hpoBonus, asj.is_in_hpo AS isInHpo, e.id AS empId, asj.id AS adjustSubjectId, g.id AS gradeId, r.id AS rankId,
-            ag.id AS adjustGradeId, s.bonus_multiplier AS bonusMultiplier, s.salary_increment_rate AS salaryIncrementRate,
-            asj.is_payband_applied AS isPaybandApplied,
-            COALESCE(asj.final_std_salary, 0) + COALESCE(asj.hpo_bonus, 0) AS totalSalary
-        FROM adjust_subject asj
-        JOIN employee e ON e.id = asj.employee_id
-        JOIN grade g ON g.id = asj.grade_id
-        JOIN department d ON d.id = e.dept_id
-        JOIN rank r ON r.id = asj.rank_id
-        JOIN adjust_grade ag ON ag.adjust_id = asj.adjust_id AND ag.grade_id = g.id
-        JOIN salary_increment_by_rank s ON s.adjust_grade_id = ag.id AND s.rank_id = r.id
-        WHERE asj.adjust_id = :adjustId
-            AND asj.is_subject = true
-            AND (COALESCE(array_length(CAST(:filterEmpNum AS text[]), 1), 0) = 0 OR e.emp_num LIKE ANY(CAST(:filterEmpNum AS text[])))
-            AND (COALESCE(array_length(CAST(:filterName AS text[]), 1), 0) = 0 OR e.name LIKE ANY(CAST(:filterName AS text[])))
-            AND (COALESCE(array_length(CAST(:filterGrade AS text[]), 1), 0) = 0 OR g.name = ANY (CAST(:filterGrade AS text[])))
-            AND (COALESCE(array_length(CAST(:filterDepartment AS text[]), 1), 0) = 0 OR d.name LIKE ANY(CAST(:filterDepartment AS text[])))
-            AND (COALESCE(array_length(CAST(:filterRank AS text[]), 1), 0) = 0 OR r.code = ANY (CAST(:filterRank AS text[])))
-        """,
+            SELECT 
+                e.emp_num AS empNum, e.name AS name, g.name AS gradeName, e.position_name AS positionName, d.name AS depName, r.code AS rankCode,
+                e.std_salary_increment_rate AS stdSalaryIncrementRate, asj.final_std_salary AS finalStdSalary, asj.std_salary AS stdSalary,
+                asj.hpo_bonus AS hpoBonus, asj.is_in_hpo AS isInHpo, e.id AS empId, asj.id AS adjustSubjectId, g.id AS gradeId, r.id AS rankId,
+                ag.id AS adjustGradeId, s.bonus_multiplier AS bonusMultiplier, s.salary_increment_rate AS salaryIncrementRate,
+                asj.is_payband_applied AS isPaybandApplied,
+                COALESCE(asj.final_std_salary, 0) + COALESCE(asj.hpo_bonus, 0) AS totalSalary
+            FROM adjust_subject asj
+            JOIN employee e ON e.id = asj.employee_id
+            JOIN grade g ON g.id = asj.grade_id
+            JOIN department d ON d.id = e.dept_id
+            JOIN rank r ON r.id = asj.rank_id
+            JOIN adjust_grade ag ON ag.adjust_id = asj.adjust_id AND ag.grade_id = g.id
+            JOIN salary_increment_by_rank s ON s.adjust_grade_id = ag.id AND s.rank_id = r.id
+            WHERE asj.adjust_id = :adjustId
+                AND asj.is_subject = true
+                AND (COALESCE(array_length(CAST(:filterEmpNum AS text[]), 1), 0) = 0 OR e.emp_num LIKE ANY(CAST(:filterEmpNum AS text[])))
+                AND (COALESCE(array_length(CAST(:filterName AS text[]), 1), 0) = 0 OR e.name LIKE ANY(CAST(:filterName AS text[])))
+                AND (COALESCE(array_length(CAST(:filterGrade AS text[]), 1), 0) = 0 OR g.name = ANY (CAST(:filterGrade AS text[])))
+                AND (COALESCE(array_length(CAST(:filterDepartment AS text[]), 1), 0) = 0 OR d.name LIKE ANY(CAST(:filterDepartment AS text[])))
+                AND (COALESCE(array_length(CAST(:filterRank AS text[]), 1), 0) = 0 OR r.code = ANY (CAST(:filterRank AS text[])))
+            """,
         countQuery = """
-        SELECT COUNT(asj.id)
-        FROM adjust_subject asj
-        JOIN employee e ON e.id = asj.employee_id
-        JOIN grade g ON g.id = asj.grade_id
-        JOIN department d ON d.id = e.dept_id
-        JOIN rank r ON r.id = asj.rank_id
-        JOIN adjust_grade ag ON ag.adjust_id = asj.adjust_id AND ag.grade_id = g.id
-        JOIN salary_increment_by_rank s ON s.adjust_grade_id = ag.id AND s.rank_id = r.id
-        WHERE asj.adjust_id = :adjustId
-            AND asj.is_subject = true
-            AND (COALESCE(array_length(CAST(:filterEmpNum AS text[]), 1), 0) = 0 OR e.emp_num LIKE ANY(CAST(:filterEmpNum AS text[])))
-            AND (COALESCE(array_length(CAST(:filterName AS text[]), 1), 0) = 0 OR e.name LIKE ANY(CAST(:filterName AS text[])))
-            AND (COALESCE(array_length(CAST(:filterGrade AS text[]), 1), 0) = 0 OR g.name = ANY (CAST(:filterGrade AS text[])))
-            AND (COALESCE(array_length(CAST(:filterDepartment AS text[]), 1), 0) = 0 OR d.name LIKE ANY(CAST(:filterDepartment AS text[])))
-            AND (COALESCE(array_length(CAST(:filterRank AS text[]), 1), 0) = 0 OR r.code = ANY (CAST(:filterRank AS text[])))
-        """,
+            SELECT COUNT(asj.id)
+            FROM adjust_subject asj
+            JOIN employee e ON e.id = asj.employee_id
+            JOIN grade g ON g.id = asj.grade_id
+            JOIN department d ON d.id = e.dept_id
+            JOIN rank r ON r.id = asj.rank_id
+            JOIN adjust_grade ag ON ag.adjust_id = asj.adjust_id AND ag.grade_id = g.id
+            JOIN salary_increment_by_rank s ON s.adjust_grade_id = ag.id AND s.rank_id = r.id
+            WHERE asj.adjust_id = :adjustId
+                AND asj.is_subject = true
+                AND (COALESCE(array_length(CAST(:filterEmpNum AS text[]), 1), 0) = 0 OR e.emp_num LIKE ANY(CAST(:filterEmpNum AS text[])))
+                AND (COALESCE(array_length(CAST(:filterName AS text[]), 1), 0) = 0 OR e.name LIKE ANY(CAST(:filterName AS text[])))
+                AND (COALESCE(array_length(CAST(:filterGrade AS text[]), 1), 0) = 0 OR g.name = ANY (CAST(:filterGrade AS text[])))
+                AND (COALESCE(array_length(CAST(:filterDepartment AS text[]), 1), 0) = 0 OR d.name LIKE ANY(CAST(:filterDepartment AS text[])))
+                AND (COALESCE(array_length(CAST(:filterRank AS text[]), 1), 0) = 0 OR r.code = ANY (CAST(:filterRank AS text[])))
+            """,
         nativeQuery = true
     )
     Page<MainResultProjection> findResultDtoWithPagination(
@@ -184,7 +190,6 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
         @Param("filterRank") String[] filterRank,
         Pageable pageable
     );
-
 
     @Query("""
             SELECT new com.bongsco.api.adjust.annual.dto.response.EmployeeResponse(
