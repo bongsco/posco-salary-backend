@@ -19,12 +19,12 @@ public class AdjustSearchRequest {
     private Integer page;
     private Integer size;
 
-    private Integer year;
-    private Integer month;
-    private AdjustType adjType;
-    private Boolean state;
-    private Boolean isSubmitted;
-    private String author;
+    private List<Integer> year;
+    private List<Integer> month;
+    private List<AdjustType> adjType;
+    private List<Boolean> state;
+    private List<Boolean> isSubmitted;
+    private List<String> author;
 
     private List<Map<String, String>> sorts;
 }

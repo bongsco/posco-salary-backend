@@ -20,6 +20,7 @@ import com.bongsco.api.adjust.annual.entity.PaybandCriteria;
 import com.bongsco.api.adjust.annual.entity.SalaryIncrementByRank;
 import com.bongsco.api.adjust.annual.repository.PaybandCriteriaRepository;
 import com.bongsco.api.adjust.annual.repository.SalaryIncrementByRankRepository;
+import com.bongsco.api.adjust.common.domain.AdjustType;
 import com.bongsco.api.adjust.common.dto.request.AdjustPostRequest;
 import com.bongsco.api.adjust.common.dto.request.AdjustSearchRequest;
 import com.bongsco.api.adjust.common.dto.request.AdjustUpdateRequest;
@@ -84,7 +85,6 @@ public class AdjustService {
         /* 정렬 조건 세팅 */
         List<Map<String, String>> sorts = adjustSearchRequest.getSorts();
         List<Sort.Order> sortOrders = new ArrayList<>(); //초기값은 id
-
         if (sorts != null && !sorts.isEmpty()) {
             for (Map<String, String> sort : sorts) {
                 for (Map.Entry<String, String> entry : sort.entrySet()) {
@@ -107,12 +107,27 @@ public class AdjustService {
 
         /* 데이터 가져오기 */
         /* AdjustType가 null인 경우에 SQL Parameter 추정에서 오류가 발생해서 findAdjustItem으로 할 때 str을 넘김. */
-        String adjustTypeStr =
-            (adjustSearchRequest.getAdjType() != null) ? adjustSearchRequest.getAdjType().name() : null;
+        List<String> adjustTypeStr = new ArrayList<>();
+        if (adjustSearchRequest.getAdjType() != null) {
+            adjustTypeStr = adjustSearchRequest.getAdjType().stream()
+                .filter(item -> item != null)
+                .map(AdjustType::name)
+                .toList();
+        }
 
         Page<AdjustItemProjection> adjustPageInfo = adjustRepository.findAdjustItemsWithNextStepPaginated(
-            adjustSearchRequest.getYear(), adjustSearchRequest.getMonth(), adjustTypeStr,
-            adjustSearchRequest.getState(), adjustSearchRequest.getIsSubmitted(), adjustSearchRequest.getAuthor(),
+            (adjustSearchRequest.getYear() == null || adjustSearchRequest.getYear().isEmpty()) ? null :
+                adjustSearchRequest.getYear().toArray(new Integer[0]),
+            (adjustSearchRequest.getMonth() == null || adjustSearchRequest.getMonth().isEmpty()) ? null :
+                adjustSearchRequest.getMonth().toArray(new Integer[0]),
+            (adjustTypeStr == null || adjustTypeStr.isEmpty()) ? null :
+                adjustTypeStr.toArray(new String[0]),
+            (adjustSearchRequest.getState() == null || adjustSearchRequest.getState().isEmpty()) ? null :
+                adjustSearchRequest.getState().toArray(new Boolean[0]),
+            (adjustSearchRequest.getIsSubmitted() == null || adjustSearchRequest.getIsSubmitted().isEmpty()) ? null :
+                adjustSearchRequest.getIsSubmitted().toArray(new Boolean[0]),
+            (adjustSearchRequest.getAuthor() == null || adjustSearchRequest.getAuthor().isEmpty()) ? null :
+                adjustSearchRequest.getAuthor().stream().map(author -> "%" + author + "%").toArray(String[]::new),
             pageable);
 
         /* 페이지 정보 가져오기 */

@@ -2,6 +2,7 @@ package com.bongsco.api.adjust.common.controller;
 
 import static com.bongsco.api.adjust.common.util.ParseSorts.*;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
@@ -43,15 +44,14 @@ public class AdjustController {
     public ResponseEntity<AdjustResponse> getAdjustInfo(
         @RequestParam(value = "page", required = true) Integer page,
         @RequestParam(value = "size", required = true) Integer size,
-        @RequestParam(value = "year", required = false) Integer year,
-        @RequestParam(value = "month", required = false) Integer month,
-        @RequestParam(value = "adjType", required = false) AdjustType adjType,
-        @RequestParam(value = "state", required = false) Boolean state,
-        @RequestParam(value = "isSubmitted", required = false) Boolean isSubmitted,
-        @RequestParam(value = "author", required = false) String author,
+        @RequestParam(value = "year", required = false) List<Integer> year,
+        @RequestParam(value = "month", required = false) List<Integer> month,
+        @RequestParam(value = "adjType", required = false) List<AdjustType> adjType,
+        @RequestParam(value = "state", required = false) List<Boolean> state,
+        @RequestParam(value = "isSubmitted", required = false) List<Boolean> isSubmitted,
+        @RequestParam(value = "author", required = false) List<String> author,
         @RequestParam(value = "sort", required = false) String sort
     ) throws JsonProcessingException {
-
         AdjustSearchRequest adjustSearchRequest = new AdjustSearchRequest(
             page, size, year, month, adjType, state, isSubmitted, author, extractSorts(sort)
         );

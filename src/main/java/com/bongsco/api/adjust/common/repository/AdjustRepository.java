@@ -86,8 +86,7 @@ public interface AdjustRepository extends JpaRepository<Adjust, Long> {
             FROM (
                 SELECT
                     adjust_id,
-                    step_id,
-                    ROW_NUMBER() OVER(PARTITION BY adjust_id ORDER BY step_id ASC) as rn
+                    step_id
                 FROM
                     adjust_step
                 WHERE
@@ -95,16 +94,22 @@ public interface AdjustRepository extends JpaRepository<Adjust, Long> {
             ) rs
             JOIN
                 step s ON rs.step_id = s.id
-            WHERE
-                rs.rn = 1
+            ORDER BY (CASE WHEN s.name = 'CRITERIA' THEN 1 
+                        WHEN s.name = 'PREPARATION' THEN 2
+                        WHEN s.name = 'MAIN' THEN 3 
+                        ELSE 999 END), s.order_number
+            FETCH FIRST 1 ROWS ONLY
         ) nps ON a.id = nps.adjust_id
-        WHERE (a.year = COALESCE(:year, a.year))
-            AND (a.month = COALESCE(:month, a.month))
-            AND (a.is_submitted = COALESCE(:isSubmitted, a.is_submitted))
-            AND (:state IS NULL OR (:state = TRUE AND nps.step_name IS NULL) OR (:state = FALSE AND nps.step_name IS NOT NULL))
-            AND (:adjustType IS NULL OR a.adjust_type = :adjustType)
-            AND (:author IS NULL OR a.author LIKE CONCAT('%', :author, '%'))
-            AND NOT a.deleted
+        WHERE (COALESCE(array_length(CAST(:year AS integer[]), 1), 0) = 0 OR a.year = ANY(CAST(:year AS integer[])))
+            AND (COALESCE(array_length(CAST(:month AS integer[]), 1), 0) = 0 OR a.month = ANY (CAST(:month AS integer[])))
+            AND (COALESCE(array_length(CAST(:adjustType AS text[]), 1), 0) = 0 OR a.adjust_type = ANY (CAST(:adjustType AS text[])))
+            AND (COALESCE(array_length(CAST(:author AS text[]), 1), 0) = 0 OR a.author LIKE ANY(CAST(:author AS text[])))
+            AND (COALESCE(array_length(CAST(:isSubmitted AS boolean[]), 1), 0) = 0 OR a.is_submitted = ANY (CAST(:isSubmitted AS boolean[])))
+            AND (
+                    COALESCE(array_length(CAST(:state AS boolean[]), 1), 0) = 0
+                    OR ((TRUE = ANY(CAST(:state AS boolean[]))) AND nps.step_name IS NULL)
+                    OR ((FALSE = ANY(CAST(:state AS boolean[]))) AND nps.step_name IS NOT NULL)
+            )        
         """,
         countQuery = """
             SELECT count(*)
@@ -114,12 +119,12 @@ public interface AdjustRepository extends JpaRepository<Adjust, Long> {
                 SELECT
                     rs.adjust_id,
                     s.name AS step_name,
-                    s.detail_step_name
+                    s.detail_step_name,
+                    s.url
                 FROM (
                     SELECT
                         adjust_id,
-                        step_id,
-                        ROW_NUMBER() OVER(PARTITION BY adjust_id ORDER BY step_id ASC) as rn
+                        step_id
                     FROM
                         adjust_step
                     WHERE
@@ -127,21 +132,28 @@ public interface AdjustRepository extends JpaRepository<Adjust, Long> {
                 ) rs
                 JOIN
                     step s ON rs.step_id = s.id
-                WHERE
-                    rs.rn = 1
+                ORDER BY (CASE WHEN s.name = 'CRITERIA' THEN 1 
+                            WHEN s.name = 'PREPARATION' THEN 2
+                            WHEN s.name = 'MAIN' THEN 3 
+                            ELSE 999 END), s.order_number
+                FETCH FIRST 1 ROWS ONLY
             ) nps ON a.id = nps.adjust_id
-            WHERE (a.year = COALESCE(:year, a.year))
-                AND (a.month = COALESCE(:month, a.month))
-                AND (a.is_submitted = COALESCE(:isSubmitted, a.is_submitted))
-                AND (:state IS NULL OR (:state = TRUE AND nps.step_name IS NULL) OR (:state = FALSE AND nps.step_name IS NOT NULL))
-                AND (:adjustType IS NULL OR a.adjust_type = :adjustType)
-                AND (:author IS NULL OR a.author LIKE CONCAT('%', :author, '%'))
+            WHERE (COALESCE(array_length(CAST(:year AS integer[]), 1), 0) = 0 OR a.year = ANY(CAST(:year AS integer[])))
+                AND (COALESCE(array_length(CAST(:month AS integer[]), 1), 0) = 0 OR a.month = ANY (CAST(:month AS integer[])))
+                AND (COALESCE(array_length(CAST(:adjustType AS text[]), 1), 0) = 0 OR a.adjust_type = ANY (CAST(:adjustType AS text[])))
+                AND (COALESCE(array_length(CAST(:author AS text[]), 1), 0) = 0 OR a.author LIKE ANY(CAST(:author AS text[])))
+                AND (COALESCE(array_length(CAST(:isSubmitted AS boolean[]), 1), 0) = 0 OR a.is_submitted = ANY (CAST(:isSubmitted AS boolean[])))
+                AND (
+                        COALESCE(array_length(CAST(:state AS boolean[]), 1), 0) = 0
+                        OR ((TRUE = ANY(CAST(:state AS boolean[]))) AND nps.step_name IS NULL)
+                        OR ((FALSE = ANY(CAST(:state AS boolean[]))) AND nps.step_name IS NOT NULL)
+                ) 
             """,
         nativeQuery = true)
     Page<AdjustItemProjection> findAdjustItemsWithNextStepPaginated(
-        @Param("year") Integer year, @Param("month") Integer month,
-        @Param("adjustType") String adjustType, @Param("state") Boolean state,
-        @Param("isSubmitted") Boolean isSubmitted, @Param("author") String author, Pageable pageable);
+        @Param("year") Integer[] year, @Param("month") Integer[] month,
+        @Param("adjustType") String[] adjustType, @Param("state") Boolean[] state,
+        @Param("isSubmitted") Boolean[] isSubmitted, @Param("author") String[] author, Pageable pageable);
 
     @Query("SELECT MAX(a.orderNumber) FROM Adjust a WHERE a.year = :year AND a.adjustType = :adjustType")
     Integer findMaxOrderNumberByYear(@Param("year") int year, @Param("adjustType") AdjustType adjustType);
