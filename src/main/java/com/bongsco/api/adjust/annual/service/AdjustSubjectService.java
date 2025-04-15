@@ -284,6 +284,7 @@ public class AdjustSubjectService {
                 .stdSalary(newStdSalary)
                 .finalStdSalary(newStdSalary)
                 .hpoBonus(newHpoBonus)
+                .isPaybandApplied(PaybandAppliedType.NONE)
                 .build();
         }).filter(Objects::nonNull).toList();
 
