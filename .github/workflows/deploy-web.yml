@@ -1,0 +1,23 @@
+name: Deploy Web Service
+
+on:
+  push:
+    branches: [ develop ]
+    paths:
+      - 'web/**'
+  pull_request:
+    branches: [ develop ]
+    paths:
+      - 'web/**'
+
+jobs:
+  call-reusable-deploy:
+    uses: ./.github/workflows/deploy-common.yml
+    with:
+      app_path: 'web'
+      container_name: 'bongsco-springboot-container'
+      ecr_repository: 'bongsco/salary-management-backend'
+      ecs_service: 'bongsco-springboot-new-service'
+      ecs_cluster: 'bongsco-salary-management-ecs-cluster'
+      codebuild_project_name: 'bongsco-salary-management-dev-cb'
+    secrets: inherit
