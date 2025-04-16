@@ -3,6 +3,7 @@ package com.bongsco.api.adjust.annual.service;
 import static com.bongsco.api.common.exception.ErrorCode.*;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -72,6 +73,7 @@ public class CriteriaService {
                 ag.getGrade().getName(),
                 ag.getIsActive()
             ))
+            .sorted(Comparator.comparing(SelectableItemDto::getName))  // 이름 기준 오름차순 정렬
             .collect(Collectors.toList());
 
         // 2. AdjustEmploymentType -> SelectableItemDto 변환
@@ -81,6 +83,7 @@ public class CriteriaService {
                 ae.getEmploymentType().getName(),
                 ae.getIsActive()
             ))
+            .sorted(Comparator.comparing(SelectableItemDto::getName))  // 이름 기준 오름차순 정렬
             .collect(Collectors.toList());
 
         // 3. 최종 응답 구성
@@ -99,13 +102,11 @@ public class CriteriaService {
             .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
 
         // ✅ Adjust 정보 업데이트 (기존 객체 수정)
-        Adjust updatedAdjust = adjust.toBuilder()
+        adjust = adjust.toBuilder()
             .baseDate(request.getBaseDate())
             .exceptionStartDate(request.getExceptionStartDate())
             .exceptionEndDate(request.getExceptionEndDate())
             .build();
-
-        adjustRepository.save(updatedAdjust);
 
         // ✅ 등급 체크 상태 반영
         Map<Long, AdjustGrade> gradeMap = adjustGradeRepository.findByAdjustId(adjustId).stream()
@@ -134,10 +135,12 @@ public class CriteriaService {
         Set<Long> selectedGradeIds = adjustGradeRepository.findByAdjustIdAndIsActive(adjustId, true).stream()
             .map(g -> g.getGrade().getId())
             .collect(Collectors.toSet());
+        System.out.println("*************selectedGradeIds: " + selectedGradeIds);
 
         Set<Long> selectedPaymentIds = adjustEmploymentTypeRepository.findByAdjustIdAndIsActive(adjustId, true).stream()
             .map(p -> p.getEmploymentType().getId())
             .collect(Collectors.toSet());
+        System.out.println("*************selectedPaymentIds: " + selectedPaymentIds);
 
         // ✅ 기존 대상자 직원 ID만 조회 (최적화된 쿼리 사용)
         Set<Long> existingEmpIds = adjustSubjectRepository.findEmployeeIdsByAdjustId(adjustId);
@@ -157,25 +160,23 @@ public class CriteriaService {
         // ✅ 삭제 대상: 기존엔 있었지만, 새 목록엔 없음
         Set<Long> deleteEmpIds = new HashSet<>(existingEmpIds);
         deleteEmpIds.removeAll(newEmpIds);
-
+        System.out.println("*************deleteEmpIds: " + deleteEmpIds);
         // ✅ 추가 대상: 새 목록에는 있는데 기존엔 없었음
         Set<Long> insertEmpIds = new HashSet<>(newEmpIds);
         insertEmpIds.removeAll(existingEmpIds);
+        System.out.println("*************insertEmpIds: " + insertEmpIds);
 
         // ✅ 삭제 대상 생성
-        List<AdjustSubject> toDeleteSubjects = deleteEmpIds.stream()
-            .map(id -> AdjustSubject.builder()
-                .adjust(adjust)
-                .employee(Employee.builder().id(id).build())
-                .build())
-            .toList();
+        List<AdjustSubject> toDeleteSubjects =
+            adjustSubjectRepository.softDeleteByAdjustIdAndEmployeeIdIn(adjustId, deleteEmpIds);
 
         // ✅ 추가 대상 생성
+        Adjust finalAdjust = adjust;
         List<AdjustSubject> toInsertSubjects = insertEmpIds.stream()
             .map(id -> {
                 EmployeeSimple emp = empMap.get(id);
                 return AdjustSubject.builder()
-                    .adjust(adjust)
+                    .adjust(finalAdjust)
                     .employee(Employee.builder().id(id).build())
                     .grade(emp.getGrade())
                     .rank(emp.getRank())
@@ -190,7 +191,9 @@ public class CriteriaService {
             .toList();
 
         adjustSubjectRepository.deleteAll(toDeleteSubjects);
+        System.out.println("*************toDeleteSubjects: " + toDeleteSubjects);
         adjustSubjectRepository.saveAll(toInsertSubjects);
+        System.out.println("*************toInsertSubjects: " + toInsertSubjects);
 
         // ✅ 응답 DTO 구성
         List<SelectableItemDto> gradeDtos = gradeMap.values().stream()
