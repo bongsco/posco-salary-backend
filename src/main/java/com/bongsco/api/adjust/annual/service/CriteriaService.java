@@ -28,7 +28,6 @@ import com.bongsco.api.adjust.annual.entity.PaybandCriteria;
 import com.bongsco.api.adjust.annual.entity.SalaryIncrementByRank;
 import com.bongsco.api.adjust.annual.repository.PaybandCriteriaRepository;
 import com.bongsco.api.adjust.annual.repository.SalaryIncrementByRankRepository;
-import com.bongsco.api.adjust.common.domain.StepName;
 import com.bongsco.api.adjust.common.entity.Adjust;
 import com.bongsco.api.adjust.common.entity.AdjustEmploymentType;
 import com.bongsco.api.adjust.common.entity.AdjustGrade;
@@ -47,6 +46,7 @@ import com.bongsco.api.employee.repository.EmployeeRepository;
 import com.bongsco.api.employee.repository.GradeRepository;
 import com.bongsco.api.employee.repository.RankRepository;
 
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -62,6 +62,7 @@ public class CriteriaService {
     private final RankRepository rankRepository;
     private final SalaryIncrementByRankRepository salaryIncrementByRankRepository;
     private final PaybandCriteriaRepository paybandCriteriaRepository;
+    private final EntityManager entityManager;
 
     public SubjectCriteriaResponse getSubjectCriteria(Long adjustId) {
         Adjust adjust = adjustRepository.findById(adjustId)
@@ -100,9 +101,8 @@ public class CriteriaService {
     @Transactional
     public SubjectCriteriaResponse updateSubjectCriteria(Long adjustId, SubjectCriteriaRequest request) {
         // step 모든 단계 초기화
-        adjustStepRepository.resetAdjustStepByAdjustIdAndStepName(adjustId, StepName.MAIN);
-        adjustStepRepository.resetAdjustStepByAdjustIdAndStepName(adjustId, StepName.CRITERIA);
-        adjustStepRepository.resetAdjustStepByAdjustIdAndStepName(adjustId, StepName.PREPARATION);
+        adjustStepRepository.resetAdjustStepByAdjustId(adjustId);
+        entityManager.clear();
 
         Adjust adjust = adjustRepository.findById(adjustId)
             .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
