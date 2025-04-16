@@ -13,6 +13,7 @@ public interface AdjustGradeRepository extends JpaRepository<AdjustGrade, Long> 
             SELECT ag FROM AdjustGrade ag
             JOIN FETCH ag.grade
             WHERE ag.adjust.id = :adjustId
+            ORDER BY ag.grade.name
         """)
     List<AdjustGrade> findByAdjustId(@Param("adjustId") Long adjustId);
 

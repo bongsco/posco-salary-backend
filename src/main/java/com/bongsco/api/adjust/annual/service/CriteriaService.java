@@ -28,6 +28,7 @@ import com.bongsco.api.adjust.annual.entity.PaybandCriteria;
 import com.bongsco.api.adjust.annual.entity.SalaryIncrementByRank;
 import com.bongsco.api.adjust.annual.repository.PaybandCriteriaRepository;
 import com.bongsco.api.adjust.annual.repository.SalaryIncrementByRankRepository;
+import com.bongsco.api.adjust.common.domain.StepName;
 import com.bongsco.api.adjust.common.entity.Adjust;
 import com.bongsco.api.adjust.common.entity.AdjustEmploymentType;
 import com.bongsco.api.adjust.common.entity.AdjustGrade;
@@ -35,6 +36,7 @@ import com.bongsco.api.adjust.common.entity.AdjustSubject;
 import com.bongsco.api.adjust.common.repository.AdjustEmploymentTypeRepository;
 import com.bongsco.api.adjust.common.repository.AdjustGradeRepository;
 import com.bongsco.api.adjust.common.repository.AdjustRepository;
+import com.bongsco.api.adjust.common.repository.AdjustStepRepository;
 import com.bongsco.api.adjust.common.repository.AdjustSubjectRepository;
 import com.bongsco.api.common.exception.CustomException;
 import com.bongsco.api.common.exception.ErrorCode;
@@ -42,7 +44,6 @@ import com.bongsco.api.employee.entity.Employee;
 import com.bongsco.api.employee.entity.Grade;
 import com.bongsco.api.employee.entity.Rank;
 import com.bongsco.api.employee.repository.EmployeeRepository;
-import com.bongsco.api.employee.repository.EmploymentTypeRepository;
 import com.bongsco.api.employee.repository.GradeRepository;
 import com.bongsco.api.employee.repository.RankRepository;
 
@@ -55,7 +56,7 @@ public class CriteriaService {
     private final AdjustGradeRepository adjustGradeRepository;
     private final AdjustSubjectRepository adjustSubjectRepository;
     private final AdjustEmploymentTypeRepository adjustEmploymentTypeRepository;
-    private final EmploymentTypeRepository employmentTypeRepository;
+    private final AdjustStepRepository adjustStepRepository;
     private final EmployeeRepository employeeRepository;
     private final GradeRepository gradeRepository;
     private final RankRepository rankRepository;
@@ -98,6 +99,11 @@ public class CriteriaService {
 
     @Transactional
     public SubjectCriteriaResponse updateSubjectCriteria(Long adjustId, SubjectCriteriaRequest request) {
+        // step 모든 단계 초기화
+        adjustStepRepository.resetAdjustStepByAdjustIdAndStepName(adjustId, StepName.MAIN);
+        adjustStepRepository.resetAdjustStepByAdjustIdAndStepName(adjustId, StepName.CRITERIA);
+        adjustStepRepository.resetAdjustStepByAdjustIdAndStepName(adjustId, StepName.PREPARATION);
+
         Adjust adjust = adjustRepository.findById(adjustId)
             .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
 
@@ -135,12 +141,10 @@ public class CriteriaService {
         Set<Long> selectedGradeIds = adjustGradeRepository.findByAdjustIdAndIsActive(adjustId, true).stream()
             .map(g -> g.getGrade().getId())
             .collect(Collectors.toSet());
-        System.out.println("*************selectedGradeIds: " + selectedGradeIds);
 
         Set<Long> selectedPaymentIds = adjustEmploymentTypeRepository.findByAdjustIdAndIsActive(adjustId, true).stream()
             .map(p -> p.getEmploymentType().getId())
             .collect(Collectors.toSet());
-        System.out.println("*************selectedPaymentIds: " + selectedPaymentIds);
 
         // ✅ 기존 대상자 직원 ID만 조회 (최적화된 쿼리 사용)
         Set<Long> existingEmpIds = adjustSubjectRepository.findEmployeeIdsByAdjustId(adjustId);
@@ -160,15 +164,12 @@ public class CriteriaService {
         // ✅ 삭제 대상: 기존엔 있었지만, 새 목록엔 없음
         Set<Long> deleteEmpIds = new HashSet<>(existingEmpIds);
         deleteEmpIds.removeAll(newEmpIds);
-        System.out.println("*************deleteEmpIds: " + deleteEmpIds);
         // ✅ 추가 대상: 새 목록에는 있는데 기존엔 없었음
         Set<Long> insertEmpIds = new HashSet<>(newEmpIds);
         insertEmpIds.removeAll(existingEmpIds);
-        System.out.println("*************insertEmpIds: " + insertEmpIds);
 
         // ✅ 삭제 대상 생성
-        List<AdjustSubject> toDeleteSubjects =
-            adjustSubjectRepository.softDeleteByAdjustIdAndEmployeeIdIn(adjustId, deleteEmpIds);
+        adjustSubjectRepository.softDeleteByAdjustIdAndEmployeeIdIn(adjustId, deleteEmpIds);
 
         // ✅ 추가 대상 생성
         Adjust finalAdjust = adjust;
@@ -190,10 +191,7 @@ public class CriteriaService {
             })
             .toList();
 
-        adjustSubjectRepository.deleteAll(toDeleteSubjects);
-        System.out.println("*************toDeleteSubjects: " + toDeleteSubjects);
         adjustSubjectRepository.saveAll(toInsertSubjects);
-        System.out.println("*************toInsertSubjects: " + toInsertSubjects);
 
         // ✅ 응답 DTO 구성
         List<SelectableItemDto> gradeDtos = gradeMap.values().stream()

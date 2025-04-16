@@ -21,24 +21,29 @@ import com.bongsco.api.adjust.common.entity.AdjustSubject;
 
 @Repository
 public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Long> {
-
-    List<AdjustSubject> findByAdjust_Id(Long adjustId);
+    @Modifying
+    @Query(value = """
+        UPDATE AdjustSubject adjs
+            SET adjs.isPaybandApplied = "NONE"
+        WHERE adjs.adjust.id = :adjustId
+        """)
+    void updatePaybandAppliedTypeByAdjustId(@Param("adjustId") Long adjustId);
 
     @Query("""
         SELECT new com.bongsco.api.adjust.annual.dto.response.HpoEmployee(
             emp.id,
             emp.empNum,
-            emp.name, 
+            emp.name,
             dept.name,
             g.name,
             r.code,
             asj.isInHpo
         )
-        FROM AdjustSubject asj          
+        FROM AdjustSubject asj
         JOIN asj.employee emp
         JOIN emp.department dept
         JOIN emp.grade g
-        JOIN emp.rank r    
+        JOIN emp.rank r
         WHERE asj.adjust.id = :adjustId 
         AND asj.isSubject = true
         """)
@@ -251,6 +256,6 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
 
     @Modifying
     @Query("UPDATE AdjustSubject s SET s.deleted = true WHERE s.adjust.id = :adjustId AND s.employee.id IN :employeeIds AND s.deleted = false")
-    List<AdjustSubject> softDeleteByAdjustIdAndEmployeeIdIn(@Param("adjustId") Long adjustId,
+    void softDeleteByAdjustIdAndEmployeeIdIn(@Param("adjustId") Long adjustId,
         @Param("employeeIds") Set<Long> employeeIds);
 }

@@ -67,8 +67,6 @@ public class PreparationController {
         @Valid @RequestBody ChangedHighPerformGroupEmployeeRequest changedHighPerformGroupEmployeeRequest
     ) {
         adjSubjectService.updateHighPerformGroupEmployee(adjustId, changedHighPerformGroupEmployeeRequest);
-        adjustSubjectService.initializeIsPaybandApplied(adjustId);
-        adjustStepService.resetMain(adjustId);
         return ResponseEntity.noContent().build();
     }
 }

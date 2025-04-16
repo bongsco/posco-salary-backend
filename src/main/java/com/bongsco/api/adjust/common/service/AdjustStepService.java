@@ -16,6 +16,7 @@ import com.bongsco.api.adjust.common.repository.StepRepository;
 import com.bongsco.api.common.exception.CustomException;
 import com.bongsco.api.common.exception.ErrorCode;
 
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -24,6 +25,7 @@ public class AdjustStepService {
     private final AdjustStepRepository adjustStepRepository;
     private final StepRepository stepRepository;
     private final AdjustRepository adjustRepository;
+    private final EntityManager entityManager;
 
     public StepperResponse getSteps(Long adjustId) {
         List<AdjustStep> adjustSteps = adjustStepRepository.findByAdjustIdOrderByStep_OrderNumberAsc(adjustId);
@@ -57,11 +59,7 @@ public class AdjustStepService {
 
     @Transactional
     public void resetMain(Long adjustId) {
-        List<AdjustStep> criteriaSteps = adjustStepRepository.findAllByAdjust_IdAndStep_Name(adjustId, StepName.MAIN)
-            .stream()
-            .map(e -> e.toBuilder().isDone(false).build())
-            .toList();
-
-        adjustStepRepository.saveAll(criteriaSteps);
+        adjustStepRepository.resetAdjustStepByAdjustIdAndStepName(adjustId, StepName.MAIN);
+        entityManager.clear();
     }
 }

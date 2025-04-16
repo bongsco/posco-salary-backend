@@ -18,7 +18,6 @@ import com.bongsco.api.adjust.annual.dto.response.PaybandCriteriaConfigListRespo
 import com.bongsco.api.adjust.annual.dto.response.PaymentRateResponse;
 import com.bongsco.api.adjust.annual.dto.response.PaymentRateUpdateResponse;
 import com.bongsco.api.adjust.annual.dto.response.SubjectCriteriaResponse;
-import com.bongsco.api.adjust.annual.service.AdjustService;
 import com.bongsco.api.adjust.annual.service.AdjustSubjectService;
 import com.bongsco.api.adjust.annual.service.CriteriaService;
 import com.bongsco.api.adjust.common.service.AdjustStepService;
