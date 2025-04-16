@@ -15,7 +15,7 @@ jobs:
     uses: ./.github/workflows/deploy-common.yml
     with:
       app_path: 'mobile'
-      container_name: 'bongsco-mobile-container'
+      container_name: 'mobile-container'
       ecr_repository: 'bongsco/salary-management-backend'
       ecs_service: 'bongsco-mobile-ecs-service'
       ecs_cluster: 'bongsco-salary-management-ecs-cluster'
