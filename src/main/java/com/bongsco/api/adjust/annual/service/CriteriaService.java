@@ -31,6 +31,7 @@ import com.bongsco.api.adjust.common.entity.Adjust;
 import com.bongsco.api.adjust.common.entity.AdjustEmploymentType;
 import com.bongsco.api.adjust.common.entity.AdjustGrade;
 import com.bongsco.api.adjust.common.entity.AdjustSubject;
+import com.bongsco.api.adjust.common.entity.PaybandAppliedType;
 import com.bongsco.api.adjust.common.repository.AdjustEmploymentTypeRepository;
 import com.bongsco.api.adjust.common.repository.AdjustGradeRepository;
 import com.bongsco.api.adjust.common.repository.AdjustRepository;
@@ -72,7 +73,7 @@ public class CriteriaService {
                 ag.getGrade().getName(),
                 ag.getIsActive()
             ))
-            .collect(Collectors.toList());
+            .toList();
 
         // 2. AdjustEmploymentType -> SelectableItemDto 변환
         List<SelectableItemDto> paymentDtos = adjustEmploymentTypeRepository.findByAdjustId(adjustId).stream()
@@ -81,7 +82,7 @@ public class CriteriaService {
                 ae.getEmploymentType().getName(),
                 ae.getIsActive()
             ))
-            .collect(Collectors.toList());
+            .toList();
 
         // 3. 최종 응답 구성
         return new SubjectCriteriaResponse(
@@ -181,7 +182,7 @@ public class CriteriaService {
                     .rank(emp.getRank())
                     .isSubject(true)
                     .isInHpo(false)
-                    .isPaybandApplied(null)
+                    .isPaybandApplied(PaybandAppliedType.NONE)
                     .stdSalary(null)
                     .hpoBonus(null)
                     .finalStdSalary(null)
@@ -199,7 +200,7 @@ public class CriteriaService {
                 ag.getGrade().getName(),
                 Boolean.TRUE.equals(ag.getIsActive())
             ))
-            .collect(Collectors.toList());
+            .toList();
 
         List<SelectableItemDto> paymentDtos = typeMap.values().stream()
             .map(ae -> new SelectableItemDto(
@@ -207,7 +208,7 @@ public class CriteriaService {
                 ae.getEmploymentType().getName(),
                 Boolean.TRUE.equals(ae.getIsActive())
             ))
-            .collect(Collectors.toList());
+            .toList();
 
         return new SubjectCriteriaResponse(
             adjust.getBaseDate(),
