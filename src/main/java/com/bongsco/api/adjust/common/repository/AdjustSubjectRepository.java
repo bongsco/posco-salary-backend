@@ -253,4 +253,9 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
             AND asj.isSubject = true
         """)
     List<MainResultExcelDto> findAllResultDtoByAdjustId(@Param("adjustId") Long adjustId);
+
+    @Modifying
+    @Query("UPDATE AdjustSubject s SET s.deleted = true WHERE s.adjust.id = :adjustId AND s.employee.id IN :employeeIds AND s.deleted = false")
+    void softDeleteByAdjustIdAndEmployeeIdIn(@Param("adjustId") Long adjustId,
+        @Param("employeeIds") Set<Long> employeeIds);
 }

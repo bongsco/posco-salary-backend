@@ -28,4 +28,13 @@ public interface AdjustStepRepository extends JpaRepository<AdjustStep, Long> {
         @Param("adjustId") Long adjustId,
         @Param("stepName") StepName stepName
     );
+
+    @Modifying
+    @Query(value = """
+        UPDATE AdjustStep adjs
+            SET adjs.isDone = false
+        WHERE adjs.adjust.id = :adjustId
+        """)
+    void resetAdjustStepByAdjustId(
+        @Param("adjustId") Long adjustId);
 }

@@ -17,6 +17,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.SequenceGenerator;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,7 +33,12 @@ import lombok.NoArgsConstructor;
 @SQLRestriction("deleted = false")
 public class AdjustSubject extends BaseEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "adjust_subject_seq")
+    @SequenceGenerator(
+        name = "adjust_subject_seq",              // generator 이름
+        sequenceName = "adjust_subject_seq",      // DB 시퀀스 이름
+        allocationSize = 100                      // 미리 당겨올 ID 개수 (batch 성능 영향!)
+    )
     private Long id;
 
     @ManyToOne

@@ -3,6 +3,7 @@ package com.bongsco.api.adjust.annual.service;
 import static com.bongsco.api.common.exception.ErrorCode.*;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -31,10 +32,10 @@ import com.bongsco.api.adjust.common.entity.Adjust;
 import com.bongsco.api.adjust.common.entity.AdjustEmploymentType;
 import com.bongsco.api.adjust.common.entity.AdjustGrade;
 import com.bongsco.api.adjust.common.entity.AdjustSubject;
-import com.bongsco.api.adjust.common.entity.PaybandAppliedType;
 import com.bongsco.api.adjust.common.repository.AdjustEmploymentTypeRepository;
 import com.bongsco.api.adjust.common.repository.AdjustGradeRepository;
 import com.bongsco.api.adjust.common.repository.AdjustRepository;
+import com.bongsco.api.adjust.common.repository.AdjustStepRepository;
 import com.bongsco.api.adjust.common.repository.AdjustSubjectRepository;
 import com.bongsco.api.common.exception.CustomException;
 import com.bongsco.api.common.exception.ErrorCode;
@@ -42,10 +43,10 @@ import com.bongsco.api.employee.entity.Employee;
 import com.bongsco.api.employee.entity.Grade;
 import com.bongsco.api.employee.entity.Rank;
 import com.bongsco.api.employee.repository.EmployeeRepository;
-import com.bongsco.api.employee.repository.EmploymentTypeRepository;
 import com.bongsco.api.employee.repository.GradeRepository;
 import com.bongsco.api.employee.repository.RankRepository;
 
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -55,12 +56,13 @@ public class CriteriaService {
     private final AdjustGradeRepository adjustGradeRepository;
     private final AdjustSubjectRepository adjustSubjectRepository;
     private final AdjustEmploymentTypeRepository adjustEmploymentTypeRepository;
-    private final EmploymentTypeRepository employmentTypeRepository;
+    private final AdjustStepRepository adjustStepRepository;
     private final EmployeeRepository employeeRepository;
     private final GradeRepository gradeRepository;
     private final RankRepository rankRepository;
     private final SalaryIncrementByRankRepository salaryIncrementByRankRepository;
     private final PaybandCriteriaRepository paybandCriteriaRepository;
+    private final EntityManager entityManager;
 
     public SubjectCriteriaResponse getSubjectCriteria(Long adjustId) {
         Adjust adjust = adjustRepository.findById(adjustId)
@@ -73,7 +75,8 @@ public class CriteriaService {
                 ag.getGrade().getName(),
                 ag.getIsActive()
             ))
-            .toList();
+            .sorted(Comparator.comparing(SelectableItemDto::getName))  // 이름 기준 오름차순 정렬
+            .collect(Collectors.toList());
 
         // 2. AdjustEmploymentType -> SelectableItemDto 변환
         List<SelectableItemDto> paymentDtos = adjustEmploymentTypeRepository.findByAdjustId(adjustId).stream()
@@ -82,7 +85,8 @@ public class CriteriaService {
                 ae.getEmploymentType().getName(),
                 ae.getIsActive()
             ))
-            .toList();
+            .sorted(Comparator.comparing(SelectableItemDto::getName))  // 이름 기준 오름차순 정렬
+            .collect(Collectors.toList());
 
         // 3. 최종 응답 구성
         return new SubjectCriteriaResponse(
@@ -96,17 +100,19 @@ public class CriteriaService {
 
     @Transactional
     public SubjectCriteriaResponse updateSubjectCriteria(Long adjustId, SubjectCriteriaRequest request) {
+        // step 모든 단계 초기화
+        adjustStepRepository.resetAdjustStepByAdjustId(adjustId);
+        entityManager.clear();
+
         Adjust adjust = adjustRepository.findById(adjustId)
             .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
 
         // ✅ Adjust 정보 업데이트 (기존 객체 수정)
-        Adjust updatedAdjust = adjust.toBuilder()
+        adjust = adjust.toBuilder()
             .baseDate(request.getBaseDate())
             .exceptionStartDate(request.getExceptionStartDate())
             .exceptionEndDate(request.getExceptionEndDate())
             .build();
-
-        adjustRepository.save(updatedAdjust);
 
         // ✅ 등급 체크 상태 반영
         Map<Long, AdjustGrade> gradeMap = adjustGradeRepository.findByAdjustId(adjustId).stream()
@@ -158,31 +164,26 @@ public class CriteriaService {
         // ✅ 삭제 대상: 기존엔 있었지만, 새 목록엔 없음
         Set<Long> deleteEmpIds = new HashSet<>(existingEmpIds);
         deleteEmpIds.removeAll(newEmpIds);
-
         // ✅ 추가 대상: 새 목록에는 있는데 기존엔 없었음
         Set<Long> insertEmpIds = new HashSet<>(newEmpIds);
         insertEmpIds.removeAll(existingEmpIds);
 
         // ✅ 삭제 대상 생성
-        List<AdjustSubject> toDeleteSubjects = deleteEmpIds.stream()
-            .map(id -> AdjustSubject.builder()
-                .adjust(adjust)
-                .employee(Employee.builder().id(id).build())
-                .build())
-            .toList();
+        adjustSubjectRepository.softDeleteByAdjustIdAndEmployeeIdIn(adjustId, deleteEmpIds);
 
         // ✅ 추가 대상 생성
+        Adjust finalAdjust = adjust;
         List<AdjustSubject> toInsertSubjects = insertEmpIds.stream()
             .map(id -> {
                 EmployeeSimple emp = empMap.get(id);
                 return AdjustSubject.builder()
-                    .adjust(adjust)
+                    .adjust(finalAdjust)
                     .employee(Employee.builder().id(id).build())
                     .grade(emp.getGrade())
                     .rank(emp.getRank())
                     .isSubject(true)
                     .isInHpo(false)
-                    .isPaybandApplied(PaybandAppliedType.NONE)
+                    .isPaybandApplied(null)
                     .stdSalary(null)
                     .hpoBonus(null)
                     .finalStdSalary(null)
@@ -190,7 +191,6 @@ public class CriteriaService {
             })
             .toList();
 
-        adjustSubjectRepository.deleteAll(toDeleteSubjects);
         adjustSubjectRepository.saveAll(toInsertSubjects);
 
         // ✅ 응답 DTO 구성
@@ -200,7 +200,7 @@ public class CriteriaService {
                 ag.getGrade().getName(),
                 Boolean.TRUE.equals(ag.getIsActive())
             ))
-            .toList();
+            .collect(Collectors.toList());
 
         List<SelectableItemDto> paymentDtos = typeMap.values().stream()
             .map(ae -> new SelectableItemDto(
@@ -208,7 +208,7 @@ public class CriteriaService {
                 ae.getEmploymentType().getName(),
                 Boolean.TRUE.equals(ae.getIsActive())
             ))
-            .toList();
+            .collect(Collectors.toList());
 
         return new SubjectCriteriaResponse(
             adjust.getBaseDate(),
