@@ -79,9 +79,9 @@ jobs:
           CREATE_SECRET_DIR: ${{ inputs.app_path }}/src/main/resources
           CREATE_SECRET_DIR_FILE_NAME: application-dev.yml
         run: |
-          if [[ "$CONTAINER_NAME" == "web-container" ]]; then
+          if [[ "$CONTAINER_NAME" == "bongsco-web-container" ]]; then
           echo "$WEB_DEV_YML" | base64 --decode > $CREATE_SECRET_DIR/$CREATE_SECRET_DIR_FILE_NAME
-          elif [[ "$CONTAINER_NAME" == "mobile-container" ]]; then
+          elif [[ "$CONTAINER_NAME" == "bongsco-mobile-container" ]]; then
           echo "$MOBILE_DEV_YML" | base64 --decode > $CREATE_SECRET_DIR/$CREATE_SECRET_DIR_FILE_NAME
           else
           echo "❌ Unknown container name: $CONTAINER_NAME"
@@ -111,9 +111,9 @@ jobs:
           MOBILE_TASK_JSON: ${{ secrets.BONGSCO_MOBILE_TASK_JSON }}
           CONTAINER_NAME: ${{ inputs.container_name }}
         run: |
-          if [[ "$CONTAINER_NAME" == "web-container" ]]; then
+          if [[ "$CONTAINER_NAME" == "bongsco-web-container" ]]; then
             echo "$WEB_TASK_JSON" | base64 --decode > ecs-task-definition.json
-          elif [[ "$CONTAINER_NAME" == "mobile-container" ]]; then
+          elif [[ "$CONTAINER_NAME" == "bongsco-mobile-container" ]]; then
             echo "$MOBILE_TASK_JSON" | base64 --decode > ecs-task-definition.json
           else
             echo "❌ Unknown container name: $CONTAINER_NAME"
