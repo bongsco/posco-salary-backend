@@ -217,11 +217,6 @@ public class AdjustSubjectService {
     public void initializeIsPaybandApplied(Long adjustId) {
         adjustSubjectRepository.updatePaybandAppliedTypeByAdjustId(adjustId);
         entityManager.clear();
-
-        // adjustSubjectRepository.saveAll(adjustSubjectRepository.findByAdjust_Id(adjustId)
-        //     .stream()
-        //     .map(as -> as.toBuilder().isPaybandApplied(PaybandAppliedType.NONE).build())
-        //     .collect(Collectors.toList()));
     }
 
     @Transactional
