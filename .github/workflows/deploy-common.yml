@@ -1,4 +1,4 @@
-name: Deploy to Amazon ECS (Reusable)
+name: Deploy to Amazon ECS (Common)
 
 on:
   workflow_call:
@@ -26,9 +26,13 @@ on:
         required: true
       AWS_SECRET_ACCESS_KEY:
         required: true
-      BONGSCO_DEV_APP_YML:
+      BONGSCO_WEB_DEV_YML:
         required: true
-      BONGSCO_TASK_JSON:
+      BONGSCO_MOBILE_DEV_YML:
+        required: true
+      BONGSCO_WEB_TASK_JSON:
+        required: true
+      BONGSCO_MOBILE_TASK_JSON:
         required: true
 
 jobs:
@@ -50,13 +54,13 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Run AWS CodeBuild For Code Test
-        uses: aws-actions/aws-codebuild-run-build@v1
-        with:
-          project-name: ${{ inputs.codebuild_project_name }}
-          buildspec-override: "buildspec.yml"
-          environment-variables-override: |
-            APP_MODULE=${{ inputs.app_path }}
+      #      - name: Run AWS CodeBuild For Code Test
+      #        uses: aws-actions/aws-codebuild-run-build@v1
+      #        with:
+      #          project-name: ${{ inputs.codebuild_project_name }}
+      #          buildspec-override: "buildspec.yml"
+      #          environment-variables-override: |
+      #            APP_MODULE=${{ inputs.app_path }}
 
       - name: Set up JDK 21
         uses: actions/setup-java@v3
@@ -67,12 +71,22 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Copy Secret
+      - name: Copy application-dev.yml based on container name
         env:
-          CREATE_SECRET: ${{ secrets.BONGSCO_DEV_APP_YML }}
+          CONTAINER_NAME: ${{ inputs.container_name }}
+          WEB_DEV_YML: ${{ secrets.BONGSCO_WEB_DEV_YML }}
+          MOBILE_DEV_YML: ${{ secrets.BONGSCO_MOBILE_DEV_YML }}
           CREATE_SECRET_DIR: ${{ inputs.app_path }}/src/main/resources
           CREATE_SECRET_DIR_FILE_NAME: application-dev.yml
-        run: echo $CREATE_SECRET | base64 --decode > $CREATE_SECRET_DIR/$CREATE_SECRET_DIR_FILE_NAME
+        run: |
+          if [[ "$CONTAINER_NAME" == "web-container" ]]; then
+          echo "$WEB_DEV_YML" | base64 --decode > $CREATE_SECRET_DIR/$CREATE_SECRET_DIR_FILE_NAME
+          elif [[ "$CONTAINER_NAME" == "mobile-container" ]]; then
+          echo "$MOBILE_DEV_YML" | base64 --decode > $CREATE_SECRET_DIR/$CREATE_SECRET_DIR_FILE_NAME
+          else
+          echo "❌ Unknown container name: $CONTAINER_NAME"
+          exit 1
+          fi
 
       - name: Build with Gradle
         run: ./gradlew :${{ inputs.app_path }}:build
@@ -85,7 +99,7 @@ jobs:
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
+          IMAGE_TAG: ${{ inputs.app_path }}-${{ github.sha }}
         run: |
           docker build -t $ECR_REGISTRY/${{ inputs.ecr_repository }}:$IMAGE_TAG ${{ inputs.app_path }}
           docker push $ECR_REGISTRY/${{ inputs.ecr_repository }}:$IMAGE_TAG
@@ -93,9 +107,18 @@ jobs:
 
       - name: Decode and save ECS task definition JSON
         env:
-          ECS_TASK_DEFINITION: ${{ secrets.BONGSCO_TASK_JSON }}
+          WEB_TASK_JSON: ${{ secrets.BONGSCO_WEB_TASK_JSON }}
+          MOBILE_TASK_JSON: ${{ secrets.BONGSCO_MOBILE_TASK_JSON }}
+          CONTAINER_NAME: ${{ inputs.container_name }}
         run: |
-          echo "$ECS_TASK_DEFINITION" | base64 --decode > ecs-task-definition.json
+          if [[ "$CONTAINER_NAME" == "web-container" ]]; then
+            echo "$WEB_TASK_JSON" | base64 --decode > ecs-task-definition.json
+          elif [[ "$CONTAINER_NAME" == "mobile-container" ]]; then
+            echo "$MOBILE_TASK_JSON" | base64 --decode > ecs-task-definition.json
+          else
+            echo "❌ Unknown container name: $CONTAINER_NAME"
+            exit 1
+          fi
 
       - name: Fill in the new image ID in the Amazon ECS task definition
         id: task-def

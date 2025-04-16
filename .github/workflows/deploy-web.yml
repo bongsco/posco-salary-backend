@@ -15,9 +15,9 @@ jobs:
     uses: ./.github/workflows/deploy-common.yml
     with:
       app_path: 'web'
-      container_name: 'bongsco-springboot-container'
+      container_name: 'bongsco-springboot-container-web'
       ecr_repository: 'bongsco/salary-management-backend'
-      ecs_service: 'bongsco-springboot-new-service'
+      ecs_service: 'bongsco-web-ecs-service'
       ecs_cluster: 'bongsco-salary-management-ecs-cluster'
       codebuild_project_name: 'bongsco-salary-management-dev-cb'
     secrets: inherit
