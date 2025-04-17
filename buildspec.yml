@@ -24,7 +24,7 @@ phases:
 
   build:
     commands:
-      - echo "🛠️ 빌드 시작: 모듈 [$APP_MODULE]"
+      - echo "🛠️ 빌드 시작"
       - ./gradlew :$APP_MODULE:clean :$APP_MODULE:build
       - echo "✅ 빌드 완료"
 
