@@ -54,13 +54,13 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      #      - name: Run AWS CodeBuild For Code Test
-      #        uses: aws-actions/aws-codebuild-run-build@v1
-      #        with:
-      #          project-name: ${{ inputs.codebuild_project_name }}
-      #          buildspec-override: "buildspec.yml"
-      #          environment-variables-override: |
-      #            APP_MODULE=${{ inputs.app_path }}
+      - name: Run AWS CodeBuild For Code Test
+        uses: aws-actions/aws-codebuild-run-build@v1
+        with:
+          project-name: ${{ inputs.codebuild_project_name }}
+          buildspec-override: "buildspec.yml"
+          environment-variables-override: |
+            APP_MODULE=${{ inputs.app_path }}
 
       - name: Set up JDK 21
         uses: actions/setup-java@v3

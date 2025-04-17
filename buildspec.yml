@@ -2,7 +2,7 @@ version: 0.2
 
 env:
   variables:
-    APP_MODULE: "web"  # 또는 CodeBuild 콘솔에서 변수로 오버라이드 가능
+    APP_MODULE: "web"
 
 phases:
   install:
