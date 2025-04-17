@@ -258,4 +258,112 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
     @Query("UPDATE AdjustSubject s SET s.deleted = true WHERE s.adjust.id = :adjustId AND s.employee.id IN :employeeIds AND s.deleted = false")
     void softDeleteByAdjustIdAndEmployeeIdIn(@Param("adjustId") Long adjustId,
         @Param("employeeIds") Set<Long> employeeIds);
+
+    @Query(value = """
+        SELECT 
+            CAST(a.year AS VARCHAR) AS adjust_cycle,
+            COUNT(DISTINCT s.employee_id) AS headcount,
+            (
+                SELECT COUNT(DISTINCT s2.employee_id)
+                FROM adjust_subject s2
+                JOIN adjust a2 ON a2.id = s2.adjust_id
+                WHERE a2.adjust_type = 'ANNUAL'
+                  AND a2.year = a.year - 1
+                  AND s2.is_subject = TRUE
+            ) AS prev_year_headcount
+        FROM adjust_subject s
+        JOIN adjust a ON s.adjust_id = a.id
+        WHERE s.is_subject = TRUE
+          AND a.adjust_type = 'ANNUAL'
+        GROUP BY a.year
+        ORDER BY a.year
+        """, nativeQuery = true)
+    List<Object[]> getHeadcountTrendRaw();
+
+    @Query(value = """
+            SELECT 
+                g.name AS grade,
+                COUNT(*) AS count,
+                ROUND(COUNT(*) * 100.0 / total.total_count, 1) AS percentage
+            FROM adjust_subject s
+            JOIN grade g ON s.grade_id = g.id
+            JOIN adjust a ON s.adjust_id = a.id
+            JOIN (
+                SELECT COUNT(*) AS total_count
+                FROM adjust_subject s2
+                JOIN adjust a2 ON s2.adjust_id = a2.id
+                WHERE a2.adjust_type = 'ANNUAL'
+                  AND a2.id = :adjustId
+                  AND s2.is_subject = TRUE
+            ) total ON TRUE
+            WHERE a.adjust_type = 'ANNUAL'
+              AND a.id = :adjustId
+              AND s.is_subject = TRUE
+            GROUP BY g.name, total.total_count
+            ORDER BY g.name
+        """, nativeQuery = true)
+    List<Object[]> getGradeDistribution(@Param("adjustId") Long adjustId);
+
+    @Query(value = """
+            SELECT 
+                et.name AS employment_type,
+                COUNT(*) AS count,
+                ROUND(COUNT(*) * 100.0 / total.total_count, 1) AS percentage
+            FROM adjust_subject s
+            JOIN adjust a ON a.id = s.adjust_id
+            JOIN employee e ON e.id = s.employee_id
+            JOIN employment_type et ON et.id = e.employment_type_id
+            JOIN (
+                SELECT COUNT(*) AS total_count
+                FROM adjust_subject s2
+                JOIN adjust a2 ON a2.id = s2.adjust_id
+                WHERE a2.adjust_type = 'ANNUAL'
+                  AND s2.is_subject = TRUE
+                  AND a2.id = :adjustId
+            ) total ON TRUE
+            WHERE a.adjust_type = 'ANNUAL'
+              AND a.id = :adjustId
+              AND s.is_subject = TRUE
+            GROUP BY et.name, total.total_count
+            ORDER BY et.name
+        """, nativeQuery = true)
+    List<Object[]> getEmploymentTypeDistribution(@Param("adjustId") Long adjustId);
+
+    @Query(value = """
+            SELECT 
+                EXTRACT(YEAR FROM age(current_date, e.hire_date))::int AS year,
+                COUNT(*) AS count
+            FROM adjust_subject s
+            JOIN adjust a ON a.id = s.adjust_id
+            JOIN employee e ON e.id = s.employee_id
+            WHERE a.adjust_type = 'ANNUAL'
+              AND a.id = :adjustId
+              AND s.is_subject = TRUE
+              AND e.hire_date IS NOT NULL
+            GROUP BY EXTRACT(YEAR FROM age(current_date, e.hire_date))::int
+            ORDER BY year
+        """, nativeQuery = true)
+    List<Object[]> getTenureDistribution(@Param("adjustId") Long adjustId);
+
+    @Query(value = """
+            SELECT 
+                SUM(COALESCE(s.final_std_salary, 0) + COALESCE(s.hpo_bonus, 0))
+            FROM adjust_subject s
+            JOIN adjust a ON a.id = s.adjust_id
+            WHERE a.adjust_type = 'ANNUAL'
+              AND a.id = :adjustId
+              AND s.is_subject = TRUE
+        """, nativeQuery = true)
+    Long getCurrentTotalFinalSalary(@Param("adjustId") Long adjustId);
+
+    @Query(value = """
+            SELECT 
+                SUM(COALESCE(s.final_std_salary, 0) + COALESCE(s.hpo_bonus, 0))
+            FROM adjust_subject s
+            JOIN adjust a ON a.id = s.adjust_id
+            WHERE a.adjust_type = 'ANNUAL'
+              AND a.year = :prevYear
+              AND s.is_subject = TRUE
+        """, nativeQuery = true)
+    Long getPrevTotalFinalSalary(@Param("prevYear") int prevYear);
 }
