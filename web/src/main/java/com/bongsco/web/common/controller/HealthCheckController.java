@@ -8,13 +8,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/web/health")
+@RequestMapping("/web")
 public class HealthCheckController {
-    @GetMapping
+    @GetMapping("/health")
     public Map<String, String> healthCheck() {
         // response를 만드는 방식
         Map<String, String> response = new HashMap<>();
         response.put("status", "OK");
+        response.put("app", "web");
 
         return response;
     }
