@@ -4,6 +4,7 @@ import static com.bongsco.api.common.exception.ErrorCode.*;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -18,6 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.bongsco.api.adjust.annual.dto.AdjustSubjectSalaryCalculateDto;
+import com.bongsco.api.adjust.annual.dto.HpoPerDepartmentDto;
+import com.bongsco.api.adjust.annual.dto.SalaryPerGradeDto;
 import com.bongsco.api.adjust.annual.dto.request.ChangedHighPerformGroupEmployeeRequest;
 import com.bongsco.api.adjust.annual.dto.request.ChangedHighPerformGroupEmployeeRequest.ChangedHighPerformGroupEmployee;
 import com.bongsco.api.adjust.annual.dto.request.ChangedSubjectUseEmployeeRequest;
@@ -29,6 +32,7 @@ import com.bongsco.api.adjust.annual.dto.response.HpoSalaryInfo;
 import com.bongsco.api.adjust.annual.dto.response.MainResultResponses;
 import com.bongsco.api.adjust.annual.dto.response.PaybandSubjectResponse;
 import com.bongsco.api.adjust.annual.dto.response.RateInfo;
+import com.bongsco.api.adjust.annual.dto.response.ResultChartResponse;
 import com.bongsco.api.adjust.annual.repository.PaybandCriteriaRepository;
 import com.bongsco.api.adjust.annual.repository.reflection.MainResultProjection;
 import com.bongsco.api.adjust.common.entity.Adjust;
@@ -38,6 +42,7 @@ import com.bongsco.api.adjust.common.repository.AdjustRepository;
 import com.bongsco.api.adjust.common.repository.AdjustSubjectRepository;
 import com.bongsco.api.adjust.common.service.AdjustStepService;
 import com.bongsco.api.common.exception.CustomException;
+import com.bongsco.api.common.exception.ErrorCode;
 import com.bongsco.api.employee.entity.Employee;
 import com.bongsco.api.employee.repository.EmployeeRepository;
 
@@ -419,5 +424,71 @@ public class AdjustSubjectService {
             return employee.toBuilder().stdSalaryIncrementRate(finalStdSalaryIncrementRate).build();
         }).filter(Objects::nonNull).toList();
         employeeRepository.saveAll(updatedEmployees);
+    }
+
+    public ResultChartResponse getChartData(Long adjustId) {
+        Adjust currentAdjust = adjustRepository.findById(adjustId).orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
+        Adjust beforeAdjust = adjustRepository.findById(adjustId-1).orElse(null);
+
+        List<SalaryPerGradeDto> currentDto = adjustSubjectRepository.findSalaryPerDto(adjustId);
+        String adjustName =currentAdjust.getYear().toString()+"년 "+currentAdjust.getOrderNumber().toString()+"차";
+        List<SalaryPerGradeDto> berforeDto = new ArrayList<>();
+        String beforeAdjustName= "이전 차수가 존재하지 않습니다.";
+        if (beforeAdjust != null) {
+            berforeDto = adjustSubjectRepository.findSalaryPerDto(beforeAdjust.getId());
+            beforeAdjustName = beforeAdjust.getYear().toString()+"년 "+beforeAdjust.getOrderNumber().toString()+"차";
+        }
+
+        List<Map<String , Map<String, Double>>> salaryPerGrade = new ArrayList<>();
+
+        Map<String, Double> beforeSalaryPerGrade = new HashMap<>();
+        berforeDto.stream().forEach(dto -> {
+            Double stdSalary = dto.getTotalStdSalary() != null ? dto.getTotalStdSalary() : 0.0;
+            Double hpoBonus = dto.getTotalHpoBonus() != null ? dto.getTotalHpoBonus() : 0.0;
+            beforeSalaryPerGrade.put(dto.getGradeName(), stdSalary + hpoBonus);
+        });
+        salaryPerGrade.add(Map.of(beforeAdjustName, beforeSalaryPerGrade));
+
+        Map<String, Double> currentSalaryPerGrade = new HashMap<>();
+        currentDto.stream().forEach(dto -> {
+            Double stdSalary = dto.getTotalStdSalary() != null ? dto.getTotalStdSalary() : 0.0;
+            Double hpoBonus = dto.getTotalHpoBonus() != null ? dto.getTotalHpoBonus() : 0.0;
+            currentSalaryPerGrade.put(dto.getGradeName(), stdSalary + hpoBonus);
+        });
+        salaryPerGrade.add(Map.of(adjustName, currentSalaryPerGrade));
+
+
+        List<Map<String, Object>> annualSalary; annualSalary = new ArrayList<>();
+
+        Double sumStdSalary = currentDto.stream()
+            .map(SalaryPerGradeDto::getTotalStdSalary)     // totalStdSalary 꺼냄
+            .filter(Objects::nonNull)                       // null 제외
+            .mapToDouble(Double::doubleValue)
+            .sum();
+        Double sumHpoBonus = currentDto.stream()
+            .map(SalaryPerGradeDto::getTotalHpoBonus)     // totalStdSalary 꺼냄
+            .filter(Objects::nonNull)                       // null 제외
+            .mapToDouble(Double::doubleValue)
+            .sum();
+        Map<String, Object> currentAnnualSalary = Map.of("adjustName", adjustName, "stdSalary", sumStdSalary, "hpoBonus", sumHpoBonus, "totalStdSalary", sumStdSalary+sumHpoBonus);
+        annualSalary.add(currentAnnualSalary);
+
+        Double beforeSumStdSalary = berforeDto.stream()
+            .map(SalaryPerGradeDto::getTotalStdSalary)     // totalStdSalary 꺼냄
+            .filter(Objects::nonNull)                       // null 제외
+            .mapToDouble(Double::doubleValue)
+            .sum();
+        Double beforeSumHpoBonus = berforeDto.stream()
+            .map(SalaryPerGradeDto::getTotalHpoBonus)     // totalStdSalary 꺼냄
+            .filter(Objects::nonNull)                       // null 제외
+            .mapToDouble(Double::doubleValue)
+            .sum();
+        Map<String, Object> beforeAnnualSalary = Map.of("adjustName", beforeAdjustName, "stdSalary", beforeSumStdSalary, "hpoBonus", beforeSumHpoBonus, "totalStdSalary", beforeSumStdSalary+beforeSumHpoBonus);
+        annualSalary.add(beforeAnnualSalary);
+
+
+        List<HpoPerDepartmentDto> HpoPerDepartment = adjustSubjectRepository.findHpoPerDepartmentDto(adjustId);
+
+        return new ResultChartResponse(salaryPerGrade, annualSalary, HpoPerDepartment);
     }
 }
