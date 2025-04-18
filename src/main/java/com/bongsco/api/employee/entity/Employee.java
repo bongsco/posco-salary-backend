@@ -53,7 +53,7 @@ public class Employee extends BaseEntity {
     @Column(length = 10, nullable = false)
     private String name;
 
-    @Column(length = 10, nullable = false, unique = true)
+    @Column(length = 15, nullable = false, unique = true)
     private String empNum;
 
     @Column(nullable = false)
