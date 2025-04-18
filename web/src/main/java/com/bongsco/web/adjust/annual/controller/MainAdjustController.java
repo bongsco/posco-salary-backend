@@ -40,6 +40,7 @@ public class MainAdjustController {
     public ResponseEntity<PaybandSubjectResponse> getPaybandSubjects(
         @PathVariable("adjustId") Long adjustId
     ) {
+
         adjustSubjectService.calculateSalaryAndBonus(adjustId);
         return ResponseEntity.status(HttpStatus.OK)
             .body(adjustSubjectService.getBothUpperLowerSubjects(adjustId));
@@ -50,6 +51,7 @@ public class MainAdjustController {
     public ResponseEntity<Void> updatePaybandSubjects(
         @Valid @RequestBody PaybandApplyListUpdateRequest paybandApplyListUpdateRequest
     ) {
+
         adjustSubjectService.updateSubjectPaybandApplication(paybandApplyListUpdateRequest.getUpdatedSubjects());
         return ResponseEntity.noContent().build();
     }
@@ -68,6 +70,7 @@ public class MainAdjustController {
 
     ) throws JsonProcessingException {
         adjustSubjectService.changeIncrementRate(adjustId);
+
         return ResponseEntity.ok(
             adjustSubjectService.getFinalResult(adjustId, filterEmpNum, filterName, filterGrade, filterDepartment,
                 filterRank, extractSorts(sorts), pageNumber - 1, pageSize));
