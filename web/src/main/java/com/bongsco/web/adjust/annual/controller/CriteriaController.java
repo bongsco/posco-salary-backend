@@ -90,7 +90,6 @@ public class CriteriaController {
     public ResponseEntity<Void> updatePaybandCriteria(
         @Valid @RequestBody PaybandCriteriaModifyRequest request,
         @PathVariable(name = "adjustId") Long adjustId) {
-
         criteriaService.updatePaybandCriteria(request);
         adjustSubjectService.initializeIsPaybandApplied(adjustId);
         adjustStepService.resetMain(adjustId);
