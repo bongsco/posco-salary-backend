@@ -52,18 +52,6 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
     @Query("""
         SELECT asj
         FROM AdjustSubject asj
-        WHERE asj.adjust.id = :adjustId
-            AND (
-                asj.employee.empNum LIKE %:searchKey%
-                OR asj.employee.name LIKE %:searchKey%
-            )
-        """
-    )
-    List<AdjustSubject> findByAdjustIdAndSearchKey(Long adjustId, String searchKey);
-
-    @Query("""
-        SELECT asj
-        FROM AdjustSubject asj
         WHERE asj.adjust.id < :adjustId
             AND asj.employee.id = :employeeId
             AND asj.deleted != true
@@ -98,9 +86,9 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
         JOIN e.department d
         JOIN e.rank r
         JOIN asj.grade g
-        JOIN PaybandCriteria pc ON pc.grade.id = g.id
+        JOIN PaybandCriteria pc ON pc.adjustGrade.grade.id = g.id
         WHERE asj.adjust.id = :adjustId
-          AND pc.adjust.id = :adjustId
+          AND pc.adjustGrade.adjust.id = :adjustId
           AND asj.deleted != true
           AND pc.deleted != true
           AND asj.stdSalary > g.baseSalary * (pc.upperBound / 100.0)
@@ -129,9 +117,9 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
         JOIN e.department d
         JOIN e.rank r
         JOIN asj.grade g
-        JOIN PaybandCriteria pc ON pc.grade.id = g.id
+        JOIN PaybandCriteria pc ON pc.adjustGrade.grade.id = g.id
         WHERE asj.adjust.id = :adjustId
-          AND pc.adjust.id = :adjustId
+          AND pc.adjustGrade.adjust.id = :adjustId
           AND asj.deleted != true
           AND pc.deleted != true
           AND asj.stdSalary < g.baseSalary * (pc.lowerBound / 100.0)

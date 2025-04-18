@@ -13,17 +13,14 @@ import com.bongsco.api.adjust.annual.entity.PaybandCriteria;
 @Repository
 public interface PaybandCriteriaRepository extends JpaRepository<PaybandCriteria, Long> {
 
-    // ✅ 일반 메서드
-    List<PaybandCriteria> findByAdjustId(Long id);
-
     // ✅ baseSalary * (upper/lowerBound / 100.0) 계산된 limit 조회
     @Query("""
             SELECT 
                 (g.baseSalary * (pc.upperBound / 100.0)) AS upperLimit,
                 (g.baseSalary * (pc.lowerBound / 100.0)) AS lowerLimit
             FROM PaybandCriteria pc
-            JOIN pc.grade g
-            WHERE pc.adjust.id = :adjustId
+            JOIN pc.adjustGrade.grade g
+            WHERE pc.adjustGrade.adjust.id = :adjustId
               AND g.id = :gradeId
         """)
     Optional<PaybandLimitInfo> findLimitInfo(
@@ -31,7 +28,7 @@ public interface PaybandCriteriaRepository extends JpaRepository<PaybandCriteria
         @Param("gradeId") Long gradeId
     );
 
-    List<PaybandCriteria> findByAdjustIdAndIsActiveTrue(Long adjustId);
+    List<PaybandCriteria> findByAdjustGrade_Adjust_IdAndAdjustGrade_IsActiveTrue(Long adjustId);
 
     // ✅ 내부 인터페이스: 상한/하한 limit 계산 Projection
     interface PaybandLimitInfo {

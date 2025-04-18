@@ -24,35 +24,5 @@ public class PaybandCriteriaService {
     private final RepresentativeSalaryRepository representativeSalaryRepository;
     private final AdjustService adjustService;
 
-    public MainAdjPaybandCriteriaResponse findAllPaybandCriteria(Long adjInfoId) {
-        List<PaybandCriteria> paybandCriterias = paybandCriteriaRepository.findByAdjustId(adjInfoId);
-        List<Employee> employees = employeeRepository.findAll();
-        employees = employees.stream()
-            .filter(employee -> !employee.getDeleted())
-            .filter(employee -> employee.getGrade() != null)
-            .toList();
 
-        Map<Long, Integer> countEmpl = employees.stream() //gradeId:인원수
-            .collect(Collectors.groupingBy(
-                empl -> empl.getGrade().getId(), // 그룹화 기준
-                Collectors.summingInt(e -> 1) // 각 그룹의 개수 세기
-            ));
-
-        Long beforeAdjInfoId = adjustService.getBeforeAdjInfoId(adjInfoId);
-
-        List<RepresentativeSalary> representativeSalaries = representativeSalaryRepository.findByAdjustId(
-            beforeAdjInfoId);
-
-        return new MainAdjPaybandCriteriaResponse(paybandCriterias
-            .stream()
-            .filter(pc -> !pc.getDeleted())
-            .map(pc -> {
-                Integer count = countEmpl.getOrDefault(pc.getGrade().getId(), 0); // null이면 0 반환
-                Double representative = RepresentativeSalaryService.getRepresentativeVal(representativeSalaries,
-                    pc.getGrade().getId());
-
-                return MainAdjPaybandCriteriaResponse.PaybandCriteriaResponse.from(pc, count, representative);
-            })
-            .toList());
-    }
 }

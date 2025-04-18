@@ -3,6 +3,7 @@ package com.bongsco.api.adjust.annual.dto.response;
 import java.util.List;
 
 import com.bongsco.api.adjust.annual.entity.PaybandCriteria;
+import com.bongsco.api.employee.entity.Grade;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -31,10 +32,11 @@ public class MainAdjPaybandCriteriaResponse {
 
         public static PaybandCriteriaResponse from(PaybandCriteria paybandCriteria, int numberOfEmpl,
             Double representativeVal) {
-            return new PaybandCriteriaResponse(paybandCriteria.getGrade().getName(), numberOfEmpl,
+            Grade pcGrade= paybandCriteria.getAdjustGrade().getGrade();
+            return new PaybandCriteriaResponse(pcGrade.getName(), numberOfEmpl,
                 representativeVal,
                 paybandCriteria.getUpperBound(), paybandCriteria.getLowerBound(),
-                paybandCriteria.getGrade().getBaseSalary());
+                pcGrade.getBaseSalary());
         }
     }
 }
