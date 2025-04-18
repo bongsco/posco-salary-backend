@@ -202,7 +202,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
     List<Object[]> findDtoByAdjustId(@Param("adjustId") Long adjustId);
 
     @Query("""
-            SELECT asj.employee, asj.finalStdSalary
+            SELECT asj.employee, asj.finalStdSalary, asj.hpoBonus
             FROM AdjustSubject asj
             WHERE asj.adjust.id = :adjustId
                 AND asj.isSubject = true

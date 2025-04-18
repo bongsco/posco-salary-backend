@@ -73,11 +73,9 @@ public class MainAdjustController {
     }
 
     @Operation(summary = "통합인사반영", description = "마지막 페이지, 계산값 인사시스템에 반영")
-    @GetMapping("/interface")
+    @PatchMapping("/interface")
     public ResponseEntity<Void> applyToInterface(@PathVariable("adjustId") Long adjustId) {
-        adjustSubjectService.changeIncrementRate(adjustId);
-        //계약연봉, 인상률 반영
-        //adjust 반영
+        adjustSubjectService.changeIncrementRateAndSalaryInfo(adjustId);
         return ResponseEntity.noContent().build();
     }
 

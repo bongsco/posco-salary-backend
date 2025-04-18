@@ -386,17 +386,24 @@ public class AdjustSubjectService {
             resultAndPageInfo.getNumber() + 1);
     }
 
-    public void changeIncrementRate(Long adjustId) {
+    @Transactional
+    public void changeIncrementRateAndSalaryInfo(Long adjustId) {
         List<Object[]> employeeAndDtos = adjustSubjectRepository.findAdjustSubjectIncrementDtoByAdjustId(
             adjustId);
 
         List<Employee> updatedEmployees = employeeAndDtos.stream().map(employeeAndDto -> {
             Employee employee = (Employee)employeeAndDto[0];
             Double finalStdSalary = Optional.ofNullable((Double)employeeAndDto[1]).orElse(0.0);
+            Double hpoBonus = Optional.ofNullable((Double)employeeAndDto[2]).orElse(0.0);
             Double beforeFinalStdSalary = employee.getStdSalary();
             Double finalStdSalaryIncrementRate = ((finalStdSalary - beforeFinalStdSalary) / beforeFinalStdSalary) * 100;
-            return employee.toBuilder().stdSalaryIncrementRate(finalStdSalaryIncrementRate).build();
+            return employee.toBuilder().stdSalaryIncrementRate(finalStdSalaryIncrementRate).stdSalary(finalStdSalary).hpoBonus(hpoBonus).build();
         }).filter(Objects::nonNull).toList();
         employeeRepository.saveAll(updatedEmployees);
+
+        adjustRepository.findById(adjustId).ifPresent(adjust -> {
+            adjust.toBuilder().isSubmitted(true).build();
+            adjustRepository.save(adjust);
+        });
     }
 }
