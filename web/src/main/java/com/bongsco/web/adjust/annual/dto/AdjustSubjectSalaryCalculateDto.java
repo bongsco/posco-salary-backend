@@ -15,4 +15,5 @@ public class AdjustSubjectSalaryCalculateDto {
     private Double baseSalary;
     private Double salaryIncrementRate;
     private Double bonusMultiplier;
+    private Double stdSalary;
 }

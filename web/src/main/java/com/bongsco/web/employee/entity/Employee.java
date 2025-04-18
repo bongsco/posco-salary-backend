@@ -50,6 +50,12 @@ public class Employee extends BaseEntity {
     @JoinColumn(name = "employment_type_id", nullable = false)
     private EmploymentType employmentType;
 
+    @Column(nullable = false)
+    private Double stdSalary;
+
+    @Column(nullable = false)
+    private Double hpoBonus;
+
     @Column(length = 10, nullable = false)
     private String name;
 

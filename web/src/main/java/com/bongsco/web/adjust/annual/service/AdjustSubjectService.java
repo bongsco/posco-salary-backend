@@ -241,14 +241,7 @@ public class AdjustSubjectService {
             //기준연봉= 전년도 기준연봉+(직무기본연봉*평차등연봉인상률)
 
             //전년도 기준연봉 불러옴
-            AdjustSubject beforeAdjustSubject = adjustSubjectRepository.findBeforeAdjSubject(adjustId,
-                adjustSubjectDto.getEmpId());
-
-
-            Double beforeSalary = 0.0;
-            if (beforeAdjustSubject != null) {
-                beforeSalary = beforeAdjustSubject.getFinalStdSalary() == null ? 1000000 : beforeAdjustSubject.getFinalStdSalary();
-            }
+            Double beforeSalary = adjustSubjectDto.getStdSalary();
 
             //직무 기본 연봉 불러옴
             Double gradeBaseSalary = adjustSubjectDto.getBaseSalary();
@@ -360,22 +353,13 @@ public class AdjustSubjectService {
                 })
                 .orElse("미적용");
             Double bonusMultiplier = Optional.ofNullable(dto.getBonusMultiplier()).orElse(0.0);
-            Double salaryIncrementRate = Optional.ofNullable(dto.getSalaryIncrementRate()).orElse(0.0);
+            Double finalStdSalaryIncrementRate = ((Optional.of(dto.getFinalStdSalary()).orElse(0.0) - dto.getBeforeStdSalary()) / dto.getBeforeStdSalary()) * 100;
 
+            Double salaryIncrementRate = Optional.ofNullable(dto.getSalaryIncrementRate()).orElse(0.0);
             if (dto.getIsInHpo() != null && dto.getIsInHpo()) {
                 bonusMultiplier += Optional.ofNullable(adjust.getHpoBonusMultiplier()).orElse(0.0);
                 Double hpoSalaryIncrementRate = Optional.ofNullable(adjust.getHpoSalaryIncrementByRank()).orElse(0.0);
                 salaryIncrementRate = ((1 + salaryIncrementRate / 100) * (1 + hpoSalaryIncrementRate / 100) - 1) * 100;
-            }
-
-            Double beforeFinalStdSalary = 0.0;
-            Double beforeTotalSalary = 0.0;
-            AdjustSubject beforeAdjustSubject = adjustSubjectRepository.findBeforeAdjSubject(adjustId, dto.getEmpId());
-            if (beforeAdjustSubject != null) {
-                beforeFinalStdSalary = Optional.ofNullable(beforeAdjustSubject.getFinalStdSalary()).orElse(0.0);
-                beforeTotalSalary =
-                    Optional.ofNullable(beforeAdjustSubject.getFinalStdSalary()).orElse(0.0) +
-                        Optional.ofNullable(beforeAdjustSubject.getHpoBonus()).orElse(0.0);
             }
 
             return MainResultResponses.MainResultResponse.builder()
@@ -387,11 +371,11 @@ public class AdjustSubjectService {
                 .rankCode(dto.getRankCode())
                 .salaryIncrementRate(salaryIncrementRate)
                 .bonusMultiplier(bonusMultiplier)
-                .stdSalaryIncrementRate(dto.getStdSalaryIncrementRate())
+                .stdSalaryIncrementRate(finalStdSalaryIncrementRate)
                 .payband(paybandResult)
-                .salaryBefore(beforeFinalStdSalary)
+                .salaryBefore(dto.getBeforeStdSalary())
                 .stdSalary(dto.getFinalStdSalary())
-                .totalSalaryBefore(beforeTotalSalary)
+                .totalSalaryBefore(dto.getBeforeStdSalary()+ dto.getBeforeHpoBonus())
                 .totalSalary(
                     Optional.ofNullable(dto.getFinalStdSalary()).orElse(0.0) + Optional.ofNullable(dto.getHpoBonus())
                         .orElse(0.0))
@@ -409,15 +393,7 @@ public class AdjustSubjectService {
         List<Employee> updatedEmployees = employeeAndDtos.stream().map(employeeAndDto -> {
             Employee employee = (Employee)employeeAndDto[0];
             Double finalStdSalary = Optional.ofNullable((Double)employeeAndDto[1]).orElse(0.0);
-
-            AdjustSubject beforeAdjustSubject = adjustSubjectRepository.findBeforeAdjSubject(adjustId,
-                employee.getId());
-
-            Double beforeFinalStdSalary = 0.0;
-            if (beforeAdjustSubject != null) {
-                beforeFinalStdSalary = Optional.ofNullable(beforeAdjustSubject.getFinalStdSalary()).orElse(0.0);
-            }
-
+            Double beforeFinalStdSalary = employee.getStdSalary();
             Double finalStdSalaryIncrementRate = ((finalStdSalary - beforeFinalStdSalary) / beforeFinalStdSalary) * 100;
             return employee.toBuilder().stdSalaryIncrementRate(finalStdSalaryIncrementRate).build();
         }).filter(Objects::nonNull).toList();

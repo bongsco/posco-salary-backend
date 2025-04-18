@@ -49,19 +49,6 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
         """)
     List<HpoEmployee> findByAdjustIdAndIsSubjectTrue(Long adjustId);
 
-    @Query("""
-        SELECT asj
-        FROM AdjustSubject asj
-        WHERE asj.adjust.id < :adjustId
-            AND asj.employee.id = :employeeId
-            AND asj.deleted != true
-            AND asj.isSubject = true
-        ORDER BY asj.adjust.id DESC
-        LIMIT 1
-        """
-    )
-    AdjustSubject findBeforeAdjSubject(Long adjustId, Long employeeId);
-
     Optional<AdjustSubject> findByAdjustIdAndEmployeeId(Long adjustId, Long employeeId);
 
     @Query("""
@@ -130,11 +117,11 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
         value = """
             SELECT 
                 e.emp_num AS empNum, e.name AS name, g.name AS gradeName, e.position_name AS positionName, d.name AS depName, r.code AS rankCode,
-                e.std_salary_increment_rate AS stdSalaryIncrementRate, asj.final_std_salary AS finalStdSalary, asj.std_salary AS stdSalary,
+                asj.final_std_salary AS finalStdSalary, asj.std_salary AS stdSalary,
                 asj.hpo_bonus AS hpoBonus, asj.is_in_hpo AS isInHpo, e.id AS empId, asj.id AS adjustSubjectId, g.id AS gradeId, r.id AS rankId,
                 ag.id AS adjustGradeId, s.bonus_multiplier AS bonusMultiplier, s.salary_increment_rate AS salaryIncrementRate,
                 asj.is_payband_applied AS isPaybandApplied,
-                COALESCE(asj.final_std_salary, 0) + COALESCE(asj.hpo_bonus, 0) AS totalSalary
+                COALESCE(asj.final_std_salary, 0) + COALESCE(asj.hpo_bonus, 0) AS totalSalary, e.std_salary AS beforeStdSalary, e.hpo_bonus AS beforeHpoBonus
             FROM adjust_subject asj
             JOIN employee e ON e.id = asj.employee_id
             JOIN grade g ON g.id = asj.grade_id
@@ -203,7 +190,8 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
                   asj.employee.id,
                   asj.grade.baseSalary,
                   s.salaryIncrementRate,
-                  s.bonusMultiplier
+                  s.bonusMultiplier,
+                  asj.employee.stdSalary
                   )
                   FROM AdjustSubject asj
                   JOIN AdjustGrade ag ON ag.grade.id = asj.grade.id AND asj.adjust.id = ag.adjust.id
