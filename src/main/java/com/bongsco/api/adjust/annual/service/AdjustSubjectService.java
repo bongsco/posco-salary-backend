@@ -244,8 +244,11 @@ public class AdjustSubjectService {
             AdjustSubject beforeAdjustSubject = adjustSubjectRepository.findBeforeAdjSubject(adjustId,
                 adjustSubjectDto.getEmpId());
 
-            if (beforeAdjustSubject == null)
-                return null; //신입 제외
+
+            Double beforeSalary = 0.0;
+            if (beforeAdjustSubject != null) {
+                beforeSalary = beforeAdjustSubject.getFinalStdSalary() == null ? 1000000 : beforeAdjustSubject.getFinalStdSalary();
+            }
 
             //직무 기본 연봉 불러옴
             Double gradeBaseSalary = adjustSubjectDto.getBaseSalary();
@@ -255,12 +258,12 @@ public class AdjustSubjectService {
 
             //고성과 있으면
             //평차등연봉인상률 = (직급, 평가별 평차연) * (1 + 고성과평차연)
-            if (subject.getIsInHpo()) {
+            if (subject.getIsInHpo() != null && subject.getIsInHpo()) {
                 evalDiffIncrement = evalDiffIncrement * (1 + hpoSalaryIncrementByRank) - 1;
             }
 
             Double newStdSalary =
-                (beforeAdjustSubject.getFinalStdSalary() == null ? 1000000 : beforeAdjustSubject.getFinalStdSalary())
+                beforeSalary
                     + gradeBaseSalary * evalDiffIncrement;
 
             newStdSalary = Math.floor(newStdSalary / 1000) * 1000;
@@ -276,7 +279,7 @@ public class AdjustSubjectService {
 
             //고성과 조직일 경우
             //평가차등경영성과금 지급률 = 평가차등경영성과금 지급률+고성과 경영성과금지급률
-            if (subject.getIsInHpo()) {
+            if (subject.getIsInHpo() != null && subject.getIsInHpo()) {
                 bonusMultiplier += hpoBonusMultiplier / 100;
             }
 
@@ -405,17 +408,16 @@ public class AdjustSubjectService {
 
         List<Employee> updatedEmployees = employeeAndDtos.stream().map(employeeAndDto -> {
             Employee employee = (Employee)employeeAndDto[0];
-            Double finalStdSalary = (Double)employeeAndDto[1];
+            Double finalStdSalary = Optional.ofNullable((Double)employeeAndDto[1]).orElse(0.0);
 
             AdjustSubject beforeAdjustSubject = adjustSubjectRepository.findBeforeAdjSubject(adjustId,
                 employee.getId());
-            if (beforeAdjustSubject == null)
-                return null; //신입 제외
 
-            Double beforeFinalStdSalary = beforeAdjustSubject.getFinalStdSalary();
-            if (beforeFinalStdSalary == null || finalStdSalary == null) {
-                return null;
+            Double beforeFinalStdSalary = 0.0;
+            if (beforeAdjustSubject != null) {
+                beforeFinalStdSalary = Optional.ofNullable(beforeAdjustSubject.getFinalStdSalary()).orElse(0.0);
             }
+
             Double finalStdSalaryIncrementRate = ((finalStdSalary - beforeFinalStdSalary) / beforeFinalStdSalary) * 100;
             return employee.toBuilder().stdSalaryIncrementRate(finalStdSalaryIncrementRate).build();
         }).filter(Objects::nonNull).toList();
