@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: posco-salary-backend-mobile
+
+  profiles:
+    active: dev
+
+
+
+
