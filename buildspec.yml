@@ -1,29 +1,33 @@
 version: 0.2
 
+env:
+  variables:
+    APP_MODULE: "web"
+
 phases:
   install:
     runtime-versions:
-      java: corretto17 
+      java: corretto17
     commands:
-      - echo "설치 시작"
+      - echo "🔧 설치 시작"
       - chmod +x ./gradlew
       - ./gradlew --version
-      - echo "설치 완료"
+      - echo "✅ 설치 완료"
 
   pre_build:
     commands:
-      - echo "pre_build 시작"
-      - mkdir -p src/main/resources
-      - rm -f src/main/resources/application-dev.yml
-      - echo $BONGSCO_DEV_APP_YML | base64 --decode > src/main/resources/application-dev.yml
-      - echo "pre_build 종료"
+      - echo "📁 pre_build 시작"
+      - mkdir -p $APP_MODULE/src/main/resources
+      - rm -f $APP_MODULE/src/main/resources/application-dev.yml
+      - echo $BONGSCO_DEV_APP_YML | base64 --decode > $APP_MODULE/src/main/resources/application-dev.yml
+      - echo "✅ pre_build 완료"
 
   build:
     commands:
-      - echo "빌드 시작"
-      - ./gradlew clean build
-      - echo "빌드 완료"
+      - echo "🛠️ 빌드 시작"
+      - ./gradlew :$APP_MODULE:clean :$APP_MODULE:build
+      - echo "✅ 빌드 완료"
 
   post_build:
     commands:
-      - echo "빌드 후 작업 진행해라."
+      - echo "🚀 빌드 후 작업 완료"
