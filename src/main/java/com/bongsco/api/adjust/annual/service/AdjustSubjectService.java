@@ -214,6 +214,7 @@ public class AdjustSubjectService {
         adjustSubjectRepository.saveAll(updatedSubjects);
     }
 
+    @Transactional
     public void initializeIsPaybandApplied(Long adjustId) {
         adjustSubjectRepository.updatePaybandAppliedTypeByAdjustId(adjustId);
         entityManager.clear();
