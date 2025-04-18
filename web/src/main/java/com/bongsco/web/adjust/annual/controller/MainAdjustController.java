@@ -15,18 +15,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-<<<<<<< HEAD:src/main/java/com/bongsco/api/adjust/annual/controller/MainAdjustController.java
-import com.bongsco.api.adjust.annual.dto.request.PaybandApplyListUpdateRequest;
-import com.bongsco.api.adjust.annual.dto.response.MainResultResponses;
-import com.bongsco.api.adjust.annual.dto.response.PaybandSubjectResponse;
-import com.bongsco.api.adjust.annual.dto.response.ResultChartResponse;
-import com.bongsco.api.adjust.annual.service.AdjustSubjectService;
-=======
 import com.bongsco.web.adjust.annual.dto.request.PaybandApplyListUpdateRequest;
 import com.bongsco.web.adjust.annual.dto.response.MainResultResponses;
 import com.bongsco.web.adjust.annual.dto.response.PaybandSubjectResponse;
+import com.bongsco.web.adjust.annual.dto.response.ResultChartResponse;
 import com.bongsco.web.adjust.annual.service.AdjustSubjectService;
->>>>>>> origin:web/src/main/java/com/bongsco/web/adjust/annual/controller/MainAdjustController.java
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import io.swagger.v3.oas.annotations.Operation;
