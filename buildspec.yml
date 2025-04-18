@@ -12,7 +12,17 @@ phases:
       - echo "🔧 설치 시작"
       - chmod +x ./gradlew
       - ./gradlew --version
+      - sudo yum install -y postgresql
+      - psql --version
       - echo "✅ 설치 완료"
+
+  rds_connection_test:
+    commands:
+      - echo "📡 RDS PostgreSQL 연결 시도"
+      - export PGPASSWORD=$BONGSCO_RDS_PASSWORD
+      - psql -h $BONGSCO_RDS_ENDPOINT -U $BONGSCO_RDS_USERNAME -d $BONGSCO_RDS_DB_NAME -p 5432 -c '\q'
+      - unset PGPASSWORD
+      - echo "✅ RDS PostgreSQL 연결 확인 성공"
 
   pre_build:
     commands:
