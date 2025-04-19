@@ -438,7 +438,7 @@ public class AdjustSubjectService {
             beforeAdjustName = beforeAdjust.getYear().toString()+"년 "+beforeAdjust.getOrderNumber().toString()+"차";
         }
 
-        List<Map<String , Map<String, Double>>> salaryPerGrade = new ArrayList<>();
+        List<ResultChartResponse.SalaryPerGrade> salaryPerGrades = new ArrayList<>();
 
         Map<String, Double> beforeSalaryPerGrade = new HashMap<>();
         berforeDto.stream().forEach(dto -> {
@@ -446,7 +446,7 @@ public class AdjustSubjectService {
             Double hpoBonus = dto.getTotalHpoBonus() != null ? dto.getTotalHpoBonus() : 0.0;
             beforeSalaryPerGrade.put(dto.getGradeName(), stdSalary + hpoBonus);
         });
-        salaryPerGrade.add(Map.of(beforeAdjustName, beforeSalaryPerGrade));
+        salaryPerGrades.add(ResultChartResponse.SalaryPerGrade.from(beforeAdjustName, beforeSalaryPerGrade));
 
         Map<String, Double> currentSalaryPerGrade = new HashMap<>();
         currentDto.stream().forEach(dto -> {
@@ -454,23 +454,10 @@ public class AdjustSubjectService {
             Double hpoBonus = dto.getTotalHpoBonus() != null ? dto.getTotalHpoBonus() : 0.0;
             currentSalaryPerGrade.put(dto.getGradeName(), stdSalary + hpoBonus);
         });
-        salaryPerGrade.add(Map.of(adjustName, currentSalaryPerGrade));
+        salaryPerGrades.add(ResultChartResponse.SalaryPerGrade.from(adjustName, currentSalaryPerGrade));
 
 
-        List<Map<String, Object>> annualSalary; annualSalary = new ArrayList<>();
-
-        Double sumStdSalary = currentDto.stream()
-            .map(SalaryPerGradeDto::getTotalStdSalary)     // totalStdSalary 꺼냄
-            .filter(Objects::nonNull)                       // null 제외
-            .mapToDouble(Double::doubleValue)
-            .sum();
-        Double sumHpoBonus = currentDto.stream()
-            .map(SalaryPerGradeDto::getTotalHpoBonus)     // totalStdSalary 꺼냄
-            .filter(Objects::nonNull)                       // null 제외
-            .mapToDouble(Double::doubleValue)
-            .sum();
-        Map<String, Object> currentAnnualSalary = Map.of("adjustName", adjustName, "stdSalary", sumStdSalary, "hpoBonus", sumHpoBonus, "totalStdSalary", sumStdSalary+sumHpoBonus);
-        annualSalary.add(currentAnnualSalary);
+        List<ResultChartResponse.AnnualSalary> annualSalaries = new ArrayList<>();
 
         Double beforeSumStdSalary = berforeDto.stream()
             .map(SalaryPerGradeDto::getTotalStdSalary)     // totalStdSalary 꺼냄
@@ -482,12 +469,24 @@ public class AdjustSubjectService {
             .filter(Objects::nonNull)                       // null 제외
             .mapToDouble(Double::doubleValue)
             .sum();
-        Map<String, Object> beforeAnnualSalary = Map.of("adjustName", beforeAdjustName, "stdSalary", beforeSumStdSalary, "hpoBonus", beforeSumHpoBonus, "totalStdSalary", beforeSumStdSalary+beforeSumHpoBonus);
-        annualSalary.add(beforeAnnualSalary);
+        ResultChartResponse.AnnualSalary beforeAnnualSalary = ResultChartResponse.AnnualSalary.from(beforeAdjustName, beforeSumStdSalary, beforeSumHpoBonus, beforeSumStdSalary+beforeSumHpoBonus);
+        annualSalaries.add(beforeAnnualSalary);
 
+        Double sumStdSalary = currentDto.stream()
+            .map(SalaryPerGradeDto::getTotalStdSalary)     // totalStdSalary 꺼냄
+            .filter(Objects::nonNull)                       // null 제외
+            .mapToDouble(Double::doubleValue)
+            .sum();
+        Double sumHpoBonus = currentDto.stream()
+            .map(SalaryPerGradeDto::getTotalHpoBonus)     // totalStdSalary 꺼냄
+            .filter(Objects::nonNull)                       // null 제외
+            .mapToDouble(Double::doubleValue)
+            .sum();
+        ResultChartResponse.AnnualSalary currentAnnualSalary = ResultChartResponse.AnnualSalary.from(adjustName,  sumStdSalary,  sumHpoBonus, sumStdSalary+sumHpoBonus);
+        annualSalaries.add(currentAnnualSalary);
 
         List<HpoPerDepartmentDto> HpoPerDepartment = adjustSubjectRepository.findHpoPerDepartmentDto(adjustId);
 
-        return new ResultChartResponse(salaryPerGrade, annualSalary, HpoPerDepartment);
+        return ResultChartResponse.from(salaryPerGrades, annualSalaries, HpoPerDepartment);
     }
 }
