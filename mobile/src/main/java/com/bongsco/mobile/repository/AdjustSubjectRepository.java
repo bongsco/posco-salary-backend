@@ -20,7 +20,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
 
     @Query("""
         SELECT new com.bongsco.mobile.dto.response.BarChartResponse(
-            a.year, a.orderNumber, asj.finalStdSalary, asj.hpoBonus, (COALESCE(asj.finalStdSalary, 0.0) + COALESCE(asj.grade.baseSalary, 0.0)) / 24.0 + 12.0
+            a.year, a.orderNumber, asj.finalStdSalary, asj.hpoBonus, ROUND((COALESCE(asj.finalStdSalary, 0.0) + COALESCE(asj.grade.baseSalary, 0.0)) / 24.0 + 12.0, 0)
         )
         FROM AdjustSubject asj
         JOIN Adjust a ON asj.adjust.id = a.id

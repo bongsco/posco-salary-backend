@@ -2,8 +2,6 @@ package com.bongsco.mobile.entity;
 
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
-
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -11,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,13 +28,9 @@ public class PaybandCriteria extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "adjust_id", nullable = false)
-    private Adjust adjust;
-
-    @ManyToOne
-    @JoinColumn(name = "grade_id", nullable = false)
-    private Grade grade;
+    @OneToOne
+    @JoinColumn(name = "adjust_grade_id", nullable = false)
+    private AdjustGrade adjustGrade;
 
     @Column(nullable = false)
     private Double upperBound;
@@ -43,7 +38,5 @@ public class PaybandCriteria extends BaseEntity {
     @Column(nullable = false)
     private Double lowerBound;
 
-    @Column(nullable = false)
-    private Boolean isActive;
 }
 
