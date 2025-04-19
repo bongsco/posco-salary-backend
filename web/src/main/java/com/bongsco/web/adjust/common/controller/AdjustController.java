@@ -55,7 +55,6 @@ public class AdjustController {
         AdjustSearchRequest adjustSearchRequest = new AdjustSearchRequest(
             page, size, year, month, adjType, state, isSubmitted, author, extractSorts(sort)
         );
-
         AdjustResponse response = adjustService.getAdjustInfo(adjustSearchRequest);
 
         return ResponseEntity.ok(response);
@@ -64,6 +63,7 @@ public class AdjustController {
     @Operation(summary = "개별 조정 정보 조회", description = "특정 조정 ID를 가진 연봉 조정을 조회합니다.")
     @GetMapping("/{adjustId}")
     public ResponseEntity<SingleAdjustResponse> getAdjust(@PathVariable Long adjustId) {
+
         return ResponseEntity.ok(adjustService.getAdjust(adjustId));
     }
 
@@ -72,7 +72,6 @@ public class AdjustController {
     public ResponseEntity<Map<String, String>> updateAdjustInfo(
         @PathVariable @Min(1) Long adjustId,
         @Valid @RequestBody AdjustUpdateRequest updateRequest) {
-
         adjustService.updateAdjust(adjustId, updateRequest);
 
         return ResponseEntity.ok(Map.of("message", "Successfully changed"));

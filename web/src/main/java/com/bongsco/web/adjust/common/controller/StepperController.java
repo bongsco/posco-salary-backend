@@ -36,6 +36,7 @@ public class StepperController {
         @RequestParam(required = false, defaultValue = "true") Boolean isDone
     ) {
         adjustStepService.changeIsDone(adjustId, stepId, isDone);
+
         return ResponseEntity.noContent().build();
     }
 }
