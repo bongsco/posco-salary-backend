@@ -253,10 +253,9 @@ public class AdjustService {
 
         /* Payband_criteria table 추가 조정차수, 직급 카티션 곱 하한값: 80, 상한값 : 120 */
         List<PaybandCriteria> paybandCriteriaToSave = new ArrayList<>();
-        for (Grade grade : allGrades) {
+        for (AdjustGrade adjustGrade : savedAdjustGrade) {
             PaybandCriteria paybandCriteria = PaybandCriteria.builder()
-                .adjust(savedAdjust)
-                .grade(grade)
+                .adjustGrade(adjustGrade)
                 .upperBound(120.0)
                 .lowerBound(80.0)
                 .build();

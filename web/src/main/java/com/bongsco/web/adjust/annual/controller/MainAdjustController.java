@@ -67,9 +67,17 @@ public class MainAdjustController {
         @RequestParam(value = "pageSize", required = false, defaultValue = "5") Integer pageSize
 
     ) throws JsonProcessingException {
-        adjustSubjectService.changeIncrementRate(adjustId);
         return ResponseEntity.ok(
             adjustSubjectService.getFinalResult(adjustId, filterEmpNum, filterName, filterGrade, filterDepartment,
                 filterRank, extractSorts(sorts), pageNumber - 1, pageSize));
     }
+
+    @Operation(summary = "통합인사반영", description = "마지막 페이지, 계산값 인사시스템에 반영")
+    @PatchMapping("/interface")
+    public ResponseEntity<Void> applyToInterface(@PathVariable("adjustId") Long adjustId) {
+        adjustSubjectService.changeIncrementRateAndSalaryInfo(adjustId);
+        return ResponseEntity.noContent().build();
+    }
+
+
 }
