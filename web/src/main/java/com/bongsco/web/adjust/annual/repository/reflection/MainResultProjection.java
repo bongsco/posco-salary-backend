@@ -14,8 +14,6 @@ public interface MainResultProjection {
 
     String getRankCode();
 
-    Double getStdSalaryIncrementRate();
-
     Double getFinalStdSalary();
 
     Double getStdSalary();
@@ -41,4 +39,8 @@ public interface MainResultProjection {
     PaybandAppliedType getIsPaybandApplied();
 
     Double getTotalSalary();
+
+    Double getBeforeStdSalary();
+
+    Double getBeforeHpoBonus();
 }

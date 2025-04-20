@@ -218,6 +218,7 @@ public class AdjustSubjectService {
         adjustSubjectRepository.saveAll(updatedSubjects);
     }
 
+    @Transactional
     public void initializeIsPaybandApplied(Long adjustId) {
         adjustSubjectRepository.updatePaybandAppliedTypeByAdjustId(adjustId);
         entityManager.clear();
@@ -244,11 +245,7 @@ public class AdjustSubjectService {
             //기준연봉= 전년도 기준연봉+(직무기본연봉*평차등연봉인상률)
 
             //전년도 기준연봉 불러옴
-            AdjustSubject beforeAdjustSubject = adjustSubjectRepository.findBeforeAdjSubject(adjustId,
-                adjustSubjectDto.getEmpId());
-
-            if (beforeAdjustSubject == null)
-                return null; //신입 제외
+            Double beforeSalary = adjustSubjectDto.getStdSalary();
 
             //직무 기본 연봉 불러옴
             Double gradeBaseSalary = adjustSubjectDto.getBaseSalary();
@@ -258,12 +255,12 @@ public class AdjustSubjectService {
 
             //고성과 있으면
             //평차등연봉인상률 = (직급, 평가별 평차연) * (1 + 고성과평차연)
-            if (subject.getIsInHpo()) {
+            if (subject.getIsInHpo() != null && subject.getIsInHpo()) {
                 evalDiffIncrement = evalDiffIncrement * (1 + hpoSalaryIncrementByRank) - 1;
             }
 
             Double newStdSalary =
-                (beforeAdjustSubject.getFinalStdSalary() == null ? 1000000 : beforeAdjustSubject.getFinalStdSalary())
+                beforeSalary
                     + gradeBaseSalary * evalDiffIncrement;
 
             newStdSalary = Math.floor(newStdSalary / 1000) * 1000;
@@ -279,7 +276,7 @@ public class AdjustSubjectService {
 
             //고성과 조직일 경우
             //평가차등경영성과금 지급률 = 평가차등경영성과금 지급률+고성과 경영성과금지급률
-            if (subject.getIsInHpo()) {
+            if (subject.getIsInHpo() != null && subject.getIsInHpo()) {
                 bonusMultiplier += hpoBonusMultiplier / 100;
             }
 
@@ -360,22 +357,13 @@ public class AdjustSubjectService {
                 })
                 .orElse("미적용");
             Double bonusMultiplier = Optional.ofNullable(dto.getBonusMultiplier()).orElse(0.0);
-            Double salaryIncrementRate = Optional.ofNullable(dto.getSalaryIncrementRate()).orElse(0.0);
+            Double finalStdSalaryIncrementRate = ((Optional.of(dto.getFinalStdSalary()).orElse(0.0) - dto.getBeforeStdSalary()) / dto.getBeforeStdSalary()) * 100;
 
+            Double salaryIncrementRate = Optional.ofNullable(dto.getSalaryIncrementRate()).orElse(0.0);
             if (dto.getIsInHpo() != null && dto.getIsInHpo()) {
                 bonusMultiplier += Optional.ofNullable(adjust.getHpoBonusMultiplier()).orElse(0.0);
                 Double hpoSalaryIncrementRate = Optional.ofNullable(adjust.getHpoSalaryIncrementByRank()).orElse(0.0);
                 salaryIncrementRate = ((1 + salaryIncrementRate / 100) * (1 + hpoSalaryIncrementRate / 100) - 1) * 100;
-            }
-
-            Double beforeFinalStdSalary = 0.0;
-            Double beforeTotalSalary = 0.0;
-            AdjustSubject beforeAdjustSubject = adjustSubjectRepository.findBeforeAdjSubject(adjustId, dto.getEmpId());
-            if (beforeAdjustSubject != null) {
-                beforeFinalStdSalary = Optional.ofNullable(beforeAdjustSubject.getFinalStdSalary()).orElse(0.0);
-                beforeTotalSalary =
-                    Optional.ofNullable(beforeAdjustSubject.getFinalStdSalary()).orElse(0.0) +
-                        Optional.ofNullable(beforeAdjustSubject.getHpoBonus()).orElse(0.0);
             }
 
             return MainResultResponses.MainResultResponse.builder()
@@ -387,11 +375,11 @@ public class AdjustSubjectService {
                 .rankCode(dto.getRankCode())
                 .salaryIncrementRate(salaryIncrementRate)
                 .bonusMultiplier(bonusMultiplier)
-                .stdSalaryIncrementRate(dto.getStdSalaryIncrementRate())
+                .stdSalaryIncrementRate(finalStdSalaryIncrementRate)
                 .payband(paybandResult)
-                .salaryBefore(beforeFinalStdSalary)
+                .salaryBefore(dto.getBeforeStdSalary())
                 .stdSalary(dto.getFinalStdSalary())
-                .totalSalaryBefore(beforeTotalSalary)
+                .totalSalaryBefore(dto.getBeforeStdSalary()+ dto.getBeforeHpoBonus())
                 .totalSalary(
                     Optional.ofNullable(dto.getFinalStdSalary()).orElse(0.0) + Optional.ofNullable(dto.getHpoBonus())
                         .orElse(0.0))
@@ -402,27 +390,25 @@ public class AdjustSubjectService {
             resultAndPageInfo.getNumber() + 1);
     }
 
-    public void changeIncrementRate(Long adjustId) {
+    @Transactional
+    public void changeIncrementRateAndSalaryInfo(Long adjustId) {
         List<Object[]> employeeAndDtos = adjustSubjectRepository.findAdjustSubjectIncrementDtoByAdjustId(
             adjustId);
 
         List<Employee> updatedEmployees = employeeAndDtos.stream().map(employeeAndDto -> {
             Employee employee = (Employee)employeeAndDto[0];
-            Double finalStdSalary = (Double)employeeAndDto[1];
-
-            AdjustSubject beforeAdjustSubject = adjustSubjectRepository.findBeforeAdjSubject(adjustId,
-                employee.getId());
-            if (beforeAdjustSubject == null)
-                return null; //신입 제외
-
-            Double beforeFinalStdSalary = beforeAdjustSubject.getFinalStdSalary();
-            if (beforeFinalStdSalary == null || finalStdSalary == null) {
-                return null;
-            }
+            Double finalStdSalary = Optional.ofNullable((Double)employeeAndDto[1]).orElse(0.0);
+            Double hpoBonus = Optional.ofNullable((Double)employeeAndDto[2]).orElse(0.0);
+            Double beforeFinalStdSalary = employee.getStdSalary();
             Double finalStdSalaryIncrementRate = ((finalStdSalary - beforeFinalStdSalary) / beforeFinalStdSalary) * 100;
-            return employee.toBuilder().stdSalaryIncrementRate(finalStdSalaryIncrementRate).build();
+            return employee.toBuilder().stdSalaryIncrementRate(finalStdSalaryIncrementRate).stdSalary(finalStdSalary).hpoBonus(hpoBonus).build();
         }).filter(Objects::nonNull).toList();
         employeeRepository.saveAll(updatedEmployees);
+
+        adjustRepository.findById(adjustId).ifPresent(adjust -> {
+            adjust.toBuilder().isSubmitted(true).build();
+            adjustRepository.save(adjust);
+        });
     }
 
     public ResultChartResponse getChartData(Long adjustId) {
