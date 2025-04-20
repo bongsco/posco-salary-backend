@@ -12,7 +12,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.bongsco.web.adjust.annual.dto.HpoPerDepartmentDto;
 import com.bongsco.web.adjust.annual.dto.MainResultExcelDto;
+import com.bongsco.web.adjust.annual.dto.SalaryPerGradeDto;
 import com.bongsco.web.adjust.annual.dto.response.EmployeeResponse;
 import com.bongsco.web.adjust.annual.dto.response.HpoEmployee;
 import com.bongsco.web.adjust.annual.repository.reflection.MainResultProjection;
@@ -234,4 +236,37 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
     @Query("UPDATE AdjustSubject s SET s.deleted = true WHERE s.adjust.id = :adjustId AND s.employee.id IN :employeeIds AND s.deleted = false")
     void softDeleteByAdjustIdAndEmployeeIdIn(@Param("adjustId") Long adjustId,
         @Param("employeeIds") Set<Long> employeeIds);
+
+    @Query("""
+        SELECT new com.bongsco.web.adjust.annual.dto.SalaryPerGradeDto(
+            g.name, SUM (asj.finalStdSalary), SUM (asj.hpoBonus)
+            )
+        FROM AdjustSubject asj
+        JOIN Grade g ON asj.grade.id = g.id
+        WHERE asj.adjust.id = :adjustId
+        AND asj.isSubject = true
+        AND asj.deleted=false
+        GROUP BY g.name
+        ORDER BY g.name
+    """
+    )
+    List<SalaryPerGradeDto> findSalaryPerDto(@Param("adjustId") Long adjustId);
+
+    @Query("""
+        SELECT new com.bongsco.web.adjust.annual.dto.HpoPerDepartmentDto(
+            d.name, COUNT(e)
+        )
+        FROM  AdjustSubject asj
+        JOIN Employee e ON e.id = asj.employee.id
+        JOIN Department d ON e.department.id = d.id
+        WHERE asj.adjust.id = :adjustId
+        AND asj.isSubject = true
+        AND asj.deleted=false
+        AND asj.isInHpo = true
+        GROUP BY d.name
+        ORDER BY COUNT(e) DESC
+        LIMIT 10
+""")
+    List<HpoPerDepartmentDto> findHpoPerDepartmentDto(@Param("adjustId") Long adjustId);
+
 }

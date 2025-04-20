@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.bongsco.web.adjust.annual.dto.request.PaybandApplyListUpdateRequest;
 import com.bongsco.web.adjust.annual.dto.response.MainResultResponses;
 import com.bongsco.web.adjust.annual.dto.response.PaybandSubjectResponse;
+import com.bongsco.web.adjust.annual.dto.response.ResultChartResponse;
 import com.bongsco.web.adjust.annual.service.AdjustSubjectService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
@@ -72,12 +73,16 @@ public class MainAdjustController {
                 filterRank, extractSorts(sorts), pageNumber - 1, pageSize));
     }
 
+    @Operation(summary = "차트 데이터", description = "결과페이지 차트 데이터")
+    @GetMapping("/chart")
+    public ResponseEntity<ResultChartResponse> showChart(@PathVariable("adjustId") Long adjustId){
+        return ResponseEntity.ok(adjustSubjectService.getChartData(adjustId));
+    }
+
     @Operation(summary = "통합인사반영", description = "마지막 페이지, 계산값 인사시스템에 반영")
     @PatchMapping("/interface")
     public ResponseEntity<Void> applyToInterface(@PathVariable("adjustId") Long adjustId) {
         adjustSubjectService.changeIncrementRateAndSalaryInfo(adjustId);
         return ResponseEntity.noContent().build();
     }
-
-
 }
