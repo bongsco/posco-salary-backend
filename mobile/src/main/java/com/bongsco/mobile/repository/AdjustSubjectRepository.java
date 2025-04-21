@@ -71,7 +71,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
             e.hireDate AS hireDate, e.employmentType.name AS employmentTypeName, e.rank.name AS rankName,
             asj.isInHpo AS isInHpo, s.salaryIncrementRate AS salaryIncrementRate, s.bonusMultiplier AS bonusMultiplier,
             a.hpoSalaryIncrementByRank as hpoSalaryIncrementByRank, a.hpoBonusMultiplier AS hpoBonusMultiplier,
-            asj.finalStdSalary as stdSalary, asj.hpoBonus AS hpoBonus, asj.isPaybandApplied as isPaybandApplied
+            asj.finalStdSalary as stdSalary, asj.hpoBonus AS hpoBonus, asj.isPaybandApplied as isPaybandApplied, e.stdSalary as beforeStdSalary
         FROM AdjustSubject asj
         JOIN Adjust a ON asj.adjust.id = a.id
         JOIN AdjustGrade ag ON asj.grade.id = ag.grade.id AND a.id = ag.adjust.id

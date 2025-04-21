@@ -27,5 +27,6 @@ public interface AdjustDetailProjection {
     Double getStdSalary();
     Double getHpoBonus();
     PaybandAppliedType getIsPaybandApplied();
+    Double getBeforeStdSalary();
 }
 

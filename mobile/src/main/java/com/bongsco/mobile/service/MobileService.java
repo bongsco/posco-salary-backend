@@ -37,6 +37,6 @@ public class MobileService {
     public AdjustDetailResponse getAdjustDetailList(Long adjustId, Long employeeId) {
         AdjustDetailProjection projection = adjustSubjectRepository.findAdjustDetailProjection(adjustId, employeeId);
         AdjustSubject beforeAdjustSubject =adjustSubjectRepository.findBeforeAdjSubject(adjustId, employeeId);
-        return AdjustDetailResponse.of(projection, beforeAdjustSubject==null? null: beforeAdjustSubject.getFinalStdSalary());
+        return AdjustDetailResponse.of(projection, beforeAdjustSubject==null? projection.getBeforeStdSalary(): beforeAdjustSubject.getFinalStdSalary());
     }
 }
