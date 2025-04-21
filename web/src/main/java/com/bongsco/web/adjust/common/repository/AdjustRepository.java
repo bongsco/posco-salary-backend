@@ -183,4 +183,13 @@ public interface AdjustRepository extends JpaRepository<Adjust, Long> {
 
     @Query("SELECT MAX(a.orderNumber) FROM Adjust a WHERE a.year = :year AND a.adjustType = :adjustType")
     Integer findMaxOrderNumberByYear(@Param("year") int year, @Param("adjustType") AdjustType adjustType);
+
+    @Query("""
+            SELECT a.id
+            FROM Adjust a
+            WHERE a.adjustType = 'ANNUAL'
+            ORDER BY a.year DESC, a.month DESC
+            LIMIT 1
+        """)
+    Long findLatestAnnualAdjustId();
 }
