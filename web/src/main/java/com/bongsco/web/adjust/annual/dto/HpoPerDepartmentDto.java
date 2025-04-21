@@ -10,10 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-public class AdjustSubjectSalaryCalculateDto {
-    private Long empId;
-    private Double baseSalary;
-    private Double salaryIncrementRate;
-    private Double bonusMultiplier;
-    private Double stdSalary;
+public class HpoPerDepartmentDto {
+    private String departmentName;
+    private Long count;
 }

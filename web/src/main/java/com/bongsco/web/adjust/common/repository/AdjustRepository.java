@@ -79,48 +79,27 @@ public interface AdjustRepository extends JpaRepository<Adjust, Long> {
             adjust a
         LEFT JOIN (
             SELECT
-                rs.adjust_id,
-                s.name AS step_name,
-                s.detail_step_name,
-                s.url
+                adjust_id,
+                step_name,
+                detail_step_name,
+                url
             FROM (
-                SELECT
-                    adjust_id,
-                    step_id
-                FROM
-                    adjust_step
-                WHERE
-                    is_done = false
-            ) rs
-            JOIN
-                step s ON rs.step_id = s.id
-            ORDER BY (CASE WHEN s.name = 'CRITERIA' THEN 1 
-                        WHEN s.name = 'PREPARATION' THEN 2
-                        WHEN s.name = 'MAIN' THEN 3 
-                        ELSE 999 END), s.order_number
-            FETCH FIRST 1 ROWS ONLY
-        ) nps ON a.id = nps.adjust_id
-        WHERE (COALESCE(array_length(CAST(:year AS integer[]), 1), 0) = 0 OR a.year = ANY(CAST(:year AS integer[])))
-            AND (COALESCE(array_length(CAST(:month AS integer[]), 1), 0) = 0 OR a.month = ANY (CAST(:month AS integer[])))
-            AND (COALESCE(array_length(CAST(:adjustType AS text[]), 1), 0) = 0 OR a.adjust_type = ANY (CAST(:adjustType AS text[])))
-            AND (COALESCE(array_length(CAST(:author AS text[]), 1), 0) = 0 OR a.author LIKE ANY(CAST(:author AS text[])))
-            AND (COALESCE(array_length(CAST(:isSubmitted AS boolean[]), 1), 0) = 0 OR a.is_submitted = ANY (CAST(:isSubmitted AS boolean[])))
-            AND (
-                    COALESCE(array_length(CAST(:state AS boolean[]), 1), 0) = 0
-                    OR ((TRUE = ANY(CAST(:state AS boolean[]))) AND nps.step_name IS NULL)
-                    OR ((FALSE = ANY(CAST(:state AS boolean[]))) AND nps.step_name IS NOT NULL)
-            )        
-        """,
-        countQuery = """
-            SELECT count(*)
-            FROM
-                adjust a
-            LEFT JOIN (
                 SELECT
                     rs.adjust_id,
                     s.name AS step_name,
                     s.detail_step_name,
-                    s.url
+                    s.url,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY rs.adjust_id
+                        ORDER BY
+                            CASE
+                                WHEN s.name = 'CRITERIA' THEN 1
+                                WHEN s.name = 'PREPARATION' THEN 2
+                                WHEN s.name = 'MAIN' THEN 3
+                                ELSE 999
+                            END,
+                            s.order_number
+                    ) AS rn
                 FROM (
                     SELECT
                         adjust_id,
@@ -130,13 +109,9 @@ public interface AdjustRepository extends JpaRepository<Adjust, Long> {
                     WHERE
                         is_done = false
                 ) rs
-                JOIN
-                    step s ON rs.step_id = s.id
-                ORDER BY (CASE WHEN s.name = 'CRITERIA' THEN 1 
-                            WHEN s.name = 'PREPARATION' THEN 2
-                            WHEN s.name = 'MAIN' THEN 3 
-                            ELSE 999 END), s.order_number
-                FETCH FIRST 1 ROWS ONLY
+                JOIN step s ON rs.step_id = s.id
+                    ) ranked
+                    WHERE rn = 1
             ) nps ON a.id = nps.adjust_id
             WHERE (COALESCE(array_length(CAST(:year AS integer[]), 1), 0) = 0 OR a.year = ANY(CAST(:year AS integer[])))
                 AND (COALESCE(array_length(CAST(:month AS integer[]), 1), 0) = 0 OR a.month = ANY (CAST(:month AS integer[])))
@@ -147,7 +122,58 @@ public interface AdjustRepository extends JpaRepository<Adjust, Long> {
                         COALESCE(array_length(CAST(:state AS boolean[]), 1), 0) = 0
                         OR ((TRUE = ANY(CAST(:state AS boolean[]))) AND nps.step_name IS NULL)
                         OR ((FALSE = ANY(CAST(:state AS boolean[]))) AND nps.step_name IS NOT NULL)
-                ) 
+                )        
+        """,
+        countQuery = """
+            SELECT count(*)
+                    FROM
+            adjust a
+        LEFT JOIN (
+            SELECT
+                adjust_id,
+                step_name,
+                detail_step_name,
+                url
+            FROM (
+                SELECT
+                    rs.adjust_id,
+                    s.name AS step_name,
+                    s.detail_step_name,
+                    s.url,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY rs.adjust_id
+                        ORDER BY
+                            CASE
+                                WHEN s.name = 'CRITERIA' THEN 1
+                                WHEN s.name = 'PREPARATION' THEN 2
+                                WHEN s.name = 'MAIN' THEN 3
+                                ELSE 999
+                            END,
+                            s.order_number
+                    ) AS rn
+                FROM (
+                    SELECT
+                        adjust_id,
+                        step_id
+                    FROM
+                        adjust_step
+                    WHERE
+                        is_done = false
+                ) rs
+                JOIN step s ON rs.step_id = s.id
+                    ) ranked
+                    WHERE rn = 1
+            ) nps ON a.id = nps.adjust_id
+            WHERE (COALESCE(array_length(CAST(:year AS integer[]), 1), 0) = 0 OR a.year = ANY(CAST(:year AS integer[])))
+                AND (COALESCE(array_length(CAST(:month AS integer[]), 1), 0) = 0 OR a.month = ANY (CAST(:month AS integer[])))
+                AND (COALESCE(array_length(CAST(:adjustType AS text[]), 1), 0) = 0 OR a.adjust_type = ANY (CAST(:adjustType AS text[])))
+                AND (COALESCE(array_length(CAST(:author AS text[]), 1), 0) = 0 OR a.author LIKE ANY(CAST(:author AS text[])))
+                AND (COALESCE(array_length(CAST(:isSubmitted AS boolean[]), 1), 0) = 0 OR a.is_submitted = ANY (CAST(:isSubmitted AS boolean[])))
+                AND (
+                        COALESCE(array_length(CAST(:state AS boolean[]), 1), 0) = 0
+                        OR ((TRUE = ANY(CAST(:state AS boolean[]))) AND nps.step_name IS NULL)
+                        OR ((FALSE = ANY(CAST(:state AS boolean[]))) AND nps.step_name IS NOT NULL)
+                )
             """,
         nativeQuery = true)
     Page<AdjustItemProjection> findAdjustItemsWithNextStepPaginated(

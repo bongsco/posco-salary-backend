@@ -33,7 +33,7 @@ public class PaybandCriteriaConfigListResponse {
         private Double lowerBound;
 
         public static PaybandCriteriaConfig from(PaybandCriteria paybandCriteria) {
-            return new PaybandCriteriaConfig(paybandCriteria.getId(), paybandCriteria.getGrade().getName(),
+            return new PaybandCriteriaConfig(paybandCriteria.getId(), paybandCriteria.getAdjustGrade().getGrade().getName(),
                 paybandCriteria.getUpperBound(), paybandCriteria.getLowerBound());
         }
     }

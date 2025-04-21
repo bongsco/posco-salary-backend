@@ -47,7 +47,7 @@ public class PreparationController {
         @Valid @RequestBody ChangedSubjectUseEmployeeRequest changedSubjectUseEmployeeRequest
     ) {
         adjSubjectService.updateSubjectUseEmployee(adjustId, changedSubjectUseEmployeeRequest);
-
+        adjustStepService.resetMain(adjustId);
         return ResponseEntity.noContent().build();
     }
 
@@ -67,6 +67,8 @@ public class PreparationController {
         @Valid @RequestBody ChangedHighPerformGroupEmployeeRequest changedHighPerformGroupEmployeeRequest
     ) {
         adjSubjectService.updateHighPerformGroupEmployee(adjustId, changedHighPerformGroupEmployeeRequest);
+        adjustSubjectService.initializeIsPaybandApplied(adjustId);
+        adjustStepService.resetMain(adjustId);
         return ResponseEntity.noContent().build();
     }
 }
