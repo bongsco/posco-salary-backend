@@ -3,13 +3,8 @@ name: Deploy Web Service
 on:
   push:
     branches: [ develop ]
-    paths:
-      - 'web/**'
   pull_request:
     branches: [ develop ]
-    paths:
-      - 'web/**'
-
 jobs:
   call-reusable-deploy:
     uses: ./.github/workflows/deploy-common.yml

@@ -3,12 +3,8 @@ name: Deploy Mobile Service
 on:
   push:
     branches: [ develop ]
-    paths:
-      - 'mobile/**'
   pull_request:
     branches: [ develop ]
-    paths:
-      - 'mobile/**'
 
 jobs:
   call-reusable-deploy:
