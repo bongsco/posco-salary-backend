@@ -31,12 +31,12 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
         JOIN Adjust a ON asj.adjust.id = a.id
         JOIN AdjustGrade ag ON asj.grade.id = ag.grade.id AND a.id = ag.adjust.id
         JOIN SalaryIncrementByRank s ON ag.id = s.adjustGrade.id AND asj.rank.id = s.rank.id
-        WHERE asj.employee.id = :employeeId 
+        WHERE asj.employee.empNum = :empNum 
             AND a.isSubmitted = true
         ORDER BY asj.id DESC
         LIMIT 5
     """)
-    List<ChartProjection> findFiveRecentChartData(@Param("employeeId") Long employeeId);
+    List<ChartProjection> findFiveRecentChartData(@Param("empNum") String empNum);
 
     @Query("""
         SELECT new com.bongsco.mobile.dto.response.AdjustInfoResponse(
@@ -44,24 +44,24 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
         )
         FROM AdjustSubject asj
         JOIN Adjust a ON asj.adjust.id = a.id
-        WHERE asj.employee.id = :employeeId
+        WHERE asj.employee.empNum = :empNum
             AND a.isSubmitted = true
         ORDER BY asj.id DESC
     """)
-    Page<AdjustInfoResponse> findAdjustInfo(@Param("employeeId") Long employeeId , Pageable pageable);
+    Page<AdjustInfoResponse> findAdjustInfo(@Param("empNum") String empNum , Pageable pageable);
 
     @Query("""
         SELECT asj
         FROM AdjustSubject asj
         WHERE asj.adjust.id < :adjustId
-            AND asj.employee.id = :employeeId
+            AND asj.employee.empNum = :empNum
             AND asj.deleted != true
             AND asj.isSubject = true
         ORDER BY asj.adjust.id DESC
         LIMIT 1
         """
     )
-    AdjustSubject findBeforeAdjSubject(@Param("adjustId") Long adjustId, @Param("employeeId") Long employeeId);
+    AdjustSubject findBeforeAdjSubject(@Param("adjustId") Long adjustId, @Param("empNum") String empNum);
 
 
     @Query("""
@@ -77,9 +77,9 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
         JOIN AdjustGrade ag ON asj.grade.id = ag.grade.id AND a.id = ag.adjust.id
         JOIN SalaryIncrementByRank s ON ag.id = s.adjustGrade.id AND asj.rank.id = s.rank.id
         JOIN Employee e ON asj.employee.id = e.id
-        WHERE e.id = :employeeId
+        WHERE e.empNum = :empNum
             AND a.id = :adjustId
             AND a.deleted = false
     """)
-    AdjustDetailProjection findAdjustDetailProjection(@Param("adjustId") Long adjustId, @Param("employeeId") Long employeeId);
+    AdjustDetailProjection findAdjustDetailProjection(@Param("adjustId") Long adjustId, @Param("empNum") String empNum);
 }
