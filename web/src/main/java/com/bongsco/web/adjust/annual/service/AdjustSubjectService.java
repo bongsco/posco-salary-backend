@@ -40,6 +40,7 @@ import com.bongsco.web.adjust.common.entity.AdjustSubject;
 import com.bongsco.web.adjust.common.entity.PaybandAppliedType;
 import com.bongsco.web.adjust.common.repository.AdjustRepository;
 import com.bongsco.web.adjust.common.repository.AdjustSubjectRepository;
+import com.bongsco.web.adjust.common.repository.reflection.EmployeeAndSalaryProjection;
 import com.bongsco.web.adjust.common.service.AdjustStepService;
 import com.bongsco.web.common.exception.CustomException;
 import com.bongsco.web.employee.entity.Employee;
@@ -245,7 +246,14 @@ public class AdjustSubjectService {
             //기준연봉= 전년도 기준연봉+(직무기본연봉*평차등연봉인상률)
 
             //전년도 기준연봉 불러옴
+            AdjustSubject beforeAdjustSubject = adjustSubjectRepository.findBeforeAdjSubject(adjustId,
+                adjustSubjectDto.getEmpId());
+
             Double beforeSalary = adjustSubjectDto.getStdSalary();
+
+            if (beforeAdjustSubject != null) {
+                beforeSalary = beforeAdjustSubject.getFinalStdSalary();
+            }
 
             //직무 기본 연봉 불러옴
             Double gradeBaseSalary = adjustSubjectDto.getBaseSalary();
@@ -357,7 +365,17 @@ public class AdjustSubjectService {
                 })
                 .orElse("미적용");
             Double bonusMultiplier = Optional.ofNullable(dto.getBonusMultiplier()).orElse(0.0);
-            Double finalStdSalaryIncrementRate = ((Optional.of(dto.getFinalStdSalary()).orElse(0.0) - dto.getBeforeStdSalary()) / dto.getBeforeStdSalary()) * 100;
+
+
+            AdjustSubject beforeAdjustSubject = adjustSubjectRepository.findBeforeAdjSubject(adjustId,
+                dto.getEmpId());
+            Double beforeSalary = dto.getBeforeStdSalary();
+            Double beforeHpoBonus = dto.getBeforeHpoBonus();
+            if (beforeAdjustSubject != null) {
+                beforeSalary = beforeAdjustSubject.getFinalStdSalary();
+                beforeHpoBonus = beforeAdjustSubject.getHpoBonus();
+            }
+            Double finalStdSalaryIncrementRate=((Optional.ofNullable(dto.getFinalStdSalary()).orElse(0.0) - beforeSalary) / beforeSalary) * 100;
 
             Double salaryIncrementRate = Optional.ofNullable(dto.getSalaryIncrementRate()).orElse(0.0);
             if (dto.getIsInHpo() != null && dto.getIsInHpo()) {
@@ -377,9 +395,9 @@ public class AdjustSubjectService {
                 .bonusMultiplier(bonusMultiplier)
                 .stdSalaryIncrementRate(finalStdSalaryIncrementRate)
                 .payband(paybandResult)
-                .salaryBefore(dto.getBeforeStdSalary())
+                .salaryBefore(beforeSalary)
                 .stdSalary(dto.getFinalStdSalary())
-                .totalSalaryBefore(dto.getBeforeStdSalary()+ dto.getBeforeHpoBonus())
+                .totalSalaryBefore(beforeSalary+beforeHpoBonus)
                 .totalSalary(
                     Optional.ofNullable(dto.getFinalStdSalary()).orElse(0.0) + Optional.ofNullable(dto.getHpoBonus())
                         .orElse(0.0))
@@ -392,16 +410,19 @@ public class AdjustSubjectService {
 
     @Transactional
     public void changeIncrementRateAndSalaryInfo(Long adjustId) {
-        List<Object[]> employeeAndDtos = adjustSubjectRepository.findAdjustSubjectIncrementDtoByAdjustId(
+        List<EmployeeAndSalaryProjection> projections = adjustSubjectRepository.findAdjustSubjectIncrementDtoByAdjustId(
             adjustId);
 
-        List<Employee> updatedEmployees = employeeAndDtos.stream().map(employeeAndDto -> {
-            Employee employee = (Employee)employeeAndDto[0];
-            Double finalStdSalary = Optional.ofNullable((Double)employeeAndDto[1]).orElse(0.0);
-            Double hpoBonus = Optional.ofNullable((Double)employeeAndDto[2]).orElse(0.0);
-            Double beforeFinalStdSalary = employee.getStdSalary();
+        List<Employee> updatedEmployees = projections.stream().map(projection -> {
+            Double finalStdSalary = Optional.ofNullable(projection.getFinalStdSalary()).orElse(0.0);
+            Double beforeFinalStdSalary = projection.getEmployee().getStdSalary();
+            AdjustSubject beforeAdjustSubject = adjustSubjectRepository.findBeforeAdjSubject(adjustId,
+                projection.getEmployee().getId());
+            if (beforeAdjustSubject != null){
+                beforeFinalStdSalary = beforeAdjustSubject.getFinalStdSalary();
+            }
             Double finalStdSalaryIncrementRate = ((finalStdSalary - beforeFinalStdSalary) / beforeFinalStdSalary) * 100;
-            return employee.toBuilder().stdSalaryIncrementRate(finalStdSalaryIncrementRate).stdSalary(finalStdSalary).hpoBonus(hpoBonus).build();
+            return projection.getEmployee().toBuilder().stdSalaryIncrementRate(finalStdSalaryIncrementRate).build();
         }).filter(Objects::nonNull).toList();
         employeeRepository.saveAll(updatedEmployees);
 

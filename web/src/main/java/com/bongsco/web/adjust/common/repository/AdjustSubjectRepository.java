@@ -20,6 +20,7 @@ import com.bongsco.web.adjust.annual.dto.response.HpoEmployee;
 import com.bongsco.web.adjust.annual.repository.reflection.MainResultProjection;
 import com.bongsco.web.adjust.common.dto.AdjustSubjectSalaryDto;
 import com.bongsco.web.adjust.common.entity.AdjustSubject;
+import com.bongsco.web.adjust.common.repository.reflection.EmployeeAndSalaryProjection;
 
 @Repository
 public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Long> {
@@ -204,12 +205,25 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
     List<Object[]> findDtoByAdjustId(@Param("adjustId") Long adjustId);
 
     @Query("""
-            SELECT asj.employee, asj.finalStdSalary, asj.hpoBonus
+            SELECT asj.employee as employee, asj.finalStdSalary as finalStdSalary
             FROM AdjustSubject asj
             WHERE asj.adjust.id = :adjustId
                 AND asj.isSubject = true
         """)
-    List<Object[]> findAdjustSubjectIncrementDtoByAdjustId(@Param("adjustId") Long adjustId);
+    List<EmployeeAndSalaryProjection> findAdjustSubjectIncrementDtoByAdjustId(@Param("adjustId") Long adjustId);
+
+    @Query("""
+        SELECT asj
+        FROM AdjustSubject asj
+        WHERE asj.adjust.id < :adjustId
+            AND asj.employee.id = :employeeId
+            AND asj.deleted != true
+            AND asj.isSubject = true
+        ORDER BY asj.adjust.id DESC
+        LIMIT 1
+        """
+    )
+    AdjustSubject findBeforeAdjSubject(Long adjustId, Long employeeId);
 
     List<AdjustSubject> findAllByAdjustIdAndEmployeeIdIn(Long adjustId, List<Long> employeeIds);
 
