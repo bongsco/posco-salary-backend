@@ -10,13 +10,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.bongsco.mobile.domain.AdjustType;
 import com.bongsco.mobile.dto.response.AdjustDetailResponse;
-import com.bongsco.mobile.dto.response.AdjustInfoResponse;
 import com.bongsco.mobile.dto.response.AdjustListResponse;
 import com.bongsco.mobile.dto.response.ChartResponse;
 import com.bongsco.mobile.service.MobileService;
-import com.bongsco.mobile.util.TokenUtil;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,10 +25,8 @@ public class MobileController {
 
     @GetMapping("/chartData")
     public ResponseEntity<List<ChartResponse>> getEmployeeChartData(
-        @PathVariable Long employeeId,
-        @RequestHeader("idToken") String authorizationHeader) {
-        String token = authorizationHeader.replace("Bearer ", "");
-        String empNum = TokenUtil.extractEmailFromEncodedJsonToken(token).replace("@bongsco.com", "");
+        @RequestHeader("email") String email) {
+        String empNum = email.replace("@bongsco.com", "");
         return ResponseEntity.ok(mobileService.getChartData(empNum));
     }
 
@@ -39,17 +34,15 @@ public class MobileController {
     public ResponseEntity<AdjustListResponse> getAdjustList(
         @RequestParam Integer pageNum,
         @RequestParam Integer pageSize,
-        @RequestHeader("idToken") String authorizationHeader) {
-        String token = authorizationHeader.replace("Bearer ", "");
-        String empNum = TokenUtil.extractEmailFromEncodedJsonToken(token).replace("@bongsco.com", "");
+        @RequestHeader("email") String email) {
+        String empNum = email.replace("@bongsco.com", "");
         return ResponseEntity.ok(mobileService.getAdjustList(empNum, pageNum, pageSize));
     }
 
     @GetMapping("/details/{adjustId}")
-    public ResponseEntity<AdjustDetailResponse> getAdjustDetail(@PathVariable Long adjustId, @RequestHeader("idToken") String authorizationHeader) {
-        String token = authorizationHeader.replace("Bearer ", "");
-        String empNum = TokenUtil.extractEmailFromEncodedJsonToken(token).replace("@bongsco.com", "");
+    public ResponseEntity<AdjustDetailResponse> getAdjustDetail(@PathVariable Long adjustId,
+        @RequestHeader("email") String email) {
+        String empNum = email.replace("@bongsco.com", "");
         return ResponseEntity.ok(mobileService.getAdjustDetailList(adjustId, empNum));
     }
-
 }

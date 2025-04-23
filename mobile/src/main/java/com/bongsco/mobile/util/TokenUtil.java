@@ -1,4 +1,5 @@
 package com.bongsco.mobile.util;
+
 import java.util.Base64;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -17,7 +18,6 @@ public class TokenUtil {
 
             // 3. email 추출
             return jsonNode.get("email").asText();
-
         } catch (Exception e) {
             throw new RuntimeException("Failed to extract email from encoded JSON", e);
         }

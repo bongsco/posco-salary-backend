@@ -22,21 +22,23 @@ public class ChartResponse {
     private Double bonusPrice;
     private Double salaryIncrementRate;
     private Double bonusMultiplier;
-
+    private Double salaryIncrementByRank;
+    private Double hpoSalaryIncrement;
 
     public static ChartResponse of(ChartProjection projection) {
         Double salaryIncrementRate = Optional.ofNullable(projection.getSalaryIncrementRate()).orElse(0.0);
         Double bonusMultiplier = Optional.ofNullable(projection.getBonusMultiplier()).orElse(0.0);
 
-        if (projection.getInHpo()!=null && projection.getInHpo()) {
-            salaryIncrementRate = ((1 +salaryIncrementRate / 100) * (1 + Optional.ofNullable(projection.getHpoSalaryIncrementByRank()).orElse(0.0) / 100) - 1) * 100;
-            bonusMultiplier += Optional.ofNullable(projection.getHpoBonusMultiplier()).orElse(0.0);
+        if (projection.getInHpo() != null && projection.getInHpo()) {
+            salaryIncrementRate = ((1 + salaryIncrementRate / 100) * (1
+                + Optional.ofNullable(projection.getHpoSalaryIncrementByRank()).orElse(0.0) / 100) - 1) * 100;
         }
         return new ChartResponse(
             projection.getYear(),
             projection.getOrderNumber(),
             Optional.ofNullable(projection.getStdSalary()).map(Double::longValue).orElse(null),
             Optional.ofNullable(projection.getHpoBonus()).map(Double::longValue).orElse(null),
-            projection.getBonusPrice(), salaryIncrementRate, bonusMultiplier);
+            projection.getBonusPrice(), salaryIncrementRate, bonusMultiplier,
+            projection.getSalaryIncrementRate(), projection.getHpoSalaryIncrementByRank());
     }
 }

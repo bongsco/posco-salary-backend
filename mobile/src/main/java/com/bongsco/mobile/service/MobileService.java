@@ -31,12 +31,14 @@ public class MobileService {
     public AdjustListResponse getAdjustList(String empNum, Integer pageNum, Integer pageSize) {
         Pageable pageable = PageRequest.of(pageNum - 1, pageSize);
         Page<AdjustInfoResponse> listAndPageInfo = adjustSubjectRepository.findAdjustInfo(empNum, pageable);
-        return AdjustListResponse.from(listAndPageInfo.getContent(), listAndPageInfo.getTotalPages(), listAndPageInfo.getNumber()+1);
+        return AdjustListResponse.from(listAndPageInfo.getContent(), listAndPageInfo.getTotalPages(),
+            listAndPageInfo.getNumber() + 1);
     }
 
     public AdjustDetailResponse getAdjustDetailList(Long adjustId, String empNum) {
         AdjustDetailProjection projection = adjustSubjectRepository.findAdjustDetailProjection(adjustId, empNum);
-        AdjustSubject beforeAdjustSubject =adjustSubjectRepository.findBeforeAdjSubject(adjustId, empNum);
-        return AdjustDetailResponse.of(projection, beforeAdjustSubject==null? projection.getBeforeStdSalary(): beforeAdjustSubject.getFinalStdSalary());
+        AdjustSubject beforeAdjustSubject = adjustSubjectRepository.findBeforeAdjSubject(adjustId, empNum);
+        return AdjustDetailResponse.of(projection,
+            beforeAdjustSubject == null ? projection.getBeforeStdSalary() : beforeAdjustSubject.getFinalStdSalary());
     }
 }

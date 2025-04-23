@@ -10,8 +10,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.bongsco.mobile.dto.response.AdjustInfoResponse;
-import com.bongsco.mobile.dto.response.AdjustListResponse;
-import com.bongsco.mobile.dto.response.ChartResponse;
 import com.bongsco.mobile.entity.AdjustSubject;
 import com.bongsco.mobile.repository.reflection.AdjustDetailProjection;
 import com.bongsco.mobile.repository.reflection.ChartProjection;
@@ -20,35 +18,35 @@ import com.bongsco.mobile.repository.reflection.ChartProjection;
 public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Long> {
 
     @Query("""
-        SELECT 
-            a.year AS year, a.orderNumber AS orderNumber, 
-            asj.finalStdSalary AS stdSalary, asj.hpoBonus AS hpoBonus, 
-            ROUND((COALESCE(asj.finalStdSalary, 0.0) + COALESCE(asj.grade.baseSalary, 0.0)) / 24.0 + 12.0, 0) AS bonusPrice,
-            asj.isInHpo AS isInHpo, 
-            s.salaryIncrementRate AS  salaryIncrementRate, s.bonusMultiplier AS bonusMultiplier, 
-            a.hpoSalaryIncrementByRank AS hpoSalaryIncrementByRank, a.hpoBonusMultiplier AS hpoBonusMultiplier
-        FROM AdjustSubject asj
-        JOIN Adjust a ON asj.adjust.id = a.id
-        JOIN AdjustGrade ag ON asj.grade.id = ag.grade.id AND a.id = ag.adjust.id
-        JOIN SalaryIncrementByRank s ON ag.id = s.adjustGrade.id AND asj.rank.id = s.rank.id
-        WHERE asj.employee.empNum = :empNum 
-            AND a.isSubmitted = true
-        ORDER BY asj.id DESC
-        LIMIT 5
-    """)
+            SELECT
+                a.year AS year, a.orderNumber AS orderNumber, 
+                asj.finalStdSalary AS stdSalary, asj.hpoBonus AS hpoBonus, 
+                ROUND((COALESCE(asj.finalStdSalary, 0.0) + COALESCE(asj.grade.baseSalary, 0.0)) / 24.0 + 12.0, 0) AS bonusPrice,
+                asj.isInHpo AS isInHpo, 
+                s.salaryIncrementRate AS  salaryIncrementRate, s.bonusMultiplier AS bonusMultiplier, 
+                a.hpoSalaryIncrementByRank AS hpoSalaryIncrementByRank, a.hpoBonusMultiplier AS hpoBonusMultiplier
+            FROM AdjustSubject asj
+            JOIN Adjust a ON asj.adjust.id = a.id
+            JOIN AdjustGrade ag ON asj.grade.id = ag.grade.id AND a.id = ag.adjust.id
+            JOIN SalaryIncrementByRank s ON ag.id = s.adjustGrade.id AND asj.rank.id = s.rank.id
+            WHERE asj.employee.empNum = :empNum 
+                AND a.isSubmitted = true
+            ORDER BY asj.id DESC
+            LIMIT 5
+        """)
     List<ChartProjection> findFiveRecentChartData(@Param("empNum") String empNum);
 
     @Query("""
-        SELECT new com.bongsco.mobile.dto.response.AdjustInfoResponse(
-            a.id, a.year, a.orderNumber, a.adjustType
-        )
-        FROM AdjustSubject asj
-        JOIN Adjust a ON asj.adjust.id = a.id
-        WHERE asj.employee.empNum = :empNum
-            AND a.isSubmitted = true
-        ORDER BY asj.id DESC
-    """)
-    Page<AdjustInfoResponse> findAdjustInfo(@Param("empNum") String empNum , Pageable pageable);
+            SELECT new com.bongsco.mobile.dto.response.AdjustInfoResponse(
+                a.id, a.year, a.orderNumber, a.adjustType
+            )
+            FROM AdjustSubject asj
+            JOIN Adjust a ON asj.adjust.id = a.id
+            WHERE asj.employee.empNum = :empNum
+                AND a.isSubmitted = true
+            ORDER BY asj.id DESC
+        """)
+    Page<AdjustInfoResponse> findAdjustInfo(@Param("empNum") String empNum, Pageable pageable);
 
     @Query("""
         SELECT asj
@@ -63,23 +61,22 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
     )
     AdjustSubject findBeforeAdjSubject(@Param("adjustId") Long adjustId, @Param("empNum") String empNum);
 
-
     @Query("""
-        SELECT a.year AS year, a.orderNumber AS orderNumber, a.adjustType AS adjustType,
-            a.author AS author, a.baseDate AS baseDate,a.exceptionStartDate as exceptionStartDate, a.exceptionEndDate as exceptionEndDate,
-            e.name AS name, asj.grade.name AS gradeName, e.department.name AS departmentName, e.positionName AS positionName,
-            e.hireDate AS hireDate, e.employmentType.name AS employmentTypeName, e.rank.name AS rankName,
-            asj.isInHpo AS isInHpo, s.salaryIncrementRate AS salaryIncrementRate, s.bonusMultiplier AS bonusMultiplier,
-            a.hpoSalaryIncrementByRank as hpoSalaryIncrementByRank, a.hpoBonusMultiplier AS hpoBonusMultiplier,
-            asj.finalStdSalary as stdSalary, asj.hpoBonus AS hpoBonus, asj.isPaybandApplied as isPaybandApplied, e.stdSalary as beforeStdSalary
-        FROM AdjustSubject asj
-        JOIN Adjust a ON asj.adjust.id = a.id
-        JOIN AdjustGrade ag ON asj.grade.id = ag.grade.id AND a.id = ag.adjust.id
-        JOIN SalaryIncrementByRank s ON ag.id = s.adjustGrade.id AND asj.rank.id = s.rank.id
-        JOIN Employee e ON asj.employee.id = e.id
-        WHERE e.empNum = :empNum
-            AND a.id = :adjustId
-            AND a.deleted = false
-    """)
+            SELECT a.year AS year, a.orderNumber AS orderNumber, a.adjustType AS adjustType,
+                a.author AS author, a.baseDate AS baseDate,a.exceptionStartDate as exceptionStartDate, a.exceptionEndDate as exceptionEndDate,
+                e.name AS name, asj.grade.name AS gradeName, e.department.name AS departmentName, e.positionName AS positionName,
+                e.hireDate AS hireDate, e.employmentType.name AS employmentTypeName, e.rank.code AS rankCode,
+                asj.isInHpo AS isInHpo, s.salaryIncrementRate AS salaryIncrementRate, s.bonusMultiplier AS bonusMultiplier,
+                a.hpoSalaryIncrementByRank as hpoSalaryIncrementByRank, a.hpoBonusMultiplier AS hpoBonusMultiplier,
+                asj.finalStdSalary as stdSalary, asj.hpoBonus AS hpoBonus, asj.isPaybandApplied as isPaybandApplied, e.stdSalary as beforeStdSalary
+            FROM AdjustSubject asj
+            JOIN Adjust a ON asj.adjust.id = a.id
+            JOIN AdjustGrade ag ON asj.grade.id = ag.grade.id AND a.id = ag.adjust.id
+            JOIN SalaryIncrementByRank s ON ag.id = s.adjustGrade.id AND asj.rank.id = s.rank.id
+            JOIN Employee e ON asj.employee.id = e.id
+            WHERE e.empNum = :empNum
+                AND a.id = :adjustId
+                AND a.deleted = false
+        """)
     AdjustDetailProjection findAdjustDetailProjection(@Param("adjustId") Long adjustId, @Param("empNum") String empNum);
 }
