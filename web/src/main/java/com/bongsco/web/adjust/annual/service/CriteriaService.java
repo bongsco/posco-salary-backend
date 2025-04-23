@@ -114,6 +114,8 @@ public class CriteriaService {
             .exceptionEndDate(request.getExceptionEndDate())
             .build();
 
+        adjust = adjustRepository.save(adjust);
+
         // ✅ 등급 체크 상태 반영
         Map<Long, AdjustGrade> gradeMap = adjustGradeRepository.findByAdjustId(adjustId).stream()
             .collect(Collectors.toMap(g -> g.getGrade().getId(), Function.identity()));
