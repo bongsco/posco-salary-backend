@@ -17,7 +17,7 @@ public class WebConfig implements WebMvcConfigurer {
                 "https://dzbukx9wf12yc.cloudfront.net",
                 "https://dupsbg9oaweks.cloudfront.net"
             )
-            .allowedMethods("GET") // 허용할 HTTP 메서드
+            .allowedMethods("GET", "OPTIONS") // 허용할 HTTP 메서드
             .allowedHeaders("*") // 모든 헤더 허용
             .allowCredentials(true) // 쿠키 등 인증 정보 허용
             .maxAge(3600); // preflight 캐시 시간 (초)
