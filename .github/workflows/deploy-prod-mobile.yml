@@ -1,0 +1,18 @@
+name: Deploy Mobile Service Prod
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  call-reusable-deploy:
+    uses: ./.github/workflows/deploy-prod-common.yml
+    with:
+      app_path: 'mobile'
+      container_name: 'mobile-container'
+      ecr_repository: 'bongsco/salary-management-backend'
+      ecs_service: 'bongsco-mobile-service'
+      ecs_cluster: 'bongsco-salary-management-ecs-cluster'
+    secrets: inherit

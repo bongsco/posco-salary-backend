@@ -36,8 +36,8 @@ out/
 ### VS Code ###
 .vscode/
 
-# Ignore application.yml
-/**/src/main/resources/application-*.yml
+# Ignore application.yml for local dev
+/**/src/main/resources/application-local.yml
 
 #mac
 .DS_Store
