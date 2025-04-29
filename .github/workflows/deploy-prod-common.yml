@@ -18,9 +18,6 @@ on:
       ecs_cluster:
         required: true
         type: string
-      codebuild_project_name:
-        required: true
-        type: string
     secrets:
       AWS_ACCESS_KEY_ID:
         required: true

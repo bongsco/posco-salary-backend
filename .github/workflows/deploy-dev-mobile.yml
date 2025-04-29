@@ -15,5 +15,4 @@ jobs:
       ecr_repository: 'bongsco/salary-management-backend'
       ecs_service: 'bongsco-mobile-service'
       ecs_cluster: 'bongsco-salary-management-ecs-cluster'
-      codebuild_project_name: 'bongsco-salary-management-dev-cb'
     secrets: inherit
