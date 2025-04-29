@@ -26,10 +26,6 @@ on:
         required: true
       AWS_SECRET_ACCESS_KEY:
         required: true
-      BONGSCO_WEB_DEV_YML:
-        required: true
-      BONGSCO_MOBILE_DEV_YML:
-        required: true
       BONGSCO_DEV_WEB_TASK_JSON:
         required: true
       BONGSCO_DEV_MOBILE_TASK_JSON:
