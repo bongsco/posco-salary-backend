@@ -3,8 +3,4 @@ spring:
     name: posco-salary-backend-web
 
   profiles:
-    include:
-      - dev
-      - prod
-      - local
     active: ${APPLICATION_PROFILE:dev}
