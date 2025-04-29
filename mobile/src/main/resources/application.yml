@@ -3,8 +3,4 @@ spring:
     name: posco-salary-backend-mobile
 
   profiles:
-    active: dev
-
-
-
-
+    active: ${APPLICATION_PROFILE:dev}

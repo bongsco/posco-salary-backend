@@ -1,4 +1,4 @@
-name: Deploy to Amazon ECS (Common)
+name: Deploy to Amazon ECS Dev (Common)
 
 on:
   workflow_call:
@@ -26,18 +26,14 @@ on:
         required: true
       AWS_SECRET_ACCESS_KEY:
         required: true
-      BONGSCO_WEB_DEV_YML:
+      BONGSCO_DEV_WEB_TASK_JSON:
         required: true
-      BONGSCO_MOBILE_DEV_YML:
-        required: true
-      BONGSCO_WEB_TASK_JSON:
-        required: true
-      BONGSCO_MOBILE_TASK_JSON:
+      BONGSCO_DEV_MOBILE_TASK_JSON:
         required: true
 
 jobs:
   deploy:
-    name: Deploy
+    name: Deploy Dev
     runs-on: bongsco
 
     env:
@@ -63,25 +59,8 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Copy application-dev.yml based on container name
-        env:
-          CONTAINER_NAME: ${{ inputs.container_name }}
-          WEB_DEV_YML: ${{ secrets.BONGSCO_WEB_DEV_YML }}
-          MOBILE_DEV_YML: ${{ secrets.BONGSCO_MOBILE_DEV_YML }}
-          CREATE_SECRET_DIR: ${{ inputs.app_path }}/src/main/resources
-          CREATE_SECRET_DIR_FILE_NAME: application-dev.yml
-        run: |
-          if [[ "$CONTAINER_NAME" == "web-container" ]]; then
-          echo "$WEB_DEV_YML" | base64 --decode > $CREATE_SECRET_DIR/$CREATE_SECRET_DIR_FILE_NAME
-          elif [[ "$CONTAINER_NAME" == "mobile-container" ]]; then
-          echo "$MOBILE_DEV_YML" | base64 --decode > $CREATE_SECRET_DIR/$CREATE_SECRET_DIR_FILE_NAME
-          else
-          echo "❌ Unknown container name: $CONTAINER_NAME"
-          exit 1
-          fi
-
       - name: Build with Gradle
-        run: ./gradlew :${{ inputs.app_path }}:build
+        run: ./gradlew :${{ inputs.app_path }}:build -x test
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -96,11 +75,10 @@ jobs:
           docker build -t $ECR_REGISTRY/${{ inputs.ecr_repository }}:$IMAGE_TAG ${{ inputs.app_path }}
           docker push $ECR_REGISTRY/${{ inputs.ecr_repository }}:$IMAGE_TAG
           echo "image=$ECR_REGISTRY/${{ inputs.ecr_repository }}:$IMAGE_TAG" >> $GITHUB_OUTPUT
-
       - name: Decode and save ECS task definition JSON
         env:
-          WEB_TASK_JSON: ${{ secrets.BONGSCO_WEB_TASK_JSON }}
-          MOBILE_TASK_JSON: ${{ secrets.BONGSCO_MOBILE_TASK_JSON }}
+          WEB_TASK_JSON: ${{ secrets.BONGSCO_DEV_WEB_TASK_JSON }}
+          MOBILE_TASK_JSON: ${{ secrets.BONGSCO_DEV_MOBILE_TASK_JSON }}
           CONTAINER_NAME: ${{ inputs.container_name }}
         run: |
           if [[ "$CONTAINER_NAME" == "web-container" ]]; then

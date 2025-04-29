@@ -1,4 +1,4 @@
-name: Deploy Mobile Service
+name: Deploy Web Service Dev
 
 on:
   push:
@@ -8,12 +8,12 @@ on:
 
 jobs:
   call-reusable-deploy:
-    uses: ./.github/workflows/deploy-common.yml
+    uses: ./.github/workflows/deploy-dev-common.yml
     with:
-      app_path: 'mobile'
-      container_name: 'mobile-container'
+      app_path: 'web'
+      container_name: 'web-container'
       ecr_repository: 'bongsco/salary-management-backend'
-      ecs_service: 'bongsco-mobile-service'
+      ecs_service: 'bongsco-web-service'
       ecs_cluster: 'bongsco-salary-management-ecs-cluster'
       codebuild_project_name: 'bongsco-salary-management-dev-cb'
     secrets: inherit
