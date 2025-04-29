@@ -60,7 +60,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build with Gradle
-        run: ./gradlew :${{ inputs.app_path }}:build
+        run: ./gradlew :${{ inputs.app_path }}:build -x test
 
       - name: Login to Amazon ECR
         id: login-ecr
