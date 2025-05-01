@@ -41,7 +41,6 @@ public class MainAdjustController {
     public ResponseEntity<PaybandSubjectResponse> getPaybandSubjects(
         @PathVariable("adjustId") Long adjustId
     ) {
-        adjustSubjectService.calculateSalaryAndBonus(adjustId);
         return ResponseEntity.status(HttpStatus.OK)
             .body(adjustSubjectService.getBothUpperLowerSubjects(adjustId));
     }
@@ -83,6 +82,15 @@ public class MainAdjustController {
     @PatchMapping("/interface")
     public ResponseEntity<Void> applyToInterface(@PathVariable("adjustId") Long adjustId) {
         adjustSubjectService.changeIncrementRateAndSalaryInfo(adjustId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "연봉조정api", description = "연봉을 조정해줌")
+    @PatchMapping("/calculate")
+    public ResponseEntity<Void> calculate(
+        @PathVariable("adjustId") Long adjustId
+    ) {
+        adjustSubjectService.calculateSalaryAndBonus(adjustId);
         return ResponseEntity.noContent().build();
     }
 }
