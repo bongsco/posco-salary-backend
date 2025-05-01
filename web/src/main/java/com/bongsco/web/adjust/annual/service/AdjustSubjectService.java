@@ -425,10 +425,9 @@ public class AdjustSubjectService {
             return projection.getEmployee().toBuilder().stdSalaryIncrementRate(finalStdSalaryIncrementRate).build();
         }).filter(Objects::nonNull).toList();
         employeeRepository.saveAll(updatedEmployees);
-
         adjustRepository.findById(adjustId).ifPresent(adjust -> {
-            adjust.toBuilder().isSubmitted(true).build();
-            adjustRepository.save(adjust);
+            Adjust updatedAdjust = adjust.toBuilder().isSubmitted(true).build();
+            adjustRepository.save(updatedAdjust);
         });
     }
 
