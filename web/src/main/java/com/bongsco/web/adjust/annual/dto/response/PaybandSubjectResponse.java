@@ -32,11 +32,11 @@ public class PaybandSubjectResponse {
         private String positionName;
         private String rankCode;
         private Double stdSalary;
-        private Double limitPrice;
+        private Integer limitPrice;
         private PaybandAppliedType isPaybandApplied;
 
         public static MainAdjustPaybandSubjectsResponse from(AdjustSubjectSalaryDto dto) {
-            double limitPrice = dto.getBaseSalary() * (dto.getBoundPercent() / 100.0);
+            int limitPrice = (int)Math.round(dto.getBaseSalary() * (dto.getBoundPercent() / 100.0));
 
             return new MainAdjustPaybandSubjectsResponse(
                 dto.getAdjustSubjectId(),

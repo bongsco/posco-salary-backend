@@ -75,7 +75,7 @@ public class MainAdjustController {
 
     @Operation(summary = "차트 데이터", description = "결과페이지 차트 데이터")
     @GetMapping("/chart")
-    public ResponseEntity<ResultChartResponse> showChart(@PathVariable("adjustId") Long adjustId){
+    public ResponseEntity<ResultChartResponse> showChart(@PathVariable("adjustId") Long adjustId) {
         return ResponseEntity.ok(adjustSubjectService.getChartData(adjustId));
     }
 

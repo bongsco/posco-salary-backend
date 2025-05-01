@@ -188,8 +188,11 @@ public class AdjustSubjectService {
             AdjustSubject adjustSubject = adjustSubjectRepository.findById(request.getAdjustSubjectId())
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
-            Double stdSalary = Optional.ofNullable(adjustSubject.getStdSalary()).orElse(0.0);
-            Double finalStdSalary = stdSalary; // 기본값은 그대로
+            int stdSalary = Optional.ofNullable(adjustSubject.getStdSalary())
+                .map(val -> (int)Math.round(val))
+                .orElse(0);
+
+            int finalStdSalary = stdSalary;
 
             Long adjustId = adjustSubject.getAdjust().getId();
             Long gradeId = adjustSubject.getGrade().getId();
@@ -199,19 +202,24 @@ public class AdjustSubjectService {
                 paybandCriteriaRepository.findLimitInfo(adjustId, gradeId).orElse(null);
 
             if (limitInfo != null) {
-                Double upperLimit = Optional.ofNullable(limitInfo.getUpperLimit()).orElse(Double.MAX_VALUE);
-                Double lowerLimit = Optional.ofNullable(limitInfo.getLowerLimit()).orElse(Double.MIN_VALUE);
+                int upperLimit = Optional.ofNullable(limitInfo.getUpperLimit())
+                    .map(val -> (int)Math.round(val))
+                    .orElse(Integer.MAX_VALUE);
+
+                int lowerLimit = Optional.ofNullable(limitInfo.getLowerLimit())
+                    .map(val -> (int)Math.round(val))
+                    .orElse(0);
 
                 // Enum 타입에 따라 처리
-                if (request.getIsPaybandApplied() == PaybandAppliedType.UPPER && stdSalary > upperLimit) {
+                if (request.getIsPaybandApplied() == PaybandAppliedType.UPPER) {
                     finalStdSalary = upperLimit;
-                } else if (request.getIsPaybandApplied() == PaybandAppliedType.LOWER && stdSalary < lowerLimit) {
+                } else if (request.getIsPaybandApplied() == PaybandAppliedType.LOWER) {
                     finalStdSalary = lowerLimit;
                 }
             }
 
             AdjustSubject updated = adjustSubject.toBuilder()
-                .finalStdSalary(finalStdSalary)
+                .finalStdSalary((double)finalStdSalary)
                 .isPaybandApplied(request.getIsPaybandApplied())
                 .build();
             updatedSubjects.add(updated);
@@ -366,7 +374,6 @@ public class AdjustSubjectService {
                 .orElse("미적용");
             Double bonusMultiplier = Optional.ofNullable(dto.getBonusMultiplier()).orElse(0.0);
 
-
             AdjustSubject beforeAdjustSubject = adjustSubjectRepository.findBeforeAdjSubject(adjustId,
                 dto.getEmpId());
             Double beforeSalary = dto.getBeforeStdSalary();
@@ -375,7 +382,8 @@ public class AdjustSubjectService {
                 beforeSalary = beforeAdjustSubject.getFinalStdSalary();
                 beforeHpoBonus = beforeAdjustSubject.getHpoBonus();
             }
-            Double finalStdSalaryIncrementRate=((Optional.ofNullable(dto.getFinalStdSalary()).orElse(0.0) - beforeSalary) / beforeSalary) * 100;
+            Double finalStdSalaryIncrementRate =
+                ((Optional.ofNullable(dto.getFinalStdSalary()).orElse(0.0) - beforeSalary) / beforeSalary) * 100;
 
             Double salaryIncrementRate = Optional.ofNullable(dto.getSalaryIncrementRate()).orElse(0.0);
             if (dto.getIsInHpo() != null && dto.getIsInHpo()) {
@@ -397,7 +405,7 @@ public class AdjustSubjectService {
                 .payband(paybandResult)
                 .salaryBefore(beforeSalary)
                 .stdSalary(dto.getFinalStdSalary())
-                .totalSalaryBefore(beforeSalary+beforeHpoBonus)
+                .totalSalaryBefore(beforeSalary + beforeHpoBonus)
                 .totalSalary(
                     Optional.ofNullable(dto.getFinalStdSalary()).orElse(0.0) + Optional.ofNullable(dto.getHpoBonus())
                         .orElse(0.0))
@@ -418,7 +426,7 @@ public class AdjustSubjectService {
             Double beforeFinalStdSalary = projection.getEmployee().getStdSalary();
             AdjustSubject beforeAdjustSubject = adjustSubjectRepository.findBeforeAdjSubject(adjustId,
                 projection.getEmployee().getId());
-            if (beforeAdjustSubject != null){
+            if (beforeAdjustSubject != null) {
                 beforeFinalStdSalary = beforeAdjustSubject.getFinalStdSalary();
             }
             Double finalStdSalaryIncrementRate = ((finalStdSalary - beforeFinalStdSalary) / beforeFinalStdSalary) * 100;
@@ -433,16 +441,18 @@ public class AdjustSubjectService {
     }
 
     public ResultChartResponse getChartData(Long adjustId) {
-        Adjust currentAdjust = adjustRepository.findById(adjustId).orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
-        Adjust beforeAdjust = adjustRepository.findById(adjustId-1).orElse(null);
+        Adjust currentAdjust = adjustRepository.findById(adjustId)
+            .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
+        Adjust beforeAdjust = adjustRepository.findById(adjustId - 1).orElse(null);
 
         List<SalaryPerGradeDto> currentDto = adjustSubjectRepository.findSalaryPerDto(adjustId);
-        String adjustName =currentAdjust.getYear().toString()+"년 "+currentAdjust.getOrderNumber().toString()+"차";
+        String adjustName = currentAdjust.getYear().toString() + "년 " + currentAdjust.getOrderNumber().toString() + "차";
         List<SalaryPerGradeDto> berforeDto = new ArrayList<>();
-        String beforeAdjustName= "이전 차수가 존재하지 않습니다.";
+        String beforeAdjustName = "이전 차수가 존재하지 않습니다.";
         if (beforeAdjust != null) {
             berforeDto = adjustSubjectRepository.findSalaryPerDto(beforeAdjust.getId());
-            beforeAdjustName = beforeAdjust.getYear().toString()+"년 "+beforeAdjust.getOrderNumber().toString()+"차";
+            beforeAdjustName =
+                beforeAdjust.getYear().toString() + "년 " + beforeAdjust.getOrderNumber().toString() + "차";
         }
 
         List<ResultChartResponse.SalaryPerGrade> salaryPerGrades = new ArrayList<>();
@@ -463,7 +473,6 @@ public class AdjustSubjectService {
         });
         salaryPerGrades.add(ResultChartResponse.SalaryPerGrade.from(adjustName, currentSalaryPerGrade));
 
-
         List<ResultChartResponse.AnnualSalary> annualSalaries = new ArrayList<>();
 
         Double beforeSumStdSalary = berforeDto.stream()
@@ -476,7 +485,8 @@ public class AdjustSubjectService {
             .filter(Objects::nonNull)                       // null 제외
             .mapToDouble(Double::doubleValue)
             .sum();
-        ResultChartResponse.AnnualSalary beforeAnnualSalary = ResultChartResponse.AnnualSalary.from(beforeAdjustName, beforeSumStdSalary, beforeSumHpoBonus, beforeSumStdSalary+beforeSumHpoBonus);
+        ResultChartResponse.AnnualSalary beforeAnnualSalary = ResultChartResponse.AnnualSalary.from(beforeAdjustName,
+            beforeSumStdSalary, beforeSumHpoBonus, beforeSumStdSalary + beforeSumHpoBonus);
         annualSalaries.add(beforeAnnualSalary);
 
         Double sumStdSalary = currentDto.stream()
@@ -489,7 +499,8 @@ public class AdjustSubjectService {
             .filter(Objects::nonNull)                       // null 제외
             .mapToDouble(Double::doubleValue)
             .sum();
-        ResultChartResponse.AnnualSalary currentAnnualSalary = ResultChartResponse.AnnualSalary.from(adjustName,  sumStdSalary,  sumHpoBonus, sumStdSalary+sumHpoBonus);
+        ResultChartResponse.AnnualSalary currentAnnualSalary = ResultChartResponse.AnnualSalary.from(adjustName,
+            sumStdSalary, sumHpoBonus, sumStdSalary + sumHpoBonus);
         annualSalaries.add(currentAnnualSalary);
 
         List<HpoPerDepartmentDto> HpoPerDepartment = adjustSubjectRepository.findHpoPerDepartmentDto(adjustId);
