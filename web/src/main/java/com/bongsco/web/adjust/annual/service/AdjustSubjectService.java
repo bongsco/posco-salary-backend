@@ -264,12 +264,13 @@ public class AdjustSubjectService {
             //고성과 있으면
             //평차등연봉인상률 = (직급, 평가별 평차연) * (1 + 고성과평차연)
             if (subject.getIsInHpo() != null && subject.getIsInHpo()) {
-                evalDiffIncrement = evalDiffIncrement * (1 + hpoSalaryIncrementByRank) - 1;
+                evalDiffIncrement = evalDiffIncrement * (1 + hpoSalaryIncrementByRank);
             }
+            evalDiffIncrement  = evalDiffIncrement - 1;
 
             Double newStdSalary =
                 beforeSalary
-                    + gradeBaseSalary * evalDiffIncrement/100;
+                    + gradeBaseSalary * evalDiffIncrement;
 
             newStdSalary = Math.floor(newStdSalary / 1000) * 1000;
 
