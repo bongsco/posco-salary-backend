@@ -277,7 +277,7 @@ public class AdjustSubjectService {
             // 평가차등 경영 성과금 = 평차금기준임금(업적연봉기본지금) * 평가차등경영성과금지급률
             // 평차금기준임금 = ((기준연봉월할액 + 직무기본연봉) / 2 ) + 12만원
 
-            Double rankBaseStandardSalary = (newStdSalary + gradeBaseSalary) / 12 + 12;
+            Double rankBaseStandardSalary = (newStdSalary + gradeBaseSalary) / 24 + 12;
 
             //평가차등경영성과금지급률 가져옴
             Double bonusMultiplier =
