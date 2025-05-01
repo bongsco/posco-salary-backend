@@ -269,7 +269,7 @@ public class AdjustSubjectService {
 
             Double newStdSalary =
                 beforeSalary
-                    + gradeBaseSalary * evalDiffIncrement;
+                    + gradeBaseSalary * evalDiffIncrement/100;
 
             newStdSalary = Math.floor(newStdSalary / 1000) * 1000;
 
