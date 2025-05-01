@@ -134,6 +134,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
             JOIN salary_increment_by_rank s ON s.adjust_grade_id = ag.id AND s.rank_id = r.id
             WHERE asj.adjust_id = :adjustId
                 AND asj.is_subject = true
+                AND (asj.deleted IS NULL OR asj.deleted = false)
                 AND (COALESCE(array_length(CAST(:filterEmpNum AS text[]), 1), 0) = 0 OR e.emp_num LIKE ANY(CAST(:filterEmpNum AS text[])))
                 AND (COALESCE(array_length(CAST(:filterName AS text[]), 1), 0) = 0 OR e.name LIKE ANY(CAST(:filterName AS text[])))
                 AND (COALESCE(array_length(CAST(:filterGrade AS text[]), 1), 0) = 0 OR g.name = ANY (CAST(:filterGrade AS text[])))
@@ -151,6 +152,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
             JOIN salary_increment_by_rank s ON s.adjust_grade_id = ag.id AND s.rank_id = r.id
             WHERE asj.adjust_id = :adjustId
                 AND asj.is_subject = true
+                AND (asj.deleted IS NULL OR asj.deleted = false)
                 AND (COALESCE(array_length(CAST(:filterEmpNum AS text[]), 1), 0) = 0 OR e.emp_num LIKE ANY(CAST(:filterEmpNum AS text[])))
                 AND (COALESCE(array_length(CAST(:filterName AS text[]), 1), 0) = 0 OR e.name LIKE ANY(CAST(:filterName AS text[])))
                 AND (COALESCE(array_length(CAST(:filterGrade AS text[]), 1), 0) = 0 OR g.name = ANY (CAST(:filterGrade AS text[])))
@@ -201,6 +203,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
                   JOIN SalaryIncrementByRank s ON asj.rank.id = s.rank.id AND ag.id = s.adjustGrade.id
                   WHERE asj.adjust.id = :adjustId
                   AND asj.isSubject = true
+                  AND (asj.deleted IS NULL OR asj.deleted = false)
         """)
     List<Object[]> findDtoByAdjustId(@Param("adjustId") Long adjustId);
 
@@ -209,6 +212,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
             FROM AdjustSubject asj
             WHERE asj.adjust.id = :adjustId
                 AND asj.isSubject = true
+                AND (asj.deleted IS NULL OR asj.deleted = false)
         """)
     List<EmployeeAndSalaryProjection> findAdjustSubjectIncrementDtoByAdjustId(@Param("adjustId") Long adjustId);
 
@@ -291,6 +295,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
             WHERE a.adjust_type = 'ANNUAL'
               AND a.id = :adjustId
               AND s.is_subject = TRUE
+              AND (s.deleted IS NULL OR s.deleted = false)
             GROUP BY g.name, total.total_count
             ORDER BY g.name
         """, nativeQuery = true)
@@ -316,6 +321,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
             WHERE a.adjust_type = 'ANNUAL'
               AND a.id = :adjustId
               AND s.is_subject = TRUE
+              AND (s.deleted IS NULL OR s.deleted = false)
             GROUP BY et.name, total.total_count
             ORDER BY et.name
         """, nativeQuery = true)
@@ -331,6 +337,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
             WHERE a.adjust_type = 'ANNUAL'
               AND a.id = :adjustId
               AND s.is_subject = TRUE
+              AND (s.deleted IS NULL OR s.deleted = false)
               AND e.hire_date IS NOT NULL
             GROUP BY EXTRACT(YEAR FROM age(current_date, e.hire_date))::int
             ORDER BY year
@@ -345,6 +352,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
             WHERE a.adjust_type = 'ANNUAL'
               AND a.id = :adjustId
               AND s.is_subject = TRUE
+              AND (s.deleted IS NULL OR s.deleted = false)
         """, nativeQuery = true)
     Long getCurrentTotalFinalSalary(@Param("adjustId") Long adjustId);
 
@@ -356,6 +364,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
             WHERE a.adjust_type = 'ANNUAL'
               AND a.year = :prevYear
               AND s.is_subject = TRUE
+              AND (s.deleted IS NULL OR s.deleted = false)
         """, nativeQuery = true)
     Long getPrevTotalFinalSalary(@Param("prevYear") int prevYear);
 
@@ -376,6 +385,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
                 FROM adjust_subject
                 WHERE adjust_id = :adjustId
                   AND is_subject = TRUE
+                  AND (deleted IS NULL OR deleted = false)
             ) AS sub
             GROUP BY salary_range
             ORDER BY salary_range
@@ -388,6 +398,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
             FROM adjust_subject s
             WHERE s.adjust_id = :adjustId
               AND s.is_subject = TRUE
+              AND (s.deleted IS NULL OR s.deleted = false)
         """, nativeQuery = true)
     Double getAverageFinalSalary(@Param("adjustId") Long adjustId);
 
@@ -401,6 +412,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
             JOIN grade g ON s.grade_id = g.id
             WHERE a.adjust_type = 'ANNUAL'
               AND s.is_subject = TRUE
+              AND (s.deleted IS NULL OR s.deleted = false)
             GROUP BY a.year, g.name
             ORDER BY a.year, g.name
         """, nativeQuery = true)
