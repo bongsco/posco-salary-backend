@@ -3,8 +3,6 @@ name: Deploy Web Service Prod
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
 
 jobs:
   call-reusable-deploy:

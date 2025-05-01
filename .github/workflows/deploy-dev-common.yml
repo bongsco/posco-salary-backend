@@ -63,6 +63,13 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
+      - name: Free up disk space
+        run: |
+          sudo apt-get clean
+          sudo rm -rf /var/lib/apt/lists/*
+          docker system prune -af
+          sudo rm -rf $HOME/.cache
+
       - name: Build, tag, and push image to Amazon ECR
         id: build-image
         env:
