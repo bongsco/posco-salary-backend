@@ -369,7 +369,7 @@ public class AdjustSubjectService {
                 .stdSalary(finalStdSalary)
                 .totalSalaryBefore(beforeSalary + beforeHpoBonus)
                 .totalSalary(
-                    Optional.ofNullable(dto.getFinalStdSalary()).orElse(0.0) + Optional.ofNullable(dto.getHpoBonus())
+                    finalStdSalary + Optional.ofNullable(dto.getHpoBonus())
                         .orElse(0.0))
                 .build();
         }).toList();
