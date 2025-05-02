@@ -330,10 +330,13 @@ public class CriteriaService {
                         paybandCriteriaModifyDetail.getId())
                     .orElseThrow(
                         () -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
+                Double baseSalary = paybandCriteria.getAdjustGrade().getGrade().getBaseSalary();
                 return paybandCriteria
                     .toBuilder()
                     .upperBound(paybandCriteriaModifyDetail.getUpperBound())
                     .lowerBound(paybandCriteriaModifyDetail.getLowerBound())
+                    .upperBoundMemo(baseSalary*paybandCriteriaModifyDetail.getUpperBound()/100)
+                    .lowerBoundMemo(baseSalary*paybandCriteriaModifyDetail.getLowerBound()/100)
                     .build();
             })
             .collect(Collectors.toList());

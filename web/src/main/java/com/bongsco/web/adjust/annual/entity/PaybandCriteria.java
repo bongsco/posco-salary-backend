@@ -44,5 +44,9 @@ public class PaybandCriteria extends BaseEntity {
     @Column(nullable = false)
     private Double lowerBound;
 
+    private Double upperBoundMemo;
+
+    private Double lowerBoundMemo;
+
 }
 

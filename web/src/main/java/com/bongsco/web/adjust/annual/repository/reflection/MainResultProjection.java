@@ -43,4 +43,8 @@ public interface MainResultProjection {
     Double getBeforeStdSalary();
 
     Double getBeforeHpoBonus();
+
+    Double getUpperBoundMemo();
+
+    Double getLowerBoundMemo();
 }

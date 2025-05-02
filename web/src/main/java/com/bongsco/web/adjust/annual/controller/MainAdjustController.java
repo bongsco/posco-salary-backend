@@ -85,4 +85,5 @@ public class MainAdjustController {
         adjustSubjectService.changeIncrementRateAndSalaryInfo(adjustId);
         return ResponseEntity.noContent().build();
     }
+
 }
