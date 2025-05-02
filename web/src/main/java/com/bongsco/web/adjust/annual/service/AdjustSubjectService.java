@@ -59,29 +59,6 @@ public class AdjustSubjectService {
     private final AdjustStepService adjustStepService;
     private final EntityManager entityManager;
 
-    public static Double calculateMedian(List<AdjustSubject> adjustSubjects) {
-        if (adjustSubjects.isEmpty()) {
-            return 0.0;
-        }
-
-        List<AdjustSubject> salaryPerGrade = adjustSubjects.stream()
-            .sorted(Comparator.comparing(AdjustSubject::getFinalStdSalary))
-            .toList();
-
-        int size = salaryPerGrade.size();
-        int middle = size / 2;
-
-        if (size % 2 == 0) {
-            // 짝수 개수일 때: 중앙 두 값의 평균 반환
-            return Math.round((salaryPerGrade.get(middle - 1)
-                .getFinalStdSalary()
-                + salaryPerGrade.get(middle).getFinalStdSalary()) / 2.0 / 1000.0) * 1000.0;
-        } else {
-            // 홀수 개수일 때: 가운데 값 반환
-            return Math.round(salaryPerGrade.get(middle).getFinalStdSalary() / 1000.0) * 1000.0;
-        }
-    }
-
     public List<EmployeeResponse> findAll(Long adjustId) {
         return adjustSubjectRepository.findAllEmployeeResponsesByAdjustInfoId(adjustId);
     }
@@ -188,30 +165,7 @@ public class AdjustSubjectService {
             AdjustSubject adjustSubject = adjustSubjectRepository.findById(request.getAdjustSubjectId())
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
-            Double stdSalary = Optional.ofNullable(adjustSubject.getStdSalary()).orElse(0.0);
-            Double finalStdSalary = stdSalary; // 기본값은 그대로
-
-            Long adjustId = adjustSubject.getAdjust().getId();
-            Long gradeId = adjustSubject.getGrade().getId();
-
-            // limit 정보 조회 (상한/하한)
-            PaybandCriteriaRepository.PaybandLimitInfo limitInfo =
-                paybandCriteriaRepository.findLimitInfo(adjustId, gradeId).orElse(null);
-
-            if (limitInfo != null) {
-                Double upperLimit = Optional.ofNullable(limitInfo.getUpperLimit()).orElse(Double.MAX_VALUE);
-                Double lowerLimit = Optional.ofNullable(limitInfo.getLowerLimit()).orElse(Double.MIN_VALUE);
-
-                // Enum 타입에 따라 처리
-                if (request.getIsPaybandApplied() == PaybandAppliedType.UPPER) {
-                    finalStdSalary = upperLimit;
-                } else if (request.getIsPaybandApplied() == PaybandAppliedType.LOWER) {
-                    finalStdSalary = lowerLimit;
-                }
-            }
-
             AdjustSubject updated = adjustSubject.toBuilder()
-                .finalStdSalary(finalStdSalary)
                 .isPaybandApplied(request.getIsPaybandApplied())
                 .build();
             updatedSubjects.add(updated);
@@ -289,13 +243,12 @@ public class AdjustSubjectService {
                 bonusMultiplier += hpoBonusMultiplier / 100;
             }
 
-            Double newHpoBonus = (double)Math.round(rankBaseStandardSalary * bonusMultiplier);
+            Double newHpoBonus = (double)Math.floor(rankBaseStandardSalary * bonusMultiplier);
 
             newHpoBonus = Math.floor(newHpoBonus / 1000) * 1000;
 
             return subject.toBuilder()
                 .stdSalary(newStdSalary)
-                .finalStdSalary(newStdSalary)
                 .hpoBonus(newHpoBonus)
                 .build();
         }).filter(Objects::nonNull).toList();
@@ -358,13 +311,29 @@ public class AdjustSubjectService {
         Adjust adjust = adjustRepository.findById(adjustId).orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
 
         List<MainResultResponses.MainResultResponse> responseList = resultAndPageInfo.getContent().stream().map(dto -> {
-            String paybandResult = Optional.ofNullable(dto.getIsPaybandApplied())
-                .map(t -> switch (t) {
-                    case UPPER -> "적용(상한)";
-                    case LOWER -> "적용(하한)";
-                    default -> "미적용";
-                })
-                .orElse("미적용");
+            Double finalStdSalary;
+            String paybandResult;
+
+            if (dto.getIsPaybandApplied() == null) {
+                paybandResult = "미적용";
+                finalStdSalary = dto.getStdSalary();
+            } else {
+                switch (dto.getIsPaybandApplied()) {
+                    case UPPER -> {
+                        paybandResult = "적용(상한)";
+                        finalStdSalary = Math.floor(dto.getUpperBoundMemo() / 1000.0) * 1000.0;
+                    }
+                    case LOWER -> {
+                        paybandResult = "적용(하한)";
+                        finalStdSalary = Math.floor(dto.getLowerBoundMemo() / 1000.0) * 1000.0;
+                    }
+                    default -> {
+                        paybandResult = "미적용";
+                        finalStdSalary = dto.getStdSalary();
+                    }
+                }
+            }
+
             Double bonusMultiplier = Optional.ofNullable(dto.getBonusMultiplier()).orElse(0.0);
 
             AdjustSubject beforeAdjustSubject = adjustSubjectRepository.findBeforeAdjSubject(adjustId,
@@ -397,7 +366,7 @@ public class AdjustSubjectService {
                 .stdSalaryIncrementRate(finalStdSalaryIncrementRate)
                 .payband(paybandResult)
                 .salaryBefore(beforeSalary)
-                .stdSalary(dto.getFinalStdSalary())
+                .stdSalary(finalStdSalary)
                 .totalSalaryBefore(beforeSalary + beforeHpoBonus)
                 .totalSalary(
                     Optional.ofNullable(dto.getFinalStdSalary()).orElse(0.0) + Optional.ofNullable(dto.getHpoBonus())
@@ -415,7 +384,7 @@ public class AdjustSubjectService {
             adjustId);
 
         List<Employee> updatedEmployees = projections.stream().map(projection -> {
-            Double finalStdSalary = Optional.ofNullable(projection.getFinalStdSalary()).orElse(0.0);
+            Double finalStdSalary = getFinalStdSalary(projection);
             Double beforeFinalStdSalary = projection.getEmployee().getStdSalary();
             AdjustSubject beforeAdjustSubject = adjustSubjectRepository.findBeforeAdjSubject(adjustId,
                 projection.getEmployee().getId());
@@ -426,10 +395,32 @@ public class AdjustSubjectService {
             return projection.getEmployee().toBuilder().stdSalaryIncrementRate(finalStdSalaryIncrementRate).build();
         }).filter(Objects::nonNull).toList();
         employeeRepository.saveAll(updatedEmployees);
+
+        List<AdjustSubject> updatedSubjects = projections.stream().map(projection -> {
+            Double finalStdSalary = getFinalStdSalary(projection);
+            return projection.getAdjustSubject().toBuilder().finalStdSalary(finalStdSalary).build();
+        }).filter(Objects::nonNull).toList();
+        adjustSubjectRepository.saveAll(updatedSubjects);
+
         adjustRepository.findById(adjustId).ifPresent(adjust -> {
             Adjust updatedAdjust = adjust.toBuilder().isSubmitted(true).build();
             adjustRepository.save(updatedAdjust);
         });
+
+        adjustStepService.changeIsDone(adjustId, "ANNUAL_MAIN_RESULT_000", true);
+    }
+
+    private Double getFinalStdSalary(EmployeeAndSalaryProjection projection) {
+        if (projection.getAdjustSubject().getIsPaybandApplied() == null) {
+            return Optional.ofNullable(projection.getAdjustSubject().getStdSalary()).orElse(0.0);
+        } else {
+            return
+                switch (projection.getAdjustSubject().getIsPaybandApplied()) {
+                        case UPPER -> Math.floor(Optional.ofNullable(projection.getUpperBoundMemo()).orElse(0.0)/ 1000.0) * 1000.0;
+                        case LOWER -> Math.floor(Optional.ofNullable(projection.getLowerBoundMemo()).orElse(0.0)/ 1000.0) * 1000.0;
+                        default -> Optional.ofNullable(projection.getAdjustSubject().getStdSalary()).orElse(0.0);
+                };
+        }
     }
 
     public ResultChartResponse getChartData(Long adjustId) {

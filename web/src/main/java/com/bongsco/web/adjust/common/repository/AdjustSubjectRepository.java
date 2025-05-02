@@ -124,7 +124,8 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
                 asj.hpo_bonus AS hpoBonus, asj.is_in_hpo AS isInHpo, e.id AS empId, asj.id AS adjustSubjectId, g.id AS gradeId, r.id AS rankId,
                 ag.id AS adjustGradeId, s.bonus_multiplier AS bonusMultiplier, s.salary_increment_rate AS salaryIncrementRate,
                 asj.is_payband_applied AS isPaybandApplied,
-                COALESCE(asj.final_std_salary, 0) + COALESCE(asj.hpo_bonus, 0) AS totalSalary, e.std_salary AS beforeStdSalary, e.hpo_bonus AS beforeHpoBonus
+                COALESCE(asj.final_std_salary, 0) + COALESCE(asj.hpo_bonus, 0) AS totalSalary, e.std_salary AS beforeStdSalary, e.hpo_bonus AS beforeHpoBonus,
+                pc.upper_bound_memo as upperBoundMemo, pc.lower_bound_memo as lowerBoundMemo
             FROM adjust_subject asj
             JOIN employee e ON e.id = asj.employee_id
             JOIN grade g ON g.id = asj.grade_id
@@ -132,6 +133,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
             JOIN rank r ON r.id = asj.rank_id
             JOIN adjust_grade ag ON ag.adjust_id = asj.adjust_id AND ag.grade_id = g.id
             JOIN salary_increment_by_rank s ON s.adjust_grade_id = ag.id AND s.rank_id = r.id
+            JOIN payband_criteria pc ON ag.id = pc.adjust_grade_id
             WHERE asj.adjust_id = :adjustId
                 AND asj.is_subject = true
                 AND (asj.deleted IS NULL OR asj.deleted = false)
@@ -150,6 +152,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
             JOIN rank r ON r.id = asj.rank_id
             JOIN adjust_grade ag ON ag.adjust_id = asj.adjust_id AND ag.grade_id = g.id
             JOIN salary_increment_by_rank s ON s.adjust_grade_id = ag.id AND s.rank_id = r.id
+            JOIN payband_criteria pc ON ag.id = pc.adjust_grade_id
             WHERE asj.adjust_id = :adjustId
                 AND asj.is_subject = true
                 AND (asj.deleted IS NULL OR asj.deleted = false)
@@ -208,8 +211,10 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
     List<Object[]> findDtoByAdjustId(@Param("adjustId") Long adjustId);
 
     @Query("""
-            SELECT asj.employee as employee, asj.finalStdSalary as finalStdSalary
+            SELECT asj.employee as employee, asj as adjustSubject, pc.upperBoundMemo as upperBoundMemo, pc.lowerBoundMemo as lowerBoundMemo
             FROM AdjustSubject asj
+            JOIN AdjustGrade ag ON asj.adjust.id = ag.adjust.id AND asj.grade.id = ag.grade.id
+            JOIN PaybandCriteria pc ON ag.id = pc.adjustGrade.id
             WHERE asj.adjust.id = :adjustId
                 AND asj.isSubject = true
                 AND (asj.deleted IS NULL OR asj.deleted = false)

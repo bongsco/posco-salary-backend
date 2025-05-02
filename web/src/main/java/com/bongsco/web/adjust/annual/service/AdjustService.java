@@ -258,6 +258,8 @@ public class AdjustService {
                 .adjustGrade(adjustGrade)
                 .upperBound(120.0)
                 .lowerBound(80.0)
+                .upperBoundMemo(adjustGrade.getGrade().getBaseSalary()*1.2)
+                .lowerBoundMemo(adjustGrade.getGrade().getBaseSalary()*0.8)
                 .build();
             paybandCriteriaToSave.add(paybandCriteria);
         }
