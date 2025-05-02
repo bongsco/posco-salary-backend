@@ -223,6 +223,8 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
             AND asj.employee.id = :employeeId
             AND asj.deleted != true
             AND asj.isSubject = true
+            AND asj.adjust.deleted != true
+            AND asj.adjust.isSubmitted = true
         ORDER BY asj.adjust.id DESC
         LIMIT 1
         """
