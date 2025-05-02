@@ -37,6 +37,6 @@ public class ChartResponse {
             projection.getOrderNumber(),
             Optional.ofNullable(projection.getStdSalary()).map(Double::longValue).orElse(null),
             Optional.ofNullable(projection.getHpoBonus()).map(Double::longValue).orElse(null),
-            projection.getBonusPrice(), salaryIncrementRate, projection.getHpoSalaryIncrementByRank());
+            projection.getBonusPrice(), salaryIncrementRate, bonusMultiplier);
     }
 }
