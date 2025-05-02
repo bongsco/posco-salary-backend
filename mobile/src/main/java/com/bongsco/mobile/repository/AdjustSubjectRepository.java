@@ -31,6 +31,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
             JOIN SalaryIncrementByRank s ON ag.id = s.adjustGrade.id AND asj.rank.id = s.rank.id
             WHERE asj.employee.empNum = :empNum 
                 AND a.isSubmitted = true
+                AND asj.isSubject = true
             ORDER BY asj.id DESC
             LIMIT 5
         """)
