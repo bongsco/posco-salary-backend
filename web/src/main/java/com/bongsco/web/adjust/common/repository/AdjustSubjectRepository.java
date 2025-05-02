@@ -15,6 +15,7 @@ import org.springframework.stereotype.Repository;
 import com.bongsco.web.adjust.annual.dto.HpoPerDepartmentDto;
 import com.bongsco.web.adjust.annual.dto.MainResultExcelDto;
 import com.bongsco.web.adjust.annual.dto.SalaryPerGradeDto;
+import com.bongsco.web.adjust.annual.dto.UncalculatedDto;
 import com.bongsco.web.adjust.annual.dto.response.EmployeeResponse;
 import com.bongsco.web.adjust.annual.dto.response.HpoEmployee;
 import com.bongsco.web.adjust.annual.repository.reflection.MainResultProjection;
@@ -440,6 +441,20 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
         """
     )
     List<SalaryPerGradeDto> findSalaryPerDto(@Param("adjustId") Long adjustId);
+
+    @Query("""
+            SELECT new com.bongsco.web.adjust.annual.dto.UncalculatedDto(
+                asj.grade.name, asj.stdSalary, asj.hpoBonus, asj.isPaybandApplied, pc.upperBoundMemo, pc.lowerBoundMemo
+                )
+            FROM AdjustSubject asj
+            JOIN AdjustGrade ag ON asj.grade.id = ag.grade.id AND ag.adjust.id = :adjustId
+            JOIN PaybandCriteria pc ON ag.id = pc.adjustGrade.id
+            WHERE asj.adjust.id = :adjustId
+            AND asj.isSubject = true
+            AND asj.deleted=false
+        """
+    )
+    List<UncalculatedDto> findUncalculatedDto(@Param("adjustId") Long adjustId);
 
     @Query("""
                 SELECT new com.bongsco.web.adjust.annual.dto.HpoPerDepartmentDto(
