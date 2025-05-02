@@ -44,6 +44,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
             JOIN Adjust a ON asj.adjust.id = a.id
             WHERE asj.employee.empNum = :empNum
                 AND a.isSubmitted = true
+                AND asj.isSubject = true
             ORDER BY asj.id DESC
         """)
     Page<AdjustInfoResponse> findAdjustInfo(@Param("empNum") String empNum, Pageable pageable);
@@ -53,8 +54,8 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
         FROM AdjustSubject asj
         WHERE asj.adjust.id < :adjustId
             AND asj.employee.empNum = :empNum
-            AND asj.deleted != true
             AND asj.isSubject = true
+            AND asj.adjust.isSubmitted = true
         ORDER BY asj.adjust.id DESC
         LIMIT 1
         """
@@ -76,7 +77,8 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
             JOIN Employee e ON asj.employee.id = e.id
             WHERE e.empNum = :empNum
                 AND a.id = :adjustId
-                AND a.deleted = false
+                AND a.isSubmitted = true
+                AND asj.isSubject = true
         """)
     AdjustDetailProjection findAdjustDetailProjection(@Param("adjustId") Long adjustId, @Param("empNum") String empNum);
 }
