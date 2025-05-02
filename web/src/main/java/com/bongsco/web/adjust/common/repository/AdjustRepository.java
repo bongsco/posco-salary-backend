@@ -194,4 +194,16 @@ public interface AdjustRepository extends JpaRepository<Adjust, Long> {
             LIMIT 1
         """)
     Long findLatestAnnualAdjustId();
+
+
+    @Query("""
+        SELECT a
+        FROM Adjust a
+        WHERE a.id < :adjustId
+            AND a.isSubmitted = true
+            AND a.deleted != true
+        ORDER BY a.id DESC
+        LIMIT 1
+    """)
+    Adjust findBeforeAdjustById(Long adjustId);
 }

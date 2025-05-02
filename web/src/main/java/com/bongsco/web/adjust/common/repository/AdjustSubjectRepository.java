@@ -228,6 +228,8 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
             AND asj.employee.id = :employeeId
             AND asj.deleted != true
             AND asj.isSubject = true
+            AND asj.adjust.deleted != true
+            AND asj.adjust.isSubmitted = true
         ORDER BY asj.adjust.id DESC
         LIMIT 1
         """
@@ -276,6 +278,7 @@ public interface AdjustSubjectRepository extends JpaRepository<AdjustSubject, Lo
         JOIN adjust a ON s.adjust_id = a.id
         WHERE s.is_subject = TRUE
           AND a.adjust_type = 'ANNUAL'
+          AND (s.deleted IS NULL OR s.deleted = false)
         GROUP BY a.year
         ORDER BY a.year
         """, nativeQuery = true)

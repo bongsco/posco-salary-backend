@@ -426,7 +426,7 @@ public class AdjustSubjectService {
     public ResultChartResponse getChartData(Long adjustId) {
         Adjust currentAdjust = adjustRepository.findById(adjustId)
             .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
-        Adjust beforeAdjust = adjustRepository.findById(adjustId - 1).orElse(null);
+        Adjust beforeAdjust = adjustRepository.findBeforeAdjustById(adjustId);
 
         List<SalaryPerGradeDto> currentDto = adjustSubjectRepository.findSalaryPerDto(adjustId);
         String adjustName = currentAdjust.getYear().toString() + "년 " + currentAdjust.getOrderNumber().toString() + "차";
