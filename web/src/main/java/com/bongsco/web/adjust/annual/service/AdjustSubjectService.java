@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.bongsco.web.adjust.annual.dto.AdjustSubjectSalaryCalculateDto;
 import com.bongsco.web.adjust.annual.dto.HpoPerDepartmentDto;
 import com.bongsco.web.adjust.annual.dto.SalaryPerGradeDto;
+import com.bongsco.web.adjust.annual.dto.UncalculatedDto;
 import com.bongsco.web.adjust.annual.dto.request.ChangedHighPerformGroupEmployeeRequest;
 import com.bongsco.web.adjust.annual.dto.request.ChangedHighPerformGroupEmployeeRequest.ChangedHighPerformGroupEmployee;
 import com.bongsco.web.adjust.annual.dto.request.ChangedSubjectUseEmployeeRequest;
@@ -345,7 +346,7 @@ public class AdjustSubjectService {
                 beforeHpoBonus = beforeAdjustSubject.getHpoBonus();
             }
             Double finalStdSalaryIncrementRate =
-                ((Optional.ofNullable(dto.getFinalStdSalary()).orElse(0.0) - beforeSalary) / beforeSalary) * 100;
+                ((finalStdSalary - beforeSalary) / beforeSalary) * 100;
 
             Double salaryIncrementRate = Optional.ofNullable(dto.getSalaryIncrementRate()).orElse(0.0);
             if (dto.getIsInHpo() != null && dto.getIsInHpo()) {
@@ -428,7 +429,36 @@ public class AdjustSubjectService {
             .orElseThrow(() -> new CustomException(RESOURCE_NOT_FOUND));
         Adjust beforeAdjust = adjustRepository.findBeforeAdjustById(adjustId);
 
-        List<SalaryPerGradeDto> currentDto = adjustSubjectRepository.findSalaryPerDto(adjustId);
+        List<UncalculatedDto> uncalculatedDto = adjustSubjectRepository.findUncalculatedDto(adjustId);
+
+        Map<String, List<UncalculatedDto>> gradeSalaryMap = uncalculatedDto.stream()
+            .filter(dto -> dto.getGradeName() != null)
+            .collect(Collectors.groupingBy(
+                UncalculatedDto::getGradeName
+            ));
+
+        List<SalaryPerGradeDto> currentDto = new ArrayList<>();
+        for (Map.Entry<String, List<UncalculatedDto>> entry : gradeSalaryMap.entrySet()) {
+            String gradeName = entry.getKey();
+            List<UncalculatedDto> dtoList = entry.getValue();
+            Double stdSalarySum = dtoList.stream()
+                .mapToDouble(dto -> {
+                    PaybandAppliedType type = dto.getPaybandAppliedType();
+                    if (type == PaybandAppliedType.UPPER) {
+                        return Optional.ofNullable(dto.getUpperBoundMemo()).orElse(0.0);
+                    } else if (type == PaybandAppliedType.LOWER) {
+                        return Optional.ofNullable(dto.getLowerBoundMemo()).orElse(0.0);
+                    } else {
+                        return Optional.ofNullable(dto.getStdSalary()).orElse(0.0);
+                    }
+                }).sum();
+
+            Double hpoBonusSum = dtoList.stream()
+                .mapToDouble(dto -> Optional.ofNullable(dto.getHpoBonus()).orElse(0.0))
+                .sum();
+            currentDto.add(new SalaryPerGradeDto(gradeName, stdSalarySum, hpoBonusSum));
+        }
+
         String adjustName = currentAdjust.getYear().toString() + "년 " + currentAdjust.getOrderNumber().toString() + "차";
         List<SalaryPerGradeDto> berforeDto = new ArrayList<>();
         String beforeAdjustName = "이전 차수가 존재하지 않습니다.";

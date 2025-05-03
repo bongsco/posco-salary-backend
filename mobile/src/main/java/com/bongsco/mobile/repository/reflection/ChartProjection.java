@@ -10,6 +10,5 @@ public interface ChartProjection {
     Double getSalaryIncrementRate();
     Double getBonusMultiplier();
     Double getHpoSalaryIncrementByRank();
-
     Double getHpoBonusMultiplier();
 }

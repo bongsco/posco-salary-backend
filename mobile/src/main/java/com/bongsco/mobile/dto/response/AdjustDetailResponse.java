@@ -69,14 +69,14 @@ public class AdjustDetailResponse {
             projection.getSalaryIncrementRate(),
             projection.getBonusMultiplier(),
             projection.getIsInHpo(),
-            projection.getHpoSalaryIncrementByRank(),
-            projection.getHpoBonusMultiplier(),
+            projection.getHpoSalaryIncrementByRank() == null || projection.getIsInHpo() != true? 0.0 : projection.getHpoSalaryIncrementByRank(),
+            projection.getHpoBonusMultiplier() == null || projection.getIsInHpo() != true? 0.0 : projection.getHpoBonusMultiplier(),
             finalSalaryIncrementRate,
             finalBonusMultiplier,
             beforeStdSalary,
             projection.getStdSalary(),
             projection.getHpoBonus(),
-            projection.getIsPaybandApplied().getDisplayName(),
+            projection.getIsPaybandApplied()==null ? "미적용" : projection.getIsPaybandApplied().getDisplayName(),
             Optional.ofNullable(projection.getStdSalary()).orElse(0.0) + Optional.ofNullable(projection.getHpoBonus())
                 .orElse(0.0)
         );
