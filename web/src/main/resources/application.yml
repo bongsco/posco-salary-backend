@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: posco-salary-backend-web
+
+  profiles:
+    active: ${APPLICATION_PROFILE:dev}
